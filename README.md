@@ -17,3 +17,9 @@ This project helps users manage products, inventory, and orders.
 
 ## Project Status
 Currently in development.
+
+## Features
+
+- Product management
+- Inventory tracking
+- Order management
