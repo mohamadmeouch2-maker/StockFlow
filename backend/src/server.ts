@@ -63,6 +63,26 @@ app.patch("/products/:id/stock", (req, res) => {
 
   return res.json(product);
 });
+app.delete("/products/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  const index = products.findIndex(
+    (p) => p.id === id
+  );
+
+  if (index === -1) {
+    return res.status(404).json({
+      message: "Product not found"
+    });
+  }
+
+  const deletedProduct = products.splice(index, 1)[0];
+
+  return res.json({
+    message: "Product deleted successfully",
+    product: deletedProduct
+  });
+});
 app.listen(PORT, () => {
   console.log(`StockFlow API running on port ${PORT}`);
 });
