@@ -98,6 +98,65 @@ app.delete("/products/:id", (req, res) => {
     product: deletedProduct
   });
 });
-app.listen(PORT, () => {
-  console.log(`StockFlow API running on port ${PORT}`);
+
+app.put("/products/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const product = products.find((p) => p.id === id);
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product not found"
+    });
+  }
+  const { name, price, stock } = req.body;
+
+if (
+  typeof name !== "string" ||
+  name.trim() === "" ||
+  typeof price !== "number" ||
+  !Number.isFinite(price) ||
+  price < 0 ||
+  typeof stock !== "number" ||
+  !Number.isInteger(stock) ||
+  stock < 0
+) {
+  return res.status(400).json({
+    message: "Invalid product data"
+  });
+}
+  product.name = req.body.name;
+  product.price = req.body.price;
+  product.stock = req.body.stock;
+  return res.json({
+  message: "Product updated successfully",
+  product: product
 });
+})
+app.patch("/products/:id/stock", (req, res) => {
+  const id = Number(req.params.id);
+  const product = products.find((p) => p.id === id);
+
+  if (!product) {
+    return res.status(404).json({
+      message: "Product not found"
+    });
+  }
+
+  const { stock } = req.body;
+
+  if (!Number.isInteger(stock) || stock < 0) {
+    return res.status(400).json({
+      message: "Invalid stock value"
+    });
+  }
+
+  product.stock = stock;
+
+  return res.json({
+    message: "Stock updated successfully",
+    product: product
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`StockFlow API running on port ${PORT}`);});
