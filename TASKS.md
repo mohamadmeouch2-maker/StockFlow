@@ -34,7 +34,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Place an order: check and deduct stock in one transaction, 409 if stock is short (FR-07, FR-08)
   - [x] My orders, newest first (FR-09) and cancel a pending order, which restores the stock (FR-10)
   - [x] Admin: list orders, filter by status, change status Pending → Shipped → Delivered (FR-12)
-  - [x] 24 automatic API tests with Jest + Supertest on a separate test database (NFR-07 asks for at least 10). Run with `npm test` in `api-node/`
+  - [x] Automatic API tests with Jest + Supertest on a separate test database (NFR-07 asks for at least 10). Run with `npm test` in `api-node/`
 
 - [x] **Website connected to the API (Nov 5, planned for Nov 12):**
   - [x] Replace the mock data with the real API
@@ -43,16 +43,21 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Add to cart (never more than the stock), cart page and checkout (FR-06, FR-07)
   - [x] My orders with Cancel (FR-09, FR-10) and the admin orders page: ship, deliver, filter (FR-12)
   - [x] Checked in the browser: register, refresh, order, cancel, admin page protection, ship/deliver, form errors
+- [x] **Finishing and extras (Nov 5, planned for Nov 13):**
+  - [x] README: features, how to install and run, demo accounts, API overview
+  - [x] Tested the README steps on a fresh copy from GitHub and fixed 3 install problems found that way
+  - [x] Low-stock list for the admin (FR-16), served by the Node API
+  - [x] 9 website component tests with Vitest + Testing Library (NFR-07 asks for 5); API tests now 26
+  - [x] GitHub Actions CI: API and website checks and tests run on every push to `master`
 
 ## To do
 
-### Friday, Nov 13: Finish
-- [ ] Fix remaining bugs
-- [ ] README: how to install and run the project
+### Friday, Nov 13: Demo
 - [ ] Prepare the demo
+- [ ] Fix anything found during the demo rehearsal or the supervisor's review
 
 ## Not in scope (not enough time in one week)
 
-- .NET Reporting API with MySQL and data sync (FR-13 to FR-16)
-- Reports dashboard with charts
-- Docker and GitHub Actions CI
+- .NET Reporting API with MySQL and data sync (FR-13 to FR-15)
+- Reports dashboard with charts (daily sales, top products)
+- Docker

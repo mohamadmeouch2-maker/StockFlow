@@ -5,6 +5,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { categoriesRouter } from "./modules/categories/categories.routes";
 import { ordersRouter } from "./modules/orders/orders.routes";
 import { productsRouter } from "./modules/products/products.routes";
+import { reportsRouter } from "./modules/reports/reports.routes";
 
 // The app is separate from the server so tests can use it without opening a port (guide 2.10).
 export const app = express();
@@ -17,6 +18,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
+app.use("/api/reports", reportsRouter);
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Route not found", details: [] } });
 });

@@ -14,15 +14,16 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
 | My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
 | Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
+| Low stock | Admin list of products at or below their reorder level | FR-16 |
 
-Not built (out of scope for the one-week plan): the .NET reporting API with MySQL and the reports dashboard (FR-13 to FR-16), and Docker.
+Not built (out of scope for the one-week plan): the .NET reporting API with MySQL, data sync and the sales charts (FR-13 to FR-15), and Docker.
 
 ## Technologies
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (24 API tests)
+- **Tests:** Jest + Supertest (26 API tests), Vitest + Testing Library (9 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -101,10 +102,13 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test
+npm test        # ✅ Tests: 26 passed (uses the stockflow_test database, never your app data)
+
+cd ../frontend
+npm test        # ✅ Tests: 9 passed (no backend needed)
 ```
 
-✅ You should see `Tests: 24 passed`. The tests use the `stockflow_test` database, so your app data is never touched.
+The same tests run automatically on GitHub after every push to `master` (see the **Actions** tab).
 
 ## API overview
 
@@ -125,6 +129,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
 | GET | `/api/orders?status=` | Admin | All orders |
 | PATCH | `/api/orders/:id/status` | Admin | `{ "status": "SHIPPED" }`, then `DELIVERED`, or `CANCELLED` |
+| GET | `/api/reports/low-stock` | Admin | Products at or below their reorder level |
 | GET | `/health` | anyone | Liveness check |
 
 Every error has the same shape: `{ "error": { "code", "message", "details": [{ "field", "message" }] } }`.

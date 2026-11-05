@@ -1,0 +1,38 @@
+# Guide 5.6: runs the checks and tests on GitHub after every push to master and on pull requests.
+# (No .NET job: the reporting API is out of scope. The repo's main branch is "master", not "main".)
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  api-node:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: stockflow, POSTGRES_PASSWORD: stockflow, POSTGRES_DB: stockflow_test }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U stockflow" --health-interval 5s --health-retries 10
+    defaults: { run: { working-directory: api-node } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: api-node/package-lock.json }
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build

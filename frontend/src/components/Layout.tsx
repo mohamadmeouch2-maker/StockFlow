@@ -47,6 +47,9 @@ export function Layout() {
               <NavLink to="/admin/orders" className={linkClass}>
                 Manage orders
               </NavLink>
+              <NavLink to="/admin/low-stock" className={linkClass}>
+                Low stock
+              </NavLink>
             </>
           )}
 
