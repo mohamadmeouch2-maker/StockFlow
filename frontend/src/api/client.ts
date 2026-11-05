@@ -33,7 +33,8 @@ export const setOnUnauthorized = (fn: () => void) => {
 };
 
 export async function api<T>(base: "core" | "reports", path: string, init: RequestInit = {}): Promise<T> {
-  const url = (base === "core" ? import.meta.env.VITE_CORE_API : import.meta.env.VITE_REPORTS_API) + path;
+  // Falls back to the local API when VITE_CORE_API isn't set (e.g. in a production build).
+  const url = (base === "core" ? (import.meta.env.VITE_CORE_API ?? "http://localhost:4000") : import.meta.env.VITE_REPORTS_API) + path;
   const res = await fetch(url, {
     ...init,
     headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }), ...init.headers },
