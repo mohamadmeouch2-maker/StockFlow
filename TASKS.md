@@ -30,14 +30,13 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Products and categories endpoints with Zod validation (FR-04, FR-05, FR-11)
   - [x] Standard error format `{ error: { code, message, details } }` (NFR-06)
   - [x] Checked by hand: 36 requests, all with the expected result
+- [x] **API: orders and tests (Nov 5, planned for Nov 11):**
+  - [x] Place an order: check and deduct stock in one transaction, 409 if stock is short (FR-07, FR-08)
+  - [x] My orders, newest first (FR-09) and cancel a pending order, which restores the stock (FR-10)
+  - [x] Admin: list orders, filter by status, change status Pending → Shipped → Delivered (FR-12)
+  - [x] 24 automatic API tests with Jest + Supertest on a separate test database (NFR-07 asks for at least 10). Run with `npm test` in `api-node/`
 
 ## To do
-
-### Wednesday, Nov 11: API: orders
-- [ ] Place an order: check and deduct stock in one transaction, 409 if stock is short (FR-07, FR-08)
-- [ ] My orders, newest first (FR-09) and cancel a pending order (FR-10)
-- [ ] Admin: list orders, filter by status, change status (FR-12)
-- [ ] API tests with Jest + Supertest
 
 ### Thursday, Nov 12: Connect the website to the API
 - [ ] Login and register pages, admin-only pages
