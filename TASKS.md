@@ -20,13 +20,12 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 - [x] **Database setup (Nov 5, one day early):**
   - [x] Install PostgreSQL 16
   - [x] Create the database user `stockflow` and the databases `stockflow` and `stockflow_test`
+- [x] **Database tables (Nov 5, planned for Nov 9):**
+  - [x] Create the Node.js API project (`api-node/`) with Prisma
+  - [x] Database tables: users, categories, products, orders, order items, plus CHECK rules (price > 0, stock ≥ 0, quantity > 0)
+  - [x] Sample data (seed): 1 admin, 1 customer, 4 categories, 15 products
 
 ## To do
-
-### Monday, Nov 9: Database
-- [ ] Create the Node.js API project with Prisma
-- [ ] Database tables: users, categories, products, orders, order items
-- [ ] Sample data (seed)
 
 ### Tuesday, Nov 10: API: users and products
 - [ ] Register and log in with a JWT token (FR-01, FR-02)
