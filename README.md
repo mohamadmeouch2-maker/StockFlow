@@ -16,7 +16,7 @@ This project helps users manage products, inventory, and orders.
 - PostgreSQL / MySQL
 
 ## Project Status
-Currently in development.
+Currently in development. See [TASKS.md](TASKS.md) for the plan and what is done.
 
 ## Features
 
