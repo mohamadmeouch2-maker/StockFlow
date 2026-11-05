@@ -17,10 +17,11 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Product detail with stock status: In stock / Low / Out (FR-05)
   - [x] Admin product table, plus a create/edit form with validation (FR-11)
 
-## To do
+- [x] **Database setup (Nov 5, one day early):**
+  - [x] Install PostgreSQL 16
+  - [x] Create the database user `stockflow` and the databases `stockflow` and `stockflow_test`
 
-### Friday, Nov 6: Database setup
-- [ ] Install PostgreSQL 16
+## To do
 
 ### Monday, Nov 9: Database
 - [ ] Create the Node.js API project with Prisma
