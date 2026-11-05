@@ -108,7 +108,7 @@ cd ../frontend
 npm test        # ✅ Tests: 9 passed (no backend needed)
 ```
 
-The same tests run automatically on GitHub after every push to `master` (see the **Actions** tab).
+A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
 
 ## API overview
 

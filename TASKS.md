@@ -48,7 +48,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Tested the README steps on a fresh copy from GitHub and fixed 3 install problems found that way
   - [x] Low-stock list for the admin (FR-16), served by the Node API
   - [x] 9 website component tests with Vitest + Testing Library (NFR-07 asks for 5); API tests now 26
-  - [x] GitHub Actions CI: API and website checks and tests run on every push to `master`
+  - [x] GitHub Actions CI workflow added (API and website checks and tests). It starts running once the repository owner enables Actions in Settings → Actions
 
 ## To do
 
