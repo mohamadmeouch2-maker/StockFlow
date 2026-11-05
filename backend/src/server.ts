@@ -1,8 +1,17 @@
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
 import { products } from "./products";
 const app = express();
 app.use(express.json());
-const PORT = 4000;
+const PORT = Number(process.env.PORT) || 4000;
+
+// Only ever counts up, so a deleted product's ID is never given to a new product.
+let nextId = Math.max(0, ...products.map((p) => p.id)) + 1;
+
+// IDs must be plain positive whole numbers: "7" is valid; "0x7", "7.0" and "abc" are not.
+function parseId(value: string): number | null {
+  const id = Number(value);
+  return /^[1-9]\d*$/.test(value) && Number.isSafeInteger(id) ? id : null;
+}
 
 app.get("/", (req, res) => {
   res.send("Welcome to StockFlow API!");
@@ -15,7 +24,13 @@ app.get("/products", (req, res) => {
   res.json(products);
 });
 app.get("/products/:id", (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseId(req.params.id);
+
+  if (id === null) {
+    return res.status(400).json({
+      message: "Invalid product ID"
+    });
+  }
 
   const product = products.find(
     (p) => p.id === id
@@ -35,6 +50,7 @@ app.post("/products", (req, res) => {
     typeof name !== "string" ||
     !name.trim() ||
     typeof price !== "number" ||
+    !Number.isFinite(price) ||
     price < 0 ||
     typeof stock !== "number" ||
     !Number.isInteger(stock) ||
@@ -46,7 +62,7 @@ app.post("/products", (req, res) => {
   }
 
   const newProduct = {
-    id: Math.max(0, ...products.map(p => p.id)) + 1,
+    id: nextId++,
     name: name.trim(),
     price,
     stock
@@ -57,8 +73,14 @@ app.post("/products", (req, res) => {
   res.status(201).json(newProduct);
 });
 app.patch("/products/:id/stock", (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseId(req.params.id);
   const { stock } = req.body ?? {};
+
+  if (id === null) {
+    return res.status(400).json({
+      message: "Invalid product ID"
+    });
+  }
 
   const product = products.find(p => p.id === id);
 
@@ -70,16 +92,25 @@ app.patch("/products/:id/stock", (req, res) => {
 
   if (!Number.isInteger(stock) || stock < 0) {
     return res.status(400).json({
-      message: "Invalid stock"
+      message: "Invalid stock value"
     });
   }
 
   product.stock = stock;
 
-  return res.json(product);
+  return res.json({
+    message: "Stock updated successfully",
+    product: product
+  });
 });
 app.delete("/products/:id", (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseId(req.params.id);
+
+  if (id === null) {
+    return res.status(400).json({
+      message: "Invalid product ID"
+    });
+  }
 
   const index = products.findIndex(
     (p) => p.id === id
@@ -100,7 +131,14 @@ app.delete("/products/:id", (req, res) => {
 });
 
 app.put("/products/:id", (req, res) => {
-  const id = Number(req.params.id);
+  const id = parseId(req.params.id);
+
+  if (id === null) {
+    return res.status(400).json({
+      message: "Invalid product ID"
+    });
+  }
+
   const product = products.find((p) => p.id === id);
 
   if (!product) {
@@ -108,7 +146,7 @@ app.put("/products/:id", (req, res) => {
       message: "Product not found"
     });
   }
-  const { name, price, stock } = req.body;
+  const { name, price, stock } = req.body ?? {};
 
 if (
   typeof name !== "string" ||
@@ -124,39 +162,50 @@ if (
     message: "Invalid product data"
   });
 }
-  product.name = req.body.name;
-  product.price = req.body.price;
-  product.stock = req.body.stock;
+  product.name = name.trim();
+  product.price = price;
+  product.stock = stock;
   return res.json({
   message: "Product updated successfully",
   product: product
 });
 })
-app.patch("/products/:id/stock", (req, res) => {
-  const id = Number(req.params.id);
-  const product = products.find((p) => p.id === id);
-
-  if (!product) {
-    return res.status(404).json({
-      message: "Product not found"
-    });
-  }
-
-  const { stock } = req.body;
-
-  if (!Number.isInteger(stock) || stock < 0) {
-    return res.status(400).json({
-      message: "Invalid stock value"
-    });
-  }
-
-  product.stock = stock;
-
-  return res.json({
-    message: "Stock updated successfully",
-    product: product
+app.use((req, res) => {
+  res.status(404).json({
+    message: "Route not found"
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`StockFlow API running on port ${PORT}`);});
+const handleErrors: ErrorRequestHandler = (err, req, res, next) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+
+  if (err?.type === "entity.parse.failed") {
+    return res.status(400).json({
+      message: "Invalid JSON body"
+    });
+  }
+
+  // Other client errors from express.json() (e.g. 413 body too large) keep their status code.
+  if (err?.status >= 400 && err?.status < 500) {
+    return res.status(err.status).json({
+      message: err.message
+    });
+  }
+
+  console.error(err);
+  return res.status(500).json({
+    message: "Internal server error"
+  });
+};
+
+app.use(handleErrors);
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`StockFlow API running on port ${PORT}`);
+  });
+}
+
+export { app };
