@@ -9,8 +9,8 @@
     "start": "node dist/server.js",
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
-    "pretest": "dotenv -e .env.test -- prisma migrate deploy",
-    "test": "dotenv -e .env.test -- jest --runInBand"
+    "pretest": "dotenv-cli -e .env.test -- prisma migrate deploy",
+    "test": "dotenv-cli -e .env.test -- jest --runInBand"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
