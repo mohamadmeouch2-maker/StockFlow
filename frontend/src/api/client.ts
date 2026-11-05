@@ -2,7 +2,7 @@ import type { ApiErrorBody } from "./types";
 
 // Guide 4.4. Every call to the real API goes through api(). It adds the token,
 // reads the standard error format, and logs the user out on 401.
-// Not used yet: the pages use the mock productsApi until Nov 12.
+// The API address comes from .env.development (VITE_CORE_API).
 
 export class ApiError extends Error {
   // Written as normal fields: tsconfig's "erasableSyntaxOnly" does not allow

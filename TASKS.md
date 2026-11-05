@@ -36,13 +36,15 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Admin: list orders, filter by status, change status Pending → Shipped → Delivered (FR-12)
   - [x] 24 automatic API tests with Jest + Supertest on a separate test database (NFR-07 asks for at least 10). Run with `npm test` in `api-node/`
 
-## To do
+- [x] **Website connected to the API (Nov 5, planned for Nov 12):**
+  - [x] Replace the mock data with the real API
+  - [x] Login, register and logout. You stay logged in after a refresh (FR-01, FR-02)
+  - [x] Admin-only and customer-only pages (FR-03)
+  - [x] Add to cart (never more than the stock), cart page and checkout (FR-06, FR-07)
+  - [x] My orders with Cancel (FR-09, FR-10) and the admin orders page: ship, deliver, filter (FR-12)
+  - [x] Checked in the browser: register, refresh, order, cancel, admin page protection, ship/deliver, form errors
 
-### Thursday, Nov 12: Connect the website to the API
-- [ ] Login and register pages, admin-only pages
-- [ ] Replace the mock data with the real API
-- [ ] Cart and checkout (FR-06, FR-07), My orders page
-- [ ] Admin orders page
+## To do
 
 ### Friday, Nov 13: Finish
 - [ ] Fix remaining bugs

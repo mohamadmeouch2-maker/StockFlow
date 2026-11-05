@@ -7,7 +7,7 @@ export type Category = { id: number; name: string };
 export type Product = {
   id: number;
   name: string;
-  description?: string;
+  description?: string | null; // null when the product has no description
   price: string; // Prisma Decimal arrives as a string
   stock: number;
   reorderLevel: number;
@@ -26,6 +26,7 @@ export type Order = {
   total: string;
   createdAt: string;
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
+  user?: { name: string; email: string }; // only in the admin list
 };
 
 export type ApiErrorBody = {
