@@ -24,13 +24,14 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Create the Node.js API project (`api-node/`) with Prisma
   - [x] Database tables: users, categories, products, orders, order items, plus CHECK rules (price > 0, stock ≥ 0, quantity > 0)
   - [x] Sample data (seed): 1 admin, 1 customer, 4 categories, 15 products
+- [x] **API: users and products (Nov 5, planned for Nov 10):**
+  - [x] Register and log in with a JWT token valid for 1 hour (FR-01, FR-02)
+  - [x] Protect admin endpoints: 401 without a token, 403 for the wrong role (FR-03)
+  - [x] Products and categories endpoints with Zod validation (FR-04, FR-05, FR-11)
+  - [x] Standard error format `{ error: { code, message, details } }` (NFR-06)
+  - [x] Checked by hand: 36 requests, all with the expected result
 
 ## To do
-
-### Tuesday, Nov 10: API: users and products
-- [ ] Register and log in with a JWT token (FR-01, FR-02)
-- [ ] Protect admin endpoints: 401 without a token, 403 for the wrong role (FR-03)
-- [ ] Products and categories endpoints with Zod validation (FR-04, FR-05, FR-11)
 
 ### Wednesday, Nov 11: API: orders
 - [ ] Place an order: check and deduct stock in one transaction, 409 if stock is short (FR-07, FR-08)
