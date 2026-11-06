@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { reportsApi } from "../../api/reports";
+import { ProductImage } from "../../components/ProductImage";
 import { StockBadge } from "../../components/StockBadge";
 
 // FR-16: products that need restocking (stock at or below the reorder level), most urgent first.
@@ -31,7 +32,12 @@ export function LowStockPage() {
             <tbody>
               {rows.data.map((r) => (
                 <tr key={r.productId} className="border-b last:border-0">
-                  <td className="p-3">{r.name}</td>
+                  <td className="p-3">
+                    <div className="flex items-center gap-3">
+                      <ProductImage src={r.imageUrl} alt={r.name} className="h-10 w-10 shrink-0" />
+                      {r.name}
+                    </div>
+                  </td>
                   <td className="p-3 text-gray-500">{r.category}</td>
                   <td className="p-3">
                     {r.stock} <StockBadge product={r} />

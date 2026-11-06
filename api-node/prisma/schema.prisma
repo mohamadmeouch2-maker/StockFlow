@@ -50,6 +50,7 @@ model Product {
   price        Decimal     @db.Decimal(10, 2)
   stock        Int         @default(0)
   reorderLevel Int         @default(5) @map("reorder_level")
+  imageUrl     String?     @map("image_url") // FR-17: path of the uploaded photo, e.g. /uploads/products/product-1-....jpg
   categoryId   Int         @map("category_id")
   category     Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   createdAt    DateTime    @default(now()) @map("created_at")

@@ -4,6 +4,7 @@ import { productsApi } from "../api/products";
 import type { Product } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
+import { ProductImage } from "../components/ProductImage";
 import { StockBadge } from "../components/StockBadge";
 
 // FR-05: name, description, price, category and stock status of one product.
@@ -21,16 +22,20 @@ export function ProductDetailPage() {
       {product.isError && <p className="text-red-600">{product.error.message}</p>}
 
       {product.data && (
-        <div className="max-w-lg space-y-3 rounded border bg-white p-6">
-          <h1 className="text-2xl font-bold">{product.data.name}</h1>
-          <p className="text-sm text-gray-500">{product.data.category?.name}</p>
-          <p>{product.data.description || "No description."}</p>
-          <p className="text-xl font-semibold">${Number(product.data.price).toFixed(2)}</p>
-          <div className="flex items-center gap-2">
-            <StockBadge product={product.data} />
-            <span className="text-sm text-gray-500">{product.data.stock} left</span>
+        <div className="flex max-w-3xl flex-col gap-6 rounded border bg-white p-6 sm:flex-row">
+          {/* The photo next to the details (below each other on narrow screens) */}
+          <ProductImage src={product.data.imageUrl} alt={product.data.name} className="aspect-square w-full sm:w-72 sm:shrink-0" />
+          <div className="space-y-3">
+            <h1 className="text-2xl font-bold">{product.data.name}</h1>
+            <p className="text-sm text-gray-500">{product.data.category?.name}</p>
+            <p>{product.data.description || "No description."}</p>
+            <p className="text-xl font-semibold">${Number(product.data.price).toFixed(2)}</p>
+            <div className="flex items-center gap-2">
+              <StockBadge product={product.data} />
+              <span className="text-sm text-gray-500">{product.data.stock} left</span>
+            </div>
+            <BuyBox product={product.data} />
           </div>
-          <BuyBox product={product.data} />
         </div>
       )}
     </div>

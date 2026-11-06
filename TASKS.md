@@ -49,6 +49,10 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Low-stock list for the admin (FR-16), served by the Node API
   - [x] 9 website component tests with Vitest + Testing Library (NFR-07 asks for 5); API tests now 26
   - [x] GitHub Actions CI workflow added (API and website checks and tests). It starts running once the repository owner enables Actions in Settings → Actions
+- [x] **Product photos (Nov 6), FR-17:**
+  - [x] Admins upload a photo in the product form (JPG, PNG, WebP or GIF, up to 2 MB), with a preview and Remove photo
+  - [x] The photo shows next to the product in the list, product page, cart, admin table and low-stock list; a placeholder when there is none
+  - [x] Tests: API 31, website 11
 
 ## To do
 

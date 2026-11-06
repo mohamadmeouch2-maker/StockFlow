@@ -32,12 +32,16 @@ export const setOnUnauthorized = (fn: () => void) => {
   onUnauthorized = fn;
 };
 
+// Falls back to the local API when VITE_CORE_API isn't set (e.g. in a production build).
+export const CORE_API: string = import.meta.env.VITE_CORE_API ?? "http://localhost:4000";
+
 export async function api<T>(base: "core" | "reports", path: string, init: RequestInit = {}): Promise<T> {
-  // Falls back to the local API when VITE_CORE_API isn't set (e.g. in a production build).
-  const url = (base === "core" ? (import.meta.env.VITE_CORE_API ?? "http://localhost:4000") : import.meta.env.VITE_REPORTS_API) + path;
+  const url = (base === "core" ? CORE_API : import.meta.env.VITE_REPORTS_API) + path;
+  // A file upload (FormData) must not be sent as JSON: the browser sets its own Content-Type.
+  const isForm = init.body instanceof FormData;
   const res = await fetch(url, {
     ...init,
-    headers: { "Content-Type": "application/json", ...(token && { Authorization: `Bearer ${token}` }), ...init.headers },
+    headers: { ...(!isForm && { "Content-Type": "application/json" }), ...(token && { Authorization: `Bearer ${token}` }), ...init.headers },
   });
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);

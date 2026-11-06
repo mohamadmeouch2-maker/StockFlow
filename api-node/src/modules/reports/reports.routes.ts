@@ -13,5 +13,7 @@ reportsRouter.get("/low-stock", async (_req, res) => {
     include: { category: true },
     orderBy: [{ stock: "asc" }, { name: "asc" }], // most urgent first
   });
-  res.json(products.map((p) => ({ productId: p.id, name: p.name, category: p.category.name, stock: p.stock, reorderLevel: p.reorderLevel })));
+  res.json(
+    products.map((p) => ({ productId: p.id, name: p.name, imageUrl: p.imageUrl, category: p.category.name, stock: p.stock, reorderLevel: p.reorderLevel })),
+  );
 });

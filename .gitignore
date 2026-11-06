@@ -6,5 +6,7 @@ dist/
 !.env.test
 !.env.development
 *.log
+uploads/
+uploads-test/
 desktop.ini
 *.pdf

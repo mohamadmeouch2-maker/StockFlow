@@ -11,6 +11,7 @@ export type Product = {
   price: string; // Prisma Decimal arrives as a string
   stock: number;
   reorderLevel: number;
+  imageUrl?: string | null; // FR-17: e.g. "/uploads/products/product-1-....jpg", null = no photo
   categoryId: number;
   category?: Category;
 };

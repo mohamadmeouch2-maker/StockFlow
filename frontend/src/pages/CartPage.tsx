@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { ordersApi } from "../api/orders";
 import { useCart } from "../cart/useCart";
+import { ProductImage } from "../components/ProductImage";
 
 // FR-06 / FR-07: review the cart and place the order (guide 4.8).
 export function CartPage() {
@@ -43,6 +44,7 @@ export function CartPage() {
       <ul className="divide-y rounded border bg-white">
         {items.map(({ product, quantity }) => (
           <li key={product.id} className="flex flex-wrap items-center gap-3 p-3">
+            <ProductImage src={product.imageUrl} alt={product.name} className="h-14 w-14" />
             <Link to={`/products/${product.id}`} className="flex-1 font-medium hover:underline">
               {product.name}
             </Link>

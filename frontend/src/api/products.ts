@@ -1,7 +1,11 @@
 import { api } from "./client";
 import type { Category, Paged, Product } from "./types";
 
-export type ProductInput = Omit<Product, "id" | "category" | "price"> & { price: number };
+export type ProductInput = Omit<Product, "id" | "category" | "price" | "imageUrl"> & { price: number };
+
+// FR-17: same limits as the API, so most mistakes are caught before uploading.
+export const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+export const MAX_IMAGE_MB = 2;
 
 // Guide 4.4: calls to the Core API for products and categories.
 // (Until Nov 5 this file returned mock data with the same functions.)
@@ -17,4 +21,10 @@ export const productsApi = {
   update: (id: number, d: ProductInput) => api<Product>("core", `/api/products/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   remove: (id: number) => api<void>("core", `/api/products/${id}`, { method: "DELETE" }),
   categories: () => api<Category[]>("core", "/api/categories"),
+  uploadImage: (id: number, file: File) => {
+    const form = new FormData();
+    form.append("image", file);
+    return api<Product>("core", `/api/products/${id}/image`, { method: "POST", body: form });
+  },
+  removeImage: (id: number) => api<Product>("core", `/api/products/${id}/image`, { method: "DELETE" }),
 };

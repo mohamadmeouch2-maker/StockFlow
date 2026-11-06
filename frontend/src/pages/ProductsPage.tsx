@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { productsApi } from "../api/products";
 import { Pagination } from "../components/Pagination";
+import { ProductImage } from "../components/ProductImage";
 import { StockBadge } from "../components/StockBadge";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -65,13 +66,18 @@ export function ProductsPage() {
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.data?.items.map((p) => (
-          <li key={p.id} className="rounded border bg-white p-4">
-            <Link to={`/products/${p.id}`} className="font-semibold hover:underline">
-              {p.name}
+          <li key={p.id} className="flex gap-4 rounded border bg-white p-4">
+            <Link to={`/products/${p.id}`} className="shrink-0">
+              <ProductImage src={p.imageUrl} alt={p.name} className="h-24 w-24" />
             </Link>
-            <p className="text-sm text-gray-500">{p.category?.name}</p>
-            <p className="mt-2">${Number(p.price).toFixed(2)}</p>
-            <StockBadge product={p} />
+            <div className="min-w-0">
+              <Link to={`/products/${p.id}`} className="font-semibold hover:underline">
+                {p.name}
+              </Link>
+              <p className="text-sm text-gray-500">{p.category?.name}</p>
+              <p className="mt-2">${Number(p.price).toFixed(2)}</p>
+              <StockBadge product={p} />
+            </div>
           </li>
         ))}
       </ul>

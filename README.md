@@ -15,6 +15,9 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
 | Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
+| Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
+
+Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git.
 
 Not built (out of scope for the one-week plan): the .NET reporting API with MySQL, data sync and the sales charts (FR-13 to FR-15), and Docker.
 
@@ -23,7 +26,7 @@ Not built (out of scope for the one-week plan): the .NET reporting API with MySQ
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (26 API tests), Vitest + Testing Library (9 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (31 API tests), Vitest + Testing Library (11 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -102,10 +105,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 26 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 31 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 9 passed (no backend needed)
+npm test        # ✅ Tests: 11 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -130,6 +133,8 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/orders?status=` | Admin | All orders |
 | PATCH | `/api/orders/:id/status` | Admin | `{ "status": "SHIPPED" }`, then `DELIVERED`, or `CANCELLED` |
 | GET | `/api/reports/low-stock` | Admin | Products at or below their reorder level |
+| POST / DELETE | `/api/products/:id/image` | Admin | Upload a photo (form field `image`) or remove it |
+| GET | `/uploads/products/<file>` | anyone | The uploaded photos |
 | GET | `/health` | anyone | Liveness check |
 
 Every error has the same shape: `{ "error": { "code", "message", "details": [{ "field", "message" }] } }`.

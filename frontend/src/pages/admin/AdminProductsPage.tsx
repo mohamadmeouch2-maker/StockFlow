@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { productsApi } from "../../api/products";
 import type { Product } from "../../api/types";
 import { Pagination } from "../../components/Pagination";
+import { ProductImage } from "../../components/ProductImage";
 import { StockBadge } from "../../components/StockBadge";
 
 // FR-11 (admin): table of all products with Edit and Delete, plus a "New product" button.
@@ -57,7 +58,12 @@ export function AdminProductsPage() {
         <tbody>
           {products.data?.items.map((p) => (
             <tr key={p.id} className="border-b last:border-0">
-              <td className="p-3">{p.name}</td>
+              <td className="p-3">
+                <div className="flex items-center gap-3">
+                  <ProductImage src={p.imageUrl} alt={p.name} className="h-10 w-10 shrink-0" />
+                  {p.name}
+                </div>
+              </td>
               <td className="p-3 text-gray-500">{p.category?.name}</td>
               <td className="p-3">${Number(p.price).toFixed(2)}</td>
               <td className="p-3">

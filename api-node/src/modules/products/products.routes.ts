@@ -1,7 +1,8 @@
-import { Router } from "express";
+import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { AppError, notFound, parseId } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
+import { deleteUpload, productImageUpload } from "../../lib/uploads";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 
@@ -70,6 +71,37 @@ productsRouter.put("/:id", ...admin, validate(productBody), async (req, res) => 
 // A product that appears in orders can't be deleted: the error middleware returns 409.
 productsRouter.delete("/:id", ...admin, async (req, res) => {
   const id = parseId(req.params.id, "Product");
-  await prisma.product.delete({ where: { id } });
+  const product = await prisma.product.delete({ where: { id } });
+  deleteUpload(product.imageUrl); // its photo goes too
   res.status(204).end();
+});
+
+// FR-17: photos. The product must exist before a file is accepted.
+const loadProduct = async (req: Request, res: Response, next: NextFunction) => {
+  const id = parseId(req.params.id, "Product");
+  const product = await prisma.product.findUnique({ where: { id } });
+  if (!product) throw notFound("Product");
+  res.locals.product = product;
+  next();
+};
+
+// Upload or replace the photo: multipart/form-data with one file in the "image" field.
+productsRouter.post("/:id/image", ...admin, loadProduct, productImageUpload, async (req, res) => {
+  if (!req.file)
+    throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "image", message: "Choose an image file" }]);
+  const imageUrl = `/uploads/products/${req.file.filename}`;
+  try {
+    const product = await prisma.product.update({ where: { id: res.locals.product.id }, data: { imageUrl }, include: { category: true } });
+    deleteUpload(res.locals.product.imageUrl); // the old photo is no longer needed
+    res.json(product);
+  } catch (err) {
+    deleteUpload(imageUrl); // don't keep a file that no product points to
+    throw err;
+  }
+});
+
+productsRouter.delete("/:id/image", ...admin, loadProduct, async (_req, res) => {
+  const product = await prisma.product.update({ where: { id: res.locals.product.id }, data: { imageUrl: null }, include: { category: true } });
+  deleteUpload(res.locals.product.imageUrl);
+  res.json(product);
 });
