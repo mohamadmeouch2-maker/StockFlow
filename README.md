@@ -26,7 +26,7 @@ Not built (out of scope for the one-week plan): the .NET reporting API with MySQ
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (31 API tests), Vitest + Testing Library (11 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (31 API tests), Vitest + Testing Library (12 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -108,7 +108,7 @@ cd api-node
 npm test        # ✅ Tests: 31 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 11 passed (no backend needed)
+npm test        # ✅ Tests: 12 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.

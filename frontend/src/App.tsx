@@ -4,6 +4,7 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { CartProvider } from "./cart/CartProvider";
 import { Layout } from "./components/Layout";
+import { SplashScreen } from "./components/SplashScreen";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
 import { LowStockPage } from "./pages/admin/LowStockPage";
@@ -21,6 +22,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, sta
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <SplashScreen />
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>

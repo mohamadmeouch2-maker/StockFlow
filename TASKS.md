@@ -53,6 +53,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Admins upload a photo in the product form (JPG, PNG, WebP or GIF, up to 2 MB), with a preview and Remove photo
   - [x] The photo shows next to the product in the list, product page, cart, admin table and low-stock list; a placeholder when there is none
   - [x] Tests: API 31, website 11
+- [x] **Welcome screen (Nov 6):** the StockFlow logo shows for 2 seconds whenever the website opens; the logo is also in the top bar and the browser tab (12 website tests)
 
 ## To do
 

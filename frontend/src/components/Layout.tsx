@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
+import { LogoMark } from "./Logo";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   isActive ? "font-semibold text-blue-600" : "text-gray-600 hover:text-gray-900";
@@ -22,8 +23,11 @@ export function Layout() {
     <div className="min-h-screen bg-gray-50">
       <nav className="border-b bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3">
-          <Link to="/" className="text-lg font-bold text-blue-600">
-            StockFlow
+          <Link to="/" className="flex items-center gap-2 text-lg font-bold text-gray-900">
+            <LogoMark className="h-8 w-8" />
+            <span>
+              Stock<span className="text-blue-600">Flow</span>
+            </span>
           </Link>
           <NavLink to="/products" end className={linkClass}>
             Products
