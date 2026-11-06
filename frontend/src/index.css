@@ -1,5 +1,76 @@
 @import "tailwindcss";
 
+/* The shared look of the whole website. Pages use these class names
+   (card, btn, input, ...) so every page looks the same. */
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+}
+
+@layer components {
+  /* White boxes: product cards, forms, cart, orders */
+  .card {
+    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+  .card-hover {
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md;
+  }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+      disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-blue-600 text-white shadow-sm hover:bg-blue-700;
+  }
+  .btn-outline {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+  }
+  .btn-danger {
+    @apply border border-red-200 bg-white text-red-600 hover:bg-red-50;
+  }
+
+  /* Form fields */
+  .label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+  .input {
+    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition
+      placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none;
+  }
+  .field-error {
+    @apply mt-1 text-sm text-red-600;
+  }
+
+  /* Text */
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+  .link {
+    @apply font-medium text-blue-600 hover:text-blue-700 hover:underline;
+  }
+
+  /* Admin tables */
+  .data-table-wrap {
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm;
+  }
+  .data-table {
+    @apply w-full text-left text-sm;
+  }
+  .data-table th {
+    @apply bg-slate-50 px-4 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase;
+  }
+  .data-table td {
+    @apply border-t border-slate-100 px-4 py-3 align-middle;
+  }
+  .data-table tbody tr {
+    @apply transition hover:bg-blue-50/40;
+  }
+}
+
 /* Welcome screen: the logo and name "pop" in */
 @keyframes splash-pop {
   from {
@@ -16,7 +87,9 @@
 }
 /* People who turned off animations in their system settings get no movement */
 @media (prefers-reduced-motion: reduce) {
-  .splash-pop {
+  .splash-pop,
+  .card-hover {
     animation: none;
+    transition: none;
   }
 }

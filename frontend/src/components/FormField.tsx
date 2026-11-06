@@ -7,11 +7,11 @@ type Props = ComponentProps<"input"> & { id: string; label: string; error?: stri
 export function FormField({ id, label, error, ...input }: Props) {
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium">
+      <label htmlFor={id} className="label">
         {label}
       </label>
-      <input id={id} {...input} className="w-full rounded border bg-white px-3 py-2" />
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      <input id={id} {...input} className="input" />
+      {error && <p className="field-error">{error}</p>}
     </div>
   );
 }

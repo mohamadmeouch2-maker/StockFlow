@@ -6,6 +6,7 @@ import { z } from "zod";
 import { api, ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
+import { LogoMark } from "../components/Logo";
 
 // FR-01: the same rules as the API, so most mistakes are shown before sending.
 const schema = z.object({
@@ -41,19 +42,25 @@ export function RegisterPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-sm space-y-4">
-      <h1 className="text-2xl font-bold">Create an account</h1>
+    <form onSubmit={handleSubmit(onSubmit)} className="card mx-auto max-w-md space-y-5 p-8">
+      <div className="space-y-2 text-center">
+        <LogoMark className="mx-auto h-12 w-12" />
+        <h1 className="page-title">Create an account</h1>
+        <p className="text-sm text-slate-500">It takes less than a minute.</p>
+      </div>
       <FormField id="name" label="Name" autoComplete="name" {...register("name")} error={errors.name?.message} />
       <FormField id="email" label="Email" type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
-      <FormField id="password" label="Password" type="password" autoComplete="new-password" {...register("password")} error={errors.password?.message} />
-      <p className="text-xs text-gray-500">At least 8 characters, with a letter and a number.</p>
-      {serverError && <p className="text-red-600">{serverError}</p>}
-      <button disabled={isSubmitting} className="w-full rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50">
+      <div>
+        <FormField id="password" label="Password" type="password" autoComplete="new-password" {...register("password")} error={errors.password?.message} />
+        <p className="mt-1 text-xs text-slate-500">At least 8 characters, with a letter and a number.</p>
+      </div>
+      {serverError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>}
+      <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
         {isSubmitting ? "Creating account..." : "Register"}
       </button>
-      <p className="text-sm">
+      <p className="text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <Link to="/login" className="text-blue-600 hover:underline">
+        <Link to="/login" className="link">
           Log in
         </Link>
       </p>

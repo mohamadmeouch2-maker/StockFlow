@@ -1,12 +1,13 @@
 import type { OrderStatus } from "../api/types";
 
-const colors: Record<OrderStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  SHIPPED: "bg-blue-100 text-blue-700",
-  DELIVERED: "bg-green-100 text-green-700",
-  CANCELLED: "bg-gray-200 text-gray-600",
+const styles: Record<OrderStatus, { label: string; color: string }> = {
+  PENDING: { label: "Pending", color: "bg-amber-50 text-amber-800 ring-amber-200" },
+  SHIPPED: { label: "Shipped", color: "bg-blue-50 text-blue-700 ring-blue-200" },
+  DELIVERED: { label: "Delivered", color: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
+  CANCELLED: { label: "Cancelled", color: "bg-slate-100 text-slate-600 ring-slate-200" },
 };
 
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
-  return <span className={`rounded px-2 py-0.5 text-xs font-medium ${colors[status]}`}>{status}</span>;
+  const { label, color } = styles[status];
+  return <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ${color}`}>{label}</span>;
 }

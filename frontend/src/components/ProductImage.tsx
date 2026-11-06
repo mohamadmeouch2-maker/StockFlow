@@ -10,7 +10,7 @@ export function ProductImage({ src, alt, className = "" }: Props) {
 
   if (!src || failedSrc === src)
     return (
-      <div role="img" aria-label={`${alt}: no photo`} className={`flex items-center justify-center rounded bg-gray-100 text-gray-300 ${className}`}>
+      <div role="img" aria-label={`${alt}: no photo`} className={`flex items-center justify-center rounded bg-slate-100 text-slate-300 ${className}`}>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-1/2 w-1/2" aria-hidden="true">
           <rect x="3" y="4" width="18" height="16" rx="2" />
           <circle cx="9" cy="10" r="2" />

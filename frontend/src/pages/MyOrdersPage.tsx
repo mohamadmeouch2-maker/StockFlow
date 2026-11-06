@@ -17,34 +17,45 @@ export function MyOrdersPage() {
   });
 
   return (
-    <div className="max-w-2xl space-y-4">
-      <h1 className="text-2xl font-bold">My orders</h1>
-      {orders.isLoading && <p>Loading...</p>}
+    <div className="mx-auto max-w-3xl space-y-5">
+      <div>
+        <h1 className="page-title">My orders</h1>
+        <p className="text-sm text-slate-500">Newest first. Pending orders can still be cancelled.</p>
+      </div>
+      {orders.isLoading && <p className="text-slate-500">Loading...</p>}
       {orders.isError && <p className="text-red-600">Could not load your orders. {orders.error.message}</p>}
-      {cancel.isError && <p className="text-red-600">Could not cancel. {cancel.error.message}</p>}
-      {orders.data?.length === 0 && <p>You have no orders yet.</p>}
+      {cancel.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not cancel. {cancel.error.message}</p>}
+      {orders.data?.length === 0 && (
+        <div className="card p-10 text-center text-slate-500">
+          <p className="text-lg font-medium text-slate-700">You have no orders yet.</p>
+          <p className="text-sm">Your orders will appear here after you check out.</p>
+        </div>
+      )}
 
       {orders.data?.map((o) => (
-        <div key={o.id} className="space-y-2 rounded border bg-white p-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="font-semibold">Order #{o.id}</span>
+        <div key={o.id} className="card overflow-hidden">
+          <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-3">
+            <span className="font-semibold text-slate-900">Order #{o.id}</span>
             <OrderStatusBadge status={o.status} />
-            <span className="text-sm text-gray-500">{new Date(o.createdAt).toLocaleString()}</span>
+            <span className="ml-auto text-sm text-slate-500">{new Date(o.createdAt).toLocaleString()}</span>
           </div>
-          <ul className="text-sm">
+          <ul className="divide-y divide-slate-100 px-5 text-sm">
             {o.items.map((i) => (
-              <li key={i.productId}>
-                {i.quantity} × {i.product.name} at ${Number(i.unitPrice).toFixed(2)}
+              <li key={i.productId} className="flex justify-between py-2">
+                <span>
+                  <span className="font-medium">{i.quantity} ×</span> {i.product.name}
+                </span>
+                <span className="text-slate-500">${Number(i.unitPrice).toFixed(2)} each</span>
               </li>
             ))}
           </ul>
-          <div className="flex items-center justify-between">
-            <span className="font-semibold">Total: ${Number(o.total).toFixed(2)}</span>
+          <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
+            <span className="font-semibold text-slate-900">Total: ${Number(o.total).toFixed(2)}</span>
             {o.status === "PENDING" && (
               <button
                 disabled={cancel.isPending}
                 onClick={() => confirm(`Cancel order #${o.id}?`) && cancel.mutate(o.id)}
-                className="rounded border border-red-600 px-3 py-1 text-red-600 disabled:opacity-50"
+                className="btn btn-danger py-1.5"
               >
                 Cancel order
               </button>

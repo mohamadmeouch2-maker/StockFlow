@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
+import { LogoMark } from "../components/Logo";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -36,17 +37,21 @@ export function LoginPage() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="mx-auto max-w-sm space-y-4">
-      <h1 className="text-2xl font-bold">Log in</h1>
+    <form onSubmit={handleSubmit(onSubmit)} className="card mx-auto max-w-md space-y-5 p-8">
+      <div className="space-y-2 text-center">
+        <LogoMark className="mx-auto h-12 w-12" />
+        <h1 className="page-title">Welcome back</h1>
+        <p className="text-sm text-slate-500">Log in to order products and follow your orders.</p>
+      </div>
       <FormField id="email" label="Email" type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
       <FormField id="password" label="Password" type="password" autoComplete="current-password" {...register("password")} error={errors.password?.message} />
-      {serverError && <p className="text-red-600">{serverError}</p>}
-      <button disabled={isSubmitting} className="w-full rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50">
+      {serverError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>}
+      <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
         {isSubmitting ? "Logging in..." : "Log in"}
       </button>
-      <p className="text-sm">
+      <p className="text-center text-sm text-slate-600">
         No account?{" "}
-        <Link to="/register" className="text-blue-600 hover:underline">
+        <Link to="/register" className="link">
           Register
         </Link>
       </p>

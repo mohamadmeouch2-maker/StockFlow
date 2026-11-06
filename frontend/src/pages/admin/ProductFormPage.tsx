@@ -111,11 +111,11 @@ export function ProductFormPage() {
 
   const field = (name: keyof FormInput, label: string, type = "text") => (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium">
+      <label htmlFor={name} className="label">
         {label}
       </label>
-      <input id={name} type={type} step="any" {...register(name)} className="w-full rounded border bg-white px-3 py-2" />
-      {errors[name] && <p className="text-sm text-red-600">{errors[name]?.message}</p>}
+      <input id={name} type={type} step="any" {...register(name)} className="input" />
+      {errors[name] && <p className="field-error">{errors[name]?.message}</p>}
     </div>
   );
 
@@ -127,18 +127,21 @@ export function ProductFormPage() {
   const currentImage = photoRemoved ? null : existing.data?.imageUrl;
 
   return (
-    <form onSubmit={handleSubmit((v) => save.mutate(v))} className="max-w-lg space-y-4">
-      <h1 className="text-2xl font-bold">{isEdit ? "Edit product" : "New product"}</h1>
+    <form onSubmit={handleSubmit((v) => save.mutate(v))} className="card mx-auto max-w-2xl space-y-5 p-6 sm:p-8">
+      <div>
+        <h1 className="page-title">{isEdit ? "Edit product" : "New product"}</h1>
+        <p className="text-sm text-slate-500">Fields are checked here and again on the server.</p>
+      </div>
       {field("name", "Name")}
       {field("description", "Description")}
       {field("price", "Price", "number")}
       {field("stock", "Stock", "number")}
       {field("reorderLevel", "Reorder level", "number")}
       <div>
-        <label htmlFor="categoryId" className="block text-sm font-medium">
+        <label htmlFor="categoryId" className="label">
           Category
         </label>
-        <select id="categoryId" {...register("categoryId")} className="w-full rounded border bg-white px-3 py-2">
+        <select id="categoryId" {...register("categoryId")} className="input">
           <option value="0">Select...</option>
           {categories.data?.map((c) => (
             <option key={c.id} value={c.id}>
@@ -146,11 +149,11 @@ export function ProductFormPage() {
             </option>
           ))}
         </select>
-        {errors.categoryId && <p className="text-sm text-red-600">{errors.categoryId.message}</p>}
+        {errors.categoryId && <p className="field-error">{errors.categoryId.message}</p>}
       </div>
 
       <div>
-        <label htmlFor="image" className="block text-sm font-medium">
+        <label htmlFor="image" className="label">
           Photo
         </label>
         <div className="mt-1 flex items-center gap-4">
@@ -167,31 +170,31 @@ export function ProductFormPage() {
               onChange={(e) => choosePhoto(e.target.files?.[0])}
               className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-blue-700"
             />
-            <p className="text-xs text-gray-500">JPG, PNG, WebP or GIF, up to {MAX_IMAGE_MB} MB. It is uploaded when you click Save.</p>
+            <p className="text-xs text-slate-500">JPG, PNG, WebP or GIF, up to {MAX_IMAGE_MB} MB. It is uploaded when you click Save.</p>
             {isEdit && currentImage && !photo && (
               <button
                 type="button"
                 disabled={removePhoto.isPending}
                 onClick={() => confirm("Remove this photo?") && removePhoto.mutate()}
-                className="text-red-600 hover:underline disabled:opacity-50"
+                className="btn btn-danger px-3 py-1"
               >
                 Remove photo
               </button>
             )}
           </div>
         </div>
-        {photoError && <p className="text-sm text-red-600">{photoError}</p>}
-        {removePhoto.isError && <p className="text-sm text-red-600">Could not remove the photo. {removePhoto.error.message}</p>}
+        {photoError && <p className="field-error">{photoError}</p>}
+        {removePhoto.isError && <p className="field-error">Could not remove the photo. {removePhoto.error.message}</p>}
       </div>
 
       {save.isError && !(save.error instanceof ApiError && save.error.details.length) && (
-        <p className="text-red-600">Could not save. {save.error.message}</p>
+        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not save. {save.error.message}</p>
       )}
-      <div className="flex gap-3">
-        <button disabled={isSubmitting || save.isPending} className="rounded bg-blue-600 px-4 py-2 text-white disabled:opacity-50">
+      <div className="flex gap-3 border-t border-slate-100 pt-5">
+        <button disabled={isSubmitting || save.isPending} className="btn btn-primary px-6">
           {save.isPending ? "Saving..." : "Save"}
         </button>
-        <button type="button" onClick={() => navigate("/admin/products")} className="rounded border bg-white px-4 py-2">
+        <button type="button" onClick={() => navigate("/admin/products")} className="btn btn-outline">
           Cancel
         </button>
       </div>

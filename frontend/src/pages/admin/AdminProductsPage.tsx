@@ -33,54 +33,62 @@ export function AdminProductsPage() {
   const totalPages = products.data ? Math.max(1, Math.ceil(products.data.total / products.data.pageSize)) : 1;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Manage products</h1>
-        <Link to="/admin/products/new" className="rounded bg-blue-600 px-4 py-2 text-white">
-          New product
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="page-title">Manage products</h1>
+          <p className="text-sm text-slate-500">{products.data ? `${products.data.total} products` : ""}</p>
+        </div>
+        <Link to="/admin/products/new" className="btn btn-primary">
+          + New product
         </Link>
       </div>
 
-      {products.isLoading && <p>Loading...</p>}
+      {products.isLoading && <p className="text-slate-500">Loading...</p>}
       {products.isError && <p className="text-red-600">Could not load products. {products.error.message}</p>}
-      {remove.isError && <p className="text-red-600">Could not delete. {remove.error.message}</p>}
+      {remove.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not delete. {remove.error.message}</p>}
 
-      <table className="w-full rounded border bg-white text-left">
-        <thead className="border-b bg-gray-100 text-sm">
-          <tr>
-            <th className="p-3">Name</th>
-            <th className="p-3">Category</th>
-            <th className="p-3">Price</th>
-            <th className="p-3">Stock</th>
-            <th className="p-3"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.data?.items.map((p) => (
-            <tr key={p.id} className="border-b last:border-0">
-              <td className="p-3">
-                <div className="flex items-center gap-3">
-                  <ProductImage src={p.imageUrl} alt={p.name} className="h-10 w-10 shrink-0" />
-                  {p.name}
-                </div>
-              </td>
-              <td className="p-3 text-gray-500">{p.category?.name}</td>
-              <td className="p-3">${Number(p.price).toFixed(2)}</td>
-              <td className="p-3">
-                {p.stock} <StockBadge product={p} />
-              </td>
-              <td className="space-x-3 p-3 text-right">
-                <Link to={`/admin/products/${p.id}/edit`} className="text-blue-600 hover:underline">
-                  Edit
-                </Link>
-                <button onClick={() => onDelete(p)} className="text-red-600 hover:underline">
-                  Delete
-                </button>
-              </td>
+      <div className="data-table-wrap">
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {products.data?.items.map((p) => (
+              <tr key={p.id}>
+                <td>
+                  <div className="flex items-center gap-3">
+                    <ProductImage src={p.imageUrl} alt={p.name} className="h-11 w-11 shrink-0" />
+                    <span className="font-medium text-slate-900">{p.name}</span>
+                  </div>
+                </td>
+                <td className="text-slate-500">{p.category?.name}</td>
+                <td className="font-medium">${Number(p.price).toFixed(2)}</td>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 text-right">{p.stock}</span>
+                    <StockBadge product={p} />
+                  </div>
+                </td>
+                <td className="text-right whitespace-nowrap">
+                  <Link to={`/admin/products/${p.id}/edit`} className="btn btn-outline mr-2 px-3 py-1">
+                    Edit
+                  </Link>
+                  <button onClick={() => onDelete(p)} className="btn btn-danger px-3 py-1">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <Pagination page={page} totalPages={totalPages} onChange={setPage} />
     </div>

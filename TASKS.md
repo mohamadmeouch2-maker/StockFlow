@@ -55,6 +55,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Tests: API 31, website 11
   - [x] Free photos from Wikimedia Commons for all 15 sample products, added by `npm run seed`, with an author/license credits file
 - [x] **Welcome screen (Nov 6):** the StockFlow logo shows for 2 seconds whenever the website opens; the logo is also in the top bar and the browser tab (12 website tests)
+- [x] **New design (Nov 6):** shared styles (cards, buttons, inputs, tables), a welcome banner and info boxes on the products page, category buttons, a richer product page, cart summary, footer; checked on desktop and phone widths
 
 ## To do
 

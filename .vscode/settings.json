@@ -1,0 +1,4 @@
+{
+  // Tailwind's @apply in frontend/src/index.css is valid; VS Code's plain CSS checker just doesn't know it.
+  "css.lint.unknownAtRules": "ignore"
+}

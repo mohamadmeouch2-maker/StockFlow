@@ -34,12 +34,15 @@ export function AdminOrdersPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">Manage orders</h1>
+        <div>
+          <h1 className="page-title">Manage orders</h1>
+          <p className="text-sm text-slate-500">{orders.data ? `${orders.data.length} orders` : ""}</p>
+        </div>
         <select
           aria-label="Filter by status"
           value={status ?? ""}
           onChange={(e) => setStatus((e.target.value || undefined) as OrderStatus | undefined)}
-          className="rounded border bg-white px-3 py-2"
+          className="input w-auto"
         >
           <option value="">All statuses</option>
           <option value="PENDING">Pending</option>
@@ -49,44 +52,44 @@ export function AdminOrdersPage() {
         </select>
       </div>
 
-      {orders.isLoading && <p>Loading...</p>}
+      {orders.isLoading && <p className="text-slate-500">Loading...</p>}
       {orders.isError && <p className="text-red-600">Could not load orders. {orders.error.message}</p>}
-      {change.isError && <p className="text-red-600">Could not change the status. {change.error.message}</p>}
-      {orders.data?.length === 0 && <p>No orders.</p>}
+      {change.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not change the status. {change.error.message}</p>}
+      {orders.data?.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}
 
       {!!orders.data?.length && (
-        <div className="overflow-x-auto">
-          <table className="w-full rounded border bg-white text-left text-sm">
-            <thead className="border-b bg-gray-100">
+        <div className="data-table-wrap">
+          <table className="data-table">
+            <thead>
               <tr>
-                <th className="p-3">Order</th>
-                <th className="p-3">Customer</th>
-                <th className="p-3">Items</th>
-                <th className="p-3">Total</th>
-                <th className="p-3">Status</th>
-                <th className="p-3"></th>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {orders.data.map((o) => (
-                <tr key={o.id} className="border-b last:border-0">
-                  <td className="p-3">
-                    #{o.id}
-                    <div className="text-xs text-gray-500">{new Date(o.createdAt).toLocaleString()}</div>
+                <tr key={o.id}>
+                  <td>
+                    <span className="font-medium text-slate-900">#{o.id}</span>
+                    <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
                   </td>
-                  <td className="p-3">{o.user?.name ?? o.userId}</td>
-                  <td className="p-3">{items(o)}</td>
-                  <td className="p-3">${Number(o.total).toFixed(2)}</td>
-                  <td className="p-3">
+                  <td>{o.user?.name ?? o.userId}</td>
+                  <td>{items(o)}</td>
+                  <td>${Number(o.total).toFixed(2)}</td>
+                  <td>
                     <OrderStatusBadge status={o.status} />
                   </td>
-                  <td className="space-x-3 whitespace-nowrap p-3 text-right">
+                  <td className="space-x-2 text-right whitespace-nowrap">
                     {actions[o.status].map((a) => (
                       <button
                         key={a.status}
                         disabled={change.isPending}
                         onClick={() => change.mutate({ id: o.id, next: a.status })}
-                        className={a.status === "CANCELLED" ? "text-red-600 hover:underline" : "text-blue-600 hover:underline"}
+                        className={a.status === "CANCELLED" ? "btn btn-danger px-3 py-1" : "btn btn-primary px-3 py-1"}
                       >
                         {a.label}
                       </button>

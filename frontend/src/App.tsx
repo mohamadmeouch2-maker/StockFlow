@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { CartProvider } from "./cart/CartProvider";
+import { HomeHero } from "./components/HomeHero";
 import { Layout } from "./components/Layout";
 import { SplashScreen } from "./components/SplashScreen";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
@@ -31,7 +32,15 @@ export default function App() {
                 <Route index element={<Navigate to="/products" replace />} />
                 <Route path="login" element={<LoginPage />} />
                 <Route path="register" element={<RegisterPage />} />
-                <Route path="products" element={<ProductsPage />} />
+                <Route
+                  path="products"
+                  element={
+                    <>
+                      <HomeHero />
+                      <ProductsPage />
+                    </>
+                  }
+                />
                 <Route path="products/:id" element={<ProductDetailPage />} />
                 <Route element={<ProtectedRoute role="CUSTOMER" />}>
                   <Route path="cart" element={<CartPage />} />
