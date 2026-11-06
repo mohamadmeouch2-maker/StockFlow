@@ -53,8 +53,10 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 ## To do
 
 ### Friday, Nov 13: Demo
-- [ ] Prepare the demo
-- [ ] Fix anything found during the demo rehearsal or the supervisor's review
+- [x] Demo script with talking points and likely questions: [DEMO.md](DEMO.md) (Nov 6)
+- [ ] Rehearse the demo once
+- [ ] Present to the supervisor
+- [ ] Fix anything found during the rehearsal or the supervisor's review
 
 ## Not in scope (not enough time in one week)
 

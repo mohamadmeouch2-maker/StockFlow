@@ -1,0 +1,89 @@
+# StockFlow demo script
+
+About 10 minutes. Each step says what to **do**, what to **say**, and which requirement it shows.
+
+## Before the demo (5 minutes)
+
+1. Start both servers in two terminals:
+   - `cd api-node` → `npm run dev` (✅ `Core API on http://localhost:4000`)
+   - `cd frontend` → `npm run dev` (✅ `Local: http://localhost:5173/`)
+2. *(Optional: start from clean sample data.)* This **deletes all orders and registered users** and restores the 15 products. Stop the API with **Ctrl+C** first, then run in `api-node`:
+   ```
+   npx prisma migrate reset --force
+   npm run seed
+   npm run dev
+   ```
+3. Open **http://localhost:5173** and make sure you are **logged out**.
+4. Have a third terminal ready in the `api-node` folder for the tests.
+
+Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer during the demo.
+
+## The demo
+
+### 1. Introduction (30 seconds)
+**Say:** "StockFlow is an inventory and order system. Customers browse products and order them. Admins manage products, orders and stock. The website is React with TypeScript, the API is Node.js with Express, and the data is in PostgreSQL through Prisma."
+
+### 2. GitHub (30 seconds)
+**Do:** open the GitHub page and show the **README** and **TASKS.md**.
+**Say:** "The README explains how to install and run the project. TASKS.md shows the plan and what is done."
+
+### 3. Browse products as a guest (1 minute): FR-04, FR-05
+**Do:** on **Products**, type `desk` in the search, then clear it. Choose **Furniture**, then **All categories**. Click **Next**. Open one product.
+**Say:** "Search ignores capital letters, and there are 12 products per page. The product page shows the stock status: In stock, Low stock or Out of stock."
+
+### 4. Register and stay logged in (1 minute): FR-01, FR-02
+**Do:** click **Register** and create a customer (for example `demo@test.com` / `Password1`). Then press **F5**.
+**Say:** "The password needs 8 characters with a letter and a number, and it is stored hashed with bcrypt, never as plain text. After a refresh I'm still logged in: the browser keeps a token that is valid for 1 hour."
+
+### 5. Order, and the stock goes down (1 minute): FR-06, FR-07, FR-08
+**Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, then **Place order**. Open the product again.
+**Say:** "The cart never allows more than the stock. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
+
+### 6. Cancel, and the stock comes back (30 seconds): FR-09, FR-10
+**Do:** on **My orders**, click **Cancel order** → **OK**. Open the product again.
+**Say:** "Customers can cancel only Pending orders, and the stock is restored. Even a double click restores it only once."
+
+### 7. Not enough stock (1.5 minutes): FR-07
+**Do:**
+1. As the customer, add **3 × USB Keyboard** to the cart (or another product with a small stock) and **don't order yet**.
+2. Open a **new tab**, type `localhost:5173`, and log in as **admin** (each tab has its own login).
+3. Admin: **Manage products** → **Edit** USB Keyboard → set **Stock** to `1` → **Save**.
+4. Go back to the customer tab → **Cart** → **Place order**.
+
+**Say:** "The admin changed the stock while the item was in my cart. The order is refused with a clear message and nothing changes. The stock check and the deduction happen in one database transaction, so even two customers buying the last item at the same moment can't both get it. An automatic test proves that."
+
+### 8. Customers can't open admin pages (30 seconds): FR-03
+**Do:** in the customer tab, type `localhost:5173/admin/orders` in the address bar.
+**Say:** "I'm sent back to the home page. The API also refuses: 401 without a login, 403 for the wrong role."
+
+### 9. Admin: products with validation (1 minute): FR-11
+**Do:** in the admin tab, **Manage products** → **New product** → type price `-5` → **Save**. Then fill it in correctly and save.
+**Say:** "Every field is checked in the browser and again on the server with Zod. The server's messages appear next to the right field."
+
+### 10. Admin: orders (1 minute): FR-12
+**Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter.
+**Say:** "Only valid changes are offered: Pending → Shipped → Delivered, or Pending → Cancelled. The server blocks anything else."
+
+### 11. Low stock (30 seconds): FR-16
+**Do:** admin → **Low stock**.
+**Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
+
+### 12. Automatic tests (1 minute): NFR-07
+**Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
+**Say:** "26 API tests run against a separate test database, so real data is never touched. 9 website tests check the form, the product list, page protection and the cart limit. The guide asks for at least 10 and 5."
+
+### 13. Wrap-up (30 seconds)
+**Say:** "Not built yet, because of the one-week deadline: the .NET reporting API with MySQL, the sales charts, and Docker. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
+**Ask the supervisor:** help with two GitHub settings that need the owner's login: making `master` the default branch, and enabling Actions.
+
+## Questions you may be asked
+
+| Question | Short answer |
+|---|---|
+| How do you stop two people buying the last item? | The stock is reduced with one conditional update (`stock >= quantity`) inside a transaction. The database runs the two updates one after the other, so the second one finds no stock and the order fails with 409. |
+| How are passwords stored? | Hashed with bcrypt. The database never contains the real password. |
+| What's the difference between 401 and 403? | 401: not logged in (no token or a bad one). 403: logged in, but not allowed, such as a customer calling an admin endpoint. |
+| Why is the total calculated on the server? | Anything sent from the browser can be changed by the user, so the server uses the prices in the database. |
+| Why a separate test database? | The tests delete and create data. A separate database keeps the real data safe. |
+| Why TypeScript? | Types catch many mistakes before the code runs, and the editor can suggest and check field names. |
+| What would you build next? | The .NET reporting API and dashboard (FR-13 to FR-15), and Docker, so the whole project starts with one command. |
