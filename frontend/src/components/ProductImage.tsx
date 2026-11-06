@@ -25,7 +25,7 @@ export function ProductImage({ src, alt, className = "" }: Props) {
       alt={alt}
       loading="lazy"
       onError={() => setFailedSrc(src)}
-      className={`rounded bg-gray-100 object-cover ${className}`}
+      className={`rounded bg-white object-contain ${className}`} // the whole product, never cut off
     />
   );
 }

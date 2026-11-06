@@ -17,7 +17,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
 
-Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git.
+Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 15 sample products get free photos from Wikimedia Commons when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
 
 Not built (out of scope for the one-week plan): the .NET reporting API with MySQL, data sync and the sales charts (FR-13 to FR-15), and Docker.
 
