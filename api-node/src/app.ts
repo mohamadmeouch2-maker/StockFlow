@@ -8,6 +8,7 @@ import { issuesRouter } from "./modules/issues/issues.routes";
 import { ordersRouter } from "./modules/orders/orders.routes";
 import { productsRouter } from "./modules/products/products.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
+import { reviewsRouter } from "./modules/reviews/reviews.routes";
 
 // The app is separate from the server so tests can use it without opening a port (guide 2.10).
 export const app = express();
@@ -26,6 +27,7 @@ app.use(
 );
 app.use("/api/auth", authRouter);
 app.use("/api/categories", categoriesRouter);
+app.use("/api/products/:id/reviews", reviewsRouter); // ratings out of 10 and comments
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/issues", issuesRouter); // problems customers report with their orders

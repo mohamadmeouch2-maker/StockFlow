@@ -44,6 +44,7 @@ model User {
   createdAt    DateTime @default(now()) @map("created_at")
   orders       Order[]
   issues       OrderIssue[]
+  reviews      Review[]
 
   @@map("users")
 }
@@ -65,6 +66,8 @@ model Product {
   stock        Int         @default(0)
   reorderLevel Int         @default(5) @map("reorder_level")
   imageUrl     String?     @map("image_url") // FR-17: path of the uploaded photo, e.g. /uploads/products/product-1-....jpg
+  viewCount    Int         @default(0) @map("view_count") // how many times the product page was opened
+  reviews      Review[]
   categoryId   Int         @map("category_id")
   category     Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   createdAt    DateTime    @default(now()) @map("created_at")
@@ -89,6 +92,23 @@ model Order {
 
   @@index([userId])
   @@map("orders")
+}
+
+// A customer's rating (1 to 10) and optional comment for a product they bought.
+// One review per customer per product; they can change it.
+model Review {
+  id        Int      @id @default(autoincrement())
+  productId Int      @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([productId, userId])
+  @@map("reviews")
 }
 
 // A problem a customer reports about one of their orders, and the store's answer.

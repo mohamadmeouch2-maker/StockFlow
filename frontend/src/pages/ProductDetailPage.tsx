@@ -1,18 +1,32 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { productsApi } from "../api/products";
+import { reviewsApi } from "../api/reviews";
 import type { Product } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { ProductImage } from "../components/ProductImage";
+import { ProductReviews } from "../components/ProductReviews";
+import { RatingBadge } from "../components/RatingBadge";
 import { StockBadge } from "../components/StockBadge";
+
+// Counts one view per product per visit (not on every refresh).
+function useCountView(id: number) {
+  useEffect(() => {
+    const seen: number[] = JSON.parse(sessionStorage.getItem("viewed-products") ?? "[]");
+    if (seen.includes(id)) return;
+    sessionStorage.setItem("viewed-products", JSON.stringify([...seen, id]));
+    reviewsApi.countView(id).catch(() => {}); // a missed view is not important
+  }, [id]);
+}
 
 // FR-05: name, description, price, category and stock status of one product.
 export function ProductDetailPage() {
   const id = Number(useParams().id);
   const product = useQuery({ queryKey: ["product", id], queryFn: () => productsApi.get(id) });
   const p = product.data;
+  useCountView(id);
 
   return (
     <div className="space-y-5">
@@ -39,6 +53,10 @@ export function ProductDetailPage() {
               <span className="text-xs font-semibold tracking-wide text-blue-600 uppercase">{p.category?.name}</span>
               <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">{p.name}</h1>
             </div>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <RatingBadge rating={p.rating} />
+              {p.viewCount !== undefined && <span className="text-sm text-slate-400">👁 {p.viewCount} views</span>}
+            </div>
             <p className="text-3xl font-bold text-slate-900">${Number(p.price).toFixed(2)}</p>
             <div className="flex items-center gap-3">
               <StockBadge product={p} />
@@ -59,6 +77,8 @@ export function ProductDetailPage() {
           </div>
         </div>
       )}
+
+      {p && <ProductReviews productId={p.id} />}
     </div>
   );
 }

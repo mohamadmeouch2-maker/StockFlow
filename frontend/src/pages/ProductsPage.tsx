@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { productsApi } from "../api/products";
 import { Pagination } from "../components/Pagination";
 import { ProductImage } from "../components/ProductImage";
+import { RatingBadge } from "../components/RatingBadge";
 import { StockBadge } from "../components/StockBadge";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -100,6 +101,10 @@ export function ProductsPage() {
                 {p.name}
               </Link>
               <p className="mt-1 text-lg font-bold text-slate-900">${Number(p.price).toFixed(2)}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <RatingBadge rating={p.rating} />
+                {p.viewCount !== undefined && <span className="text-xs whitespace-nowrap text-slate-400">👁 {p.viewCount} views</span>}
+              </div>
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                 <StockBadge product={p} />
                 <Link to={`/products/${p.id}`} className="text-sm font-medium whitespace-nowrap text-blue-600 hover:underline">

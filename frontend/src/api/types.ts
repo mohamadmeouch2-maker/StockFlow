@@ -12,6 +12,8 @@ export type Product = {
   stock: number;
   reorderLevel: number;
   imageUrl?: string | null; // FR-17: e.g. "/uploads/products/product-1-....jpg", null = no photo
+  viewCount?: number; // how many times the product page was opened
+  rating?: Rating; // average rating out of 10
   categoryId: number;
   category?: Category;
 };
@@ -29,6 +31,18 @@ export type Order = {
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
   user?: { name: string; email: string }; // only in the admin list
   issues?: OrderIssue[]; // problems reported with this order (in "my orders")
+};
+
+// Ratings out of 10. average is null while nobody has rated the product.
+export type Rating = { average: number | null; count: number };
+export type Review = {
+  id: number;
+  userId: number;
+  userName: string;
+  rating: number; // 1 to 10
+  comment: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 // A problem a customer reports with an order, and the store's answer.

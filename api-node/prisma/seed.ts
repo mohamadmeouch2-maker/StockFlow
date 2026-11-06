@@ -38,6 +38,23 @@ const products: Record<string, SeedProduct[]> = {
   ],
 };
 
+// Sample reviewers and comments, so every product starts with some ratings (local demo data).
+const sampleReviewers: [name: string, email: string][] = [
+  ["Sara", "sara@stockflow.test"],
+  ["Omar", "omar@stockflow.test"],
+  ["Lina", "lina@stockflow.test"],
+];
+const sampleComments = [
+  "Exactly what our office needed.",
+  "Good quality for the price.",
+  "Arrived quickly and well packed.",
+  "Does the job, nothing special.",
+  "Works well. I would buy it again.",
+  "Solid and well made.",
+  "A bit smaller than I expected, but fine.",
+  "Great value, the whole team likes it.",
+];
+
 // Copies a sample photo into the uploads folder, the same place uploaded photos go (FR-17).
 function copyPhoto(file: string) {
   const dir = path.join(uploadRoot, "products");
@@ -59,7 +76,15 @@ async function main() {
     create: { name: "Customer", email: "customer@stockflow.test", passwordHash: hash },
   });
 
+  // Three sample customers who wrote the sample reviews
+  const reviewers = [];
+  for (const [name, email] of sampleReviewers) {
+    reviewers.push(await prisma.user.upsert({ where: { email }, update: {}, create: { name, email, passwordHash: hash } }));
+  }
+
   let photos = 0;
+  let reviews = 0;
+  let i = 0;
   for (const [categoryName, items] of Object.entries(products)) {
     const category = await prisma.category.upsert({ where: { name: categoryName }, update: {}, create: { name: categoryName } });
     for (const [name, description, price, stock, reorderLevel, photo] of items) {
@@ -71,11 +96,24 @@ async function main() {
         await prisma.product.update({ where: { id: product.id }, data: { imageUrl: copyPhoto(photo) } });
         photos++;
       }
+      // Sample views and 2-3 sample reviews, only for products that have none yet.
+      // The numbers follow a fixed pattern (not random), so every reset looks the same.
+      if (product.viewCount === 0) await prisma.product.update({ where: { id: product.id }, data: { viewCount: 40 + ((i * 37) % 260) } });
+      if ((await prisma.review.count({ where: { productId: product.id } })) === 0) {
+        for (const [r, reviewer] of reviewers.slice(0, 2 + (i % 2)).entries()) {
+          await prisma.review.create({
+            data: { productId: product.id, userId: reviewer.id, rating: 6 + ((i * 3 + r * 2) % 5), comment: sampleComments[(i + r * 4) % sampleComments.length] },
+          });
+          reviews++;
+        }
+      }
+      i++;
     }
   }
 
   console.log(
-    `Seeded: ${await prisma.user.count()} users, ${await prisma.category.count()} categories, ${await prisma.product.count()} products, ${photos} photos added`,
+    `Seeded: ${await prisma.user.count()} users, ${await prisma.category.count()} categories, ${await prisma.product.count()} products, ` +
+      `${photos} photos and ${reviews} reviews added`,
   );
 }
 

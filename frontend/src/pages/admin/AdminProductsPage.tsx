@@ -5,6 +5,7 @@ import { productsApi } from "../../api/products";
 import type { Product } from "../../api/types";
 import { Pagination } from "../../components/Pagination";
 import { ProductImage } from "../../components/ProductImage";
+import { RatingBadge } from "../../components/RatingBadge";
 import { StockBadge } from "../../components/StockBadge";
 
 // FR-11 (admin): table of all products with Edit and Delete, plus a "New product" button.
@@ -56,6 +57,8 @@ export function AdminProductsPage() {
               <th>Category</th>
               <th>Price</th>
               <th>Stock</th>
+              <th>Rating</th>
+              <th>Views</th>
               <th></th>
             </tr>
           </thead>
@@ -76,6 +79,10 @@ export function AdminProductsPage() {
                     <StockBadge product={p} />
                   </div>
                 </td>
+                <td>
+                  <RatingBadge rating={p.rating} />
+                </td>
+                <td className="text-slate-500">{p.viewCount ?? 0}</td>
                 <td className="text-right whitespace-nowrap">
                   <Link to={`/admin/products/${p.id}/edit`} className="btn btn-outline mr-2 px-3 py-1">
                     Edit

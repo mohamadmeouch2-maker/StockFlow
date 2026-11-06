@@ -5,6 +5,7 @@ import { prisma } from "../../lib/prisma";
 import { deleteUpload, productImageUpload } from "../../lib/uploads";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
+import { ratingsFor } from "../reviews/reviews.routes";
 
 // FR-04: ?page=1&pageSize=12&search=&categoryId=
 const listQuery = z.object({
@@ -43,7 +44,8 @@ productsRouter.get("/", validate(listQuery, "query"), async (_req, res) => {
     prisma.product.findMany({ where, include: { category: true }, orderBy: { name: "asc" }, skip: (page - 1) * pageSize, take: pageSize }),
     prisma.product.count({ where }),
   ]);
-  res.json({ items, page, pageSize, total });
+  const rating = await ratingsFor(items.map((p) => p.id)); // average rating / 10 for each product
+  res.json({ items: items.map((p) => ({ ...p, rating: rating(p.id) })), page, pageSize, total });
 });
 
 // FR-05
@@ -51,7 +53,14 @@ productsRouter.get("/:id", async (req, res) => {
   const id = parseId(req.params.id, "Product");
   const product = await prisma.product.findUnique({ where: { id }, include: { category: true } });
   if (!product) throw notFound("Product");
-  res.json(product);
+  res.json({ ...product, rating: (await ratingsFor([id]))(id) });
+});
+
+// Counts one view of the product page. The website calls it once per visit.
+productsRouter.post("/:id/view", async (req, res) => {
+  const id = parseId(req.params.id, "Product");
+  await prisma.product.update({ where: { id }, data: { viewCount: { increment: 1 } } }); // missing product -> 404
+  res.status(204).end();
 });
 
 productsRouter.post("/", ...admin, validate(productBody), async (_req, res) => {

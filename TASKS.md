@@ -58,6 +58,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 - [x] **New design (Nov 6):** shared styles (cards, buttons, inputs, tables), a welcome banner and info boxes on the products page, category buttons, a richer product page, cart summary, footer; checked on desktop and phone widths
 
 - [x] **Problem reports (Nov 6):** customers report a problem with an order (wrong item, damaged, missing, late delivery, other) from My orders; admins reply and resolve on a new Support page, with an open-count badge in the menu. Tests: API 37, website 14
+- [x] **Ratings, reviews and views (Nov 6):** buyers rate products from 1 to 10 with a comment (one review each, editable); the average rating and view count show in the list, on the product page and in the admin table; sample views and reviews for every product. Tests: API 45, website 18
 ## To do
 
 ### Friday, Nov 13: Demo

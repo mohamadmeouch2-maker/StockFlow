@@ -16,9 +16,10 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
+| Ratings, reviews and views | Customers who bought a product rate it from 1 to 10 with an optional comment; every product shows its average rating and how many times it was viewed | extra |
 | Problem reports | Customers report a problem with an order (wrong item, damaged, missing, late); admins reply and resolve it on the Support page | extra |
 
-Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 15 sample products get free photos from Wikimedia Commons when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
+Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 15 sample products get free photos from Wikimedia Commons, some views and sample reviews (from three sample customers) when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
 
 Not built (out of scope for the one-week plan): the .NET reporting API with MySQL, data sync and the sales charts (FR-13 to FR-15), and Docker.
 
@@ -27,7 +28,7 @@ Not built (out of scope for the one-week plan): the .NET reporting API with MySQ
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (37 API tests), Vitest + Testing Library (14 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (45 API tests), Vitest + Testing Library (18 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -106,10 +107,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 37 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 45 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 14 passed (no backend needed)
+npm test        # ✅ Tests: 18 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -133,6 +134,10 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
 | GET | `/api/orders?status=` | Admin | All orders |
 | PATCH | `/api/orders/:id/status` | Admin | `{ "status": "SHIPPED" }`, then `DELIVERED`, or `CANCELLED` |
+| POST | `/api/products/:id/view` | anyone | Count one view of the product page |
+| GET | `/api/products/:id/reviews` | anyone | Average rating, count and all reviews |
+| GET | `/api/products/:id/reviews/me` | Customer | May I rate it (did I buy it?) and my review |
+| PUT / DELETE | `/api/products/:id/reviews` | Customer (buyer) | Add or change my review `{ "rating": 9, "comment": "..." }`, or delete it |
 | GET | `/api/reports/low-stock` | Admin | Products at or below their reorder level |
 | POST | `/api/orders/:id/issues` | Customer (owner) | Report a problem: `{ "type": "DAMAGED", "message": "..." }` |
 | GET | `/api/issues/mine` | logged in | My problem reports and the replies |
