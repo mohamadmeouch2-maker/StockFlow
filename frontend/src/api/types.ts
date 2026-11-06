@@ -28,6 +28,23 @@ export type Order = {
   createdAt: string;
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
   user?: { name: string; email: string }; // only in the admin list
+  issues?: OrderIssue[]; // problems reported with this order (in "my orders")
+};
+
+// A problem a customer reports with an order, and the store's answer.
+export type IssueType = "WRONG_ITEM" | "DAMAGED" | "MISSING_ITEM" | "LATE_DELIVERY" | "OTHER";
+export type IssueStatus = "OPEN" | "RESOLVED";
+export type OrderIssue = {
+  id: number;
+  orderId: number;
+  type: IssueType;
+  message: string;
+  status: IssueStatus;
+  adminReply: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: { name: string; email: string }; // admin list only
+  order?: Pick<Order, "id" | "status" | "total" | "createdAt" | "items">; // admin list only
 };
 
 export type ApiErrorBody = {

@@ -5,6 +5,7 @@ import { prisma } from "../src/lib/prisma";
 
 // Empties every table in the TEST database, so each test file starts clean.
 export async function resetDb() {
+  await prisma.orderIssue.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();

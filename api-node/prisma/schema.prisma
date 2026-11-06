@@ -22,6 +22,19 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum IssueType {
+  WRONG_ITEM
+  DAMAGED
+  MISSING_ITEM
+  LATE_DELIVERY
+  OTHER
+}
+
+enum IssueStatus {
+  OPEN
+  RESOLVED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   name         String
@@ -30,6 +43,7 @@ model User {
   role         Role     @default(CUSTOMER)
   createdAt    DateTime @default(now()) @map("created_at")
   orders       Order[]
+  issues       OrderIssue[]
 
   @@map("users")
 }
@@ -71,9 +85,29 @@ model Order {
   createdAt DateTime    @default(now()) @map("created_at")
   updatedAt DateTime    @updatedAt @map("updated_at")
   items     OrderItem[]
+  issues    OrderIssue[]
 
   @@index([userId])
   @@map("orders")
+}
+
+// A problem a customer reports about one of their orders, and the store's answer.
+model OrderIssue {
+  id         Int         @id @default(autoincrement())
+  orderId    Int         @map("order_id")
+  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId     Int         @map("user_id")
+  user       User        @relation(fields: [userId], references: [id])
+  type       IssueType
+  message    String
+  status     IssueStatus @default(OPEN)
+  adminReply String?     @map("admin_reply")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  @@index([orderId])
+  @@index([status])
+  @@map("order_issues")
 }
 
 model OrderItem {

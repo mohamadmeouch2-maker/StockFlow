@@ -9,6 +9,7 @@ import { SplashScreen } from "./components/SplashScreen";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
 import { LowStockPage } from "./pages/admin/LowStockPage";
+import { SupportPage } from "./pages/admin/SupportPage";
 import { ProductFormPage } from "./pages/admin/ProductFormPage";
 import { CartPage } from "./pages/CartPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -53,6 +54,7 @@ export default function App() {
                   <Route path="products/:id/edit" element={<ProductFormPage />} />
                   <Route path="orders" element={<AdminOrdersPage />} />
                   <Route path="low-stock" element={<LowStockPage />} />
+                  <Route path="support" element={<SupportPage />} />
                 </Route>
                 <Route path="*" element={<p className="p-6">Page not found</p>} />
               </Route>

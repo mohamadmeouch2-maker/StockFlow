@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
+import { OrderProblems } from "../components/OrderProblems";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 
 // FR-09: my orders, newest first. FR-10: Pending orders can be cancelled (guide 4.9).
@@ -61,6 +62,7 @@ export function MyOrdersPage() {
               </button>
             )}
           </div>
+          <OrderProblems orderId={o.id} issues={o.issues ?? []} />
         </div>
       ))}
     </div>

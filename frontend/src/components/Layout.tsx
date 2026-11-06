@@ -1,4 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { issuesApi } from "../api/issues";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { LogoMark } from "./Logo";
@@ -14,6 +16,14 @@ export function Layout() {
   const { user, logout } = useAuth();
   const { count, clear } = useCart();
   const navigate = useNavigate();
+  // Admins see how many problem reports are still open (checked again every minute).
+  const issues = useQuery({
+    queryKey: ["issues", "OPEN"],
+    queryFn: () => issuesApi.all("OPEN"),
+    enabled: user?.role === "ADMIN",
+    refetchInterval: 60_000,
+  });
+  const openIssues = issues.data?.length ?? 0;
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
@@ -57,6 +67,10 @@ export function Layout() {
               </NavLink>
               <NavLink to="/admin/low-stock" className={linkClass}>
                 Low stock
+              </NavLink>
+              <NavLink to="/admin/support" className={linkClass}>
+                Support
+                {openIssues > 0 && <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-xs text-white">{openIssues}</span>}
               </NavLink>
             </>
           )}

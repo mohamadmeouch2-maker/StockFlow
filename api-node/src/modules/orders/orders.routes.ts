@@ -4,6 +4,7 @@ import { parseId } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
+import { reportBody, reportIssue } from "../issues/issues.routes";
 import { changeStatus, createOrder, withItems } from "./orders.service";
 
 const createBody = z.object({
@@ -20,9 +21,20 @@ ordersRouter.post("/", requireRole("CUSTOMER"), validate(createBody), async (_re
   res.status(201).json(await createOrder(res.locals.user.id, res.locals.body.items));
 });
 
-// FR-09: only my own orders, newest first.
+// FR-09: only my own orders, newest first, with any problems I reported.
 ordersRouter.get("/mine", async (_req, res) => {
-  res.json(await prisma.order.findMany({ where: { userId: res.locals.user.id }, include: withItems, orderBy: { createdAt: "desc" } }));
+  res.json(
+    await prisma.order.findMany({
+      where: { userId: res.locals.user.id },
+      include: { ...withItems, issues: { orderBy: { createdAt: "desc" } } },
+      orderBy: { createdAt: "desc" },
+    }),
+  );
+});
+
+// The customer reports a problem with one of their orders (wrong item, damaged, ...).
+ordersRouter.post("/:id/issues", requireRole("CUSTOMER"), validate(reportBody), async (req, res) => {
+  res.status(201).json(await reportIssue(parseId(req.params.id, "Order"), res.locals.user, res.locals.body));
 });
 
 // FR-10: cancel a Pending order; the stock comes back.
@@ -36,7 +48,7 @@ ordersRouter.get("/", requireRole("ADMIN"), validate(listQuery, "query"), async 
   res.json(
     await prisma.order.findMany({
       where: status ? { status } : {},
-      include: { ...withItems, user: { select: { name: true, email: true } } },
+      include: { ...withItems, user: { select: { name: true, email: true } }, issues: { select: { id: true, status: true } } },
       orderBy: { createdAt: "desc" },
     }),
   );

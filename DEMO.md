@@ -64,15 +64,19 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter.
 **Say:** "Only valid changes are offered: Pending → Shipped → Delivered, or Pending → Cancelled. The server blocks anything else."
 
-### 11. Low stock (30 seconds): FR-16
+### 11. Report a problem with an order (1 minute): extra feature
+**Do:** in the customer tab, open **My orders** → under an order click **Report a problem** → choose **Damaged item**, type a message → **Send report**. In the admin tab, open **Support** (the menu shows how many are open) → type a reply → **Send reply & resolve**. Back in the customer tab, refresh **My orders**.
+**Say:** "If something is wrong with an order, the customer can tell us right from the order. The admin answers on the Support page, and the customer sees the reply under the order. Only the owner of an order can report on it, and only one open report per order at a time."
+
+### 12. Low stock (30 seconds): FR-16
 **Do:** admin → **Low stock**.
 **Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
 
-### 12. Automatic tests (1 minute): NFR-07
+### 13. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "26 API tests run against a separate test database, so real data is never touched. 9 website tests check the form, the product list, page protection and the cart limit. The guide asks for at least 10 and 5."
+**Say:** "37 API tests run against a separate test database, so real data is never touched. 14 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen and problem reports. The guide asks for at least 10 and 5."
 
-### 13. Wrap-up (30 seconds)
+### 14. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the .NET reporting API with MySQL, the sales charts, and Docker. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
 **Ask the supervisor:** help with two GitHub settings that need the owner's login: making `master` the default branch, and enabling Actions.
 
