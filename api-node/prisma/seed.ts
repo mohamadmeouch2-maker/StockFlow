@@ -1,9 +1,10 @@
-// Sample data (guide 2.4): one admin, one customer, 4 categories and 25 products with photos.
+// Sample data (guide 2.4): one admin, one customer, 4 categories and 25 products with photos,
+// plus sample reviews and two weeks of sample orders for the admin dashboard.
 // Safe to run more than once: nothing is added twice.
 // The demo password is for local use only.
 import fs from "node:fs";
 import path from "node:path";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, type Product } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { uploadRoot } from "../src/lib/uploads";
 
@@ -95,6 +96,7 @@ async function main() {
   let photos = 0;
   let reviews = 0;
   let i = 0;
+  const allProducts: Product[] = [];
   for (const [categoryName, items] of Object.entries(products)) {
     const category = await prisma.category.upsert({ where: { name: categoryName }, update: {}, create: { name: categoryName } });
     for (const [name, description, price, stock, reorderLevel, photo] of items) {
@@ -117,13 +119,40 @@ async function main() {
           reviews++;
         }
       }
+      allProducts.push(product);
       i++;
+    }
+  }
+
+  // Sample orders from the three sample customers over the last 30 days, so the admin
+  // dashboard has sales to show. Added only once (while those customers have no orders).
+  // They are history: the stock numbers above are today's stock, so they are not lowered again.
+  let orders = 0;
+  if ((await prisma.order.count({ where: { userId: { in: reviewers.map((r) => r.id) } } })) === 0) {
+    for (let day = 29; day >= 0; day--) {
+      // 1 to 3 orders a day in the last two weeks, fewer before that (the shop is growing)
+      const ordersThatDay = day < 14 ? 1 + ((day * 5) % 3) : day % 2;
+      for (let k = 0; k < ordersThatDay; k++) {
+        // 1 to 3 different products, 1 to 3 of each (a fixed pattern again, not random)
+        const items = Array.from({ length: 1 + ((day + k) % 3) }, (_, j) => {
+          const product = allProducts[(day * 7 + k * 5 + j * 3) % allProducts.length];
+          return { productId: product.id, quantity: 1 + ((day + j) % 3), unitPrice: product.price };
+        });
+        const total = items.reduce((sum, it) => sum.add(it.unitPrice.mul(it.quantity)), new Prisma.Decimal(0));
+        // Older orders were delivered (one was cancelled), recent ones are on the way or waiting.
+        const status = (day === 9 && k === 0) || day === 21 ? "CANCELLED" : day >= 5 ? "DELIVERED" : day >= 2 ? "SHIPPED" : "PENDING";
+        const createdAt = new Date(Date.now() - day * 24 * 60 * 60 * 1000 - (k * 2 + 1) * 60 * 60 * 1000);
+        await prisma.order.create({
+          data: { userId: reviewers[(day + k) % reviewers.length].id, status, total, createdAt, items: { create: items } },
+        });
+        orders++;
+      }
     }
   }
 
   console.log(
     `Seeded: ${await prisma.user.count()} users, ${await prisma.category.count()} categories, ${await prisma.product.count()} products, ` +
-      `${photos} photos and ${reviews} reviews added`,
+      `${photos} photos, ${reviews} reviews and ${orders} orders added`,
   );
 }
 

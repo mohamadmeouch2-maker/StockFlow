@@ -7,6 +7,8 @@ import { z } from "zod";
 import { ApiError } from "../../api/client";
 import { IMAGE_TYPES, MAX_IMAGE_MB, productsApi } from "../../api/products";
 import { ProductImage } from "../../components/ProductImage";
+import { FormSkeleton } from "../../components/Skeleton";
+import { useToast } from "../../toast/useToast";
 
 // FR-11: one form for both "new product" and "edit product" (guide 4.10).
 const schema = z.object({
@@ -27,6 +29,7 @@ export function ProductFormPage() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const toast = useToast();
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: productsApi.categories });
   const existing = useQuery({ queryKey: ["product", Number(id)], queryFn: () => productsApi.get(Number(id)), enabled: isEdit });
@@ -92,6 +95,7 @@ export function ProductFormPage() {
         if (!isEdit) navigate(`/admin/products/${saved.id}/edit`, { replace: true });
         return;
       }
+      toast(isEdit ? `"${saved.name}" saved` : `"${saved.name}" added to the shop`);
       navigate("/admin/products");
     },
     onError: (err) => {
@@ -121,7 +125,7 @@ export function ProductFormPage() {
 
   // Wait for the categories too: the select can only show the product's
   // category once its <option> exists.
-  if (categories.isLoading || (isEdit && existing.isLoading)) return <p>Loading...</p>;
+  if (categories.isLoading || (isEdit && existing.isLoading)) return <FormSkeleton />;
   if (isEdit && existing.isError) return <p className="text-red-600">{existing.error.message}</p>;
 
   const currentImage = photoRemoved ? null : existing.data?.imageUrl;

@@ -60,6 +60,11 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 - [x] **Problem reports (Nov 6):** customers report a problem with an order (wrong item, damaged, missing, late delivery, other) from My orders; admins reply and resolve on a new Support page, with an open-count badge in the menu. Tests: API 37, website 14
 - [x] **Ratings, reviews and views (Nov 6):** buyers rate products from 1 to 10 with a comment (one review each, editable); the average rating and view count show in the list, on the product page and in the admin table; sample views and reviews for every product. Tests: API 45, website 18
 - [x] **10 new products (Nov 6):** notebook, scissors, paper clips, USB flash drive, webcam, calculator, bookshelf, whiteboard, glass cleaner, microfiber cloths, each with a free photo, views and sample reviews (25 products in total)
+- [x] **Admin dashboard and finishing touches (Nov 6):**
+  - [x] Dashboard as the admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, a sales-per-day chart (Recharts), orders by status and the top 5 products, for the last 7, 14 or 30 days (FR-14, FR-15, served by the Node API)
+  - [x] 30 days of sample orders from the sample customers, so the dashboard has data
+  - [x] Grey loading placeholders instead of "Loading...", pop-up messages after actions, pages fade in, buttons press in
+  - [x] Checked on desktop and phone widths. Tests: API 47, website 25
 ## To do
 
 ### Friday, Nov 13: Demo
@@ -70,6 +75,5 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 
 ## Not in scope (not enough time in one week)
 
-- .NET Reporting API with MySQL and data sync (FR-13 to FR-15)
-- Reports dashboard with charts (daily sales, top products)
+- .NET Reporting API with MySQL and data sync (FR-13). The reports and the dashboard (FR-14 to FR-16) are in the Node API instead
 - Docker

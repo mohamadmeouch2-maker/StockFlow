@@ -6,6 +6,7 @@ import { z } from "zod";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
+import { useToast } from "../toast/useToast";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email"),
@@ -19,6 +20,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const from = (useLocation().state as { from?: { pathname: string } } | null)?.from?.pathname;
   const [serverError, setServerError] = useState("");
+  const toast = useToast();
 
   const {
     register,
@@ -30,7 +32,8 @@ export function LoginPage() {
     setServerError("");
     try {
       const user = await login(v.email, v.password);
-      navigate(from ?? (user.role === "ADMIN" ? "/admin/products" : "/products"), { replace: true });
+      toast(`Welcome back, ${user.name}!`);
+      navigate(from ?? (user.role === "ADMIN" ? "/admin" : "/products"), { replace: true });
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Login failed");
     }

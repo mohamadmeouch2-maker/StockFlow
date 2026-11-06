@@ -2,15 +2,19 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
 import { OrderProblems } from "../components/OrderProblems";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
+import { RowsSkeleton } from "../components/Skeleton";
+import { useToast } from "../toast/useToast";
 
 // FR-09: my orders, newest first. FR-10: Pending orders can be cancelled (guide 4.9).
 export function MyOrdersPage() {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const orders = useQuery({ queryKey: ["orders", "mine"], queryFn: ordersApi.mine });
 
   const cancel = useMutation({
     mutationFn: (id: number) => ordersApi.cancel(id),
-    onSuccess: () => {
+    onSuccess: (order) => {
+      toast(`Order #${order.id} cancelled. The items are back in stock.`, "info");
       queryClient.invalidateQueries({ queryKey: ["orders", "mine"] });
       queryClient.invalidateQueries({ queryKey: ["products"] }); // stock came back
       queryClient.invalidateQueries({ queryKey: ["product"] });
@@ -23,7 +27,7 @@ export function MyOrdersPage() {
         <h1 className="page-title">My orders</h1>
         <p className="text-sm text-slate-500">Newest first. Pending orders can still be cancelled.</p>
       </div>
-      {orders.isLoading && <p className="text-slate-500">Loading...</p>}
+      {orders.isLoading && <RowsSkeleton rows={3} />}
       {orders.isError && <p className="text-red-600">Could not load your orders. {orders.error.message}</p>}
       {cancel.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not cancel. {cancel.error.message}</p>}
       {orders.data?.length === 0 && (

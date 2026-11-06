@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import { ProtectedRoute } from "./auth/ProtectedRoute";
 import { CartProvider } from "./cart/CartProvider";
 import { HomeHero } from "./components/HomeHero";
 import { Layout } from "./components/Layout";
+import { DashboardSkeleton } from "./components/Skeleton";
 import { SplashScreen } from "./components/SplashScreen";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
@@ -17,51 +19,66 @@ import { MyOrdersPage } from "./pages/MyOrdersPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { ToastProvider } from "./toast/ToastProvider";
+
+// The dashboard (and its chart library) is downloaded only when an admin opens it,
+// so customers get a smaller, faster website.
+const DashboardPage = lazy(() => import("./pages/admin/DashboardPage").then((m) => ({ default: m.DashboardPage })));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } });
 
-// The guide's routes (4.6). The dashboard is not built (the .NET reporting part is out of scope).
+// The guide's routes (4.6). The admin dashboard reads its numbers from the Core API
+// (the guide's .NET reporting API is out of scope).
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <SplashScreen />
-      <AuthProvider>
-        <CartProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<Layout />}>
-                <Route index element={<Navigate to="/products" replace />} />
-                <Route path="login" element={<LoginPage />} />
-                <Route path="register" element={<RegisterPage />} />
-                <Route
-                  path="products"
-                  element={
-                    <>
-                      <HomeHero />
-                      <ProductsPage />
-                    </>
-                  }
-                />
-                <Route path="products/:id" element={<ProductDetailPage />} />
-                <Route element={<ProtectedRoute role="CUSTOMER" />}>
-                  <Route path="cart" element={<CartPage />} />
-                  <Route path="orders" element={<MyOrdersPage />} />
+      <ToastProvider>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<Layout />}>
+                  <Route index element={<Navigate to="/products" replace />} />
+                  <Route path="login" element={<LoginPage />} />
+                  <Route path="register" element={<RegisterPage />} />
+                  <Route
+                    path="products"
+                    element={
+                      <>
+                        <HomeHero />
+                        <ProductsPage />
+                      </>
+                    }
+                  />
+                  <Route path="products/:id" element={<ProductDetailPage />} />
+                  <Route element={<ProtectedRoute role="CUSTOMER" />}>
+                    <Route path="cart" element={<CartPage />} />
+                    <Route path="orders" element={<MyOrdersPage />} />
+                  </Route>
+                  <Route path="admin" element={<ProtectedRoute role="ADMIN" />}>
+                    <Route
+                      index
+                      element={
+                        <Suspense fallback={<DashboardSkeleton />}>
+                          <DashboardPage />
+                        </Suspense>
+                      }
+                    />
+                    <Route path="products" element={<AdminProductsPage />} />
+                    <Route path="products/new" element={<ProductFormPage />} />
+                    <Route path="products/:id/edit" element={<ProductFormPage />} />
+                    <Route path="orders" element={<AdminOrdersPage />} />
+                    <Route path="low-stock" element={<LowStockPage />} />
+                    <Route path="support" element={<SupportPage />} />
+                  </Route>
+                  <Route path="*" element={<p className="p-6">Page not found</p>} />
                 </Route>
-                <Route path="admin" element={<ProtectedRoute role="ADMIN" />}>
-                  <Route index element={<Navigate to="/admin/products" replace />} />
-                  <Route path="products" element={<AdminProductsPage />} />
-                  <Route path="products/new" element={<ProductFormPage />} />
-                  <Route path="products/:id/edit" element={<ProductFormPage />} />
-                  <Route path="orders" element={<AdminOrdersPage />} />
-                  <Route path="low-stock" element={<LowStockPage />} />
-                  <Route path="support" element={<SupportPage />} />
-                </Route>
-                <Route path="*" element={<p className="p-6">Page not found</p>} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </CartProvider>
-      </AuthProvider>
+              </Routes>
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }

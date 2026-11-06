@@ -3,11 +3,13 @@ import { useState } from "react";
 import { ApiError } from "../api/client";
 import { issueLabel, issuesApi, ISSUE_TYPES } from "../api/issues";
 import type { IssueType, OrderIssue } from "../api/types";
+import { useToast } from "../toast/useToast";
 
 // Under each order in "My orders": the problems reported so far, the store's replies,
 // and a "Report a problem" button with a short form.
 export function OrderProblems({ orderId, issues }: { orderId: number; issues: OrderIssue[] }) {
   const qc = useQueryClient();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<IssueType>("WRONG_ITEM");
   const [message, setMessage] = useState("");
@@ -16,6 +18,7 @@ export function OrderProblems({ orderId, issues }: { orderId: number; issues: Or
   const send = useMutation({
     mutationFn: () => issuesApi.report(orderId, { type, message: message.trim() }),
     onSuccess: () => {
+      toast("Problem reported. We will answer you soon.");
       setOpen(false);
       setMessage("");
       qc.invalidateQueries({ queryKey: ["orders", "mine"] });

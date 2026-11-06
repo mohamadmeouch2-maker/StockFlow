@@ -1,16 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { reviewsApi } from "../api/reviews";
+import { useToast } from "../toast/useToast";
 
 // For a logged-in customer on a product page: give a rating from 1 to 10 and a comment,
 // or change/delete the one they gave before. Only possible after buying the product.
 export function ReviewForm({ productId }: { productId: number }) {
   const qc = useQueryClient();
+  const toast = useToast();
   const mine = useQuery({ queryKey: ["reviews", productId, "me"], queryFn: () => reviewsApi.mine(productId) });
   // What the customer picked or typed; until they touch the form, show their saved review.
   const [rating, setRating] = useState<number>();
   const [comment, setComment] = useState<string>();
-  const [saved, setSaved] = useState(false);
 
   const existing = mine.data?.review;
   const currentRating = rating ?? existing?.rating;
@@ -24,7 +25,7 @@ export function ReviewForm({ productId }: { productId: number }) {
   const save = useMutation({
     mutationFn: () => reviewsApi.save(productId, { rating: currentRating!, comment: currentComment }),
     onSuccess: () => {
-      setSaved(true);
+      toast("Thanks! Your review is saved");
       refresh();
     },
   });
@@ -33,7 +34,7 @@ export function ReviewForm({ productId }: { productId: number }) {
     onSuccess: () => {
       setRating(undefined);
       setComment(undefined);
-      setSaved(false);
+      toast("Your review was deleted", "info");
       refresh();
     },
   });
@@ -55,10 +56,7 @@ export function ReviewForm({ productId }: { productId: number }) {
               role="radio"
               aria-checked={active}
               aria-label={`${n} out of 10`}
-              onClick={() => {
-                setRating(n);
-                setSaved(false);
-              }}
+              onClick={() => setRating(n)}
               className={`h-9 w-9 rounded-lg border text-sm font-semibold transition ${
                 active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-blue-400"
               }`}
@@ -77,10 +75,7 @@ export function ReviewForm({ productId }: { productId: number }) {
           rows={2}
           maxLength={1000}
           value={currentComment}
-          onChange={(e) => {
-            setComment(e.target.value);
-            setSaved(false);
-          }}
+          onChange={(e) => setComment(e.target.value)}
           placeholder="What did you like or not like?"
           className="input"
         />
@@ -96,7 +91,6 @@ export function ReviewForm({ productId }: { productId: number }) {
           </button>
         )}
         {!currentRating && <span className="text-sm text-slate-500">Pick a score from 1 to 10.</span>}
-        {saved && <span className="text-sm font-medium text-emerald-700">Thanks! Your review is saved ✓</span>}
       </div>
     </div>
   );

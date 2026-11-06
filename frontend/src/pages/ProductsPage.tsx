@@ -5,6 +5,7 @@ import { productsApi } from "../api/products";
 import { Pagination } from "../components/Pagination";
 import { ProductImage } from "../components/ProductImage";
 import { RatingBadge } from "../components/RatingBadge";
+import { ProductCardsSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useDebounce } from "../hooks/useDebounce";
 
@@ -80,7 +81,7 @@ export function ProductsPage() {
         })}
       </div>
 
-      {products.isLoading && <p className="text-slate-500">Loading...</p>}
+      {products.isLoading && <ProductCardsSkeleton />}
       {products.isError && <p className="text-red-600">Could not load products. {products.error.message}</p>}
       {products.data?.items.length === 0 && (
         <div className="card p-10 text-center text-slate-500">

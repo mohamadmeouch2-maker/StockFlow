@@ -1,6 +1,6 @@
 # StockFlow demo script
 
-About 10 minutes. Each step says what to **do**, what to **say**, and which requirement it shows.
+About 11 minutes. Each step says what to **do**, what to **say**, and which requirement it shows.
 
 ## Before the demo (5 minutes)
 
@@ -37,7 +37,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 5. Order, and the stock goes down (1 minute): FR-06, FR-07, FR-08
 **Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, then **Place order**. Open the product again.
-**Say:** "The cart never allows more than the stock. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
+**Say:** "A short message in the corner confirms each action. The cart never allows more than the stock. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
 
 ### 6. Cancel, and the stock comes back (30 seconds): FR-09, FR-10
 **Do:** on **My orders**, click **Cancel order** → **OK**. Open the product again.
@@ -46,7 +46,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 ### 7. Not enough stock (1.5 minutes): FR-07
 **Do:**
 1. As the customer, add **3 × USB Keyboard** to the cart (or another product with a small stock) and **don't order yet**.
-2. Open a **new tab**, type `localhost:5173`, and log in as **admin** (each tab has its own login).
+2. Open a **new tab**, type `localhost:5173`, and log in as **admin** (each tab has its own login). The admin lands on the **Dashboard**; we come back to it in step 13.
 3. Admin: **Manage products** → **Edit** USB Keyboard → set **Stock** to `1` → **Save**.
 4. Go back to the customer tab → **Cart** → **Place order**.
 
@@ -72,16 +72,20 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Do:** in the customer tab, open **My orders** → under an order click **Report a problem** → choose **Damaged item**, type a message → **Send report**. In the admin tab, open **Support** (the menu shows how many are open) → type a reply → **Send reply & resolve**. Back in the customer tab, refresh **My orders**.
 **Say:** "If something is wrong with an order, the customer can tell us right from the order. The admin answers on the Support page, and the customer sees the reply under the order. Only the owner of an order can report on it, and only one open report per order at a time."
 
-### 13. Low stock (30 seconds): FR-16
-**Do:** admin → **Low stock**.
+### 13. Dashboard (1 minute): FR-14, FR-15
+**Do:** admin → **Dashboard**. Point at the tallest column in the chart. Click **Last 7 days**, then **Last 30 days**. Open **Show as a table**.
+**Say:** "This is the admin's home page. The top boxes compare this week with the week before and show what needs attention: products to restock and open problems. Below, for the chosen period: sales per day, orders by status and the 5 best sellers. Cancelled orders are not counted as sales. It all comes from one API call, which asks the database 7 questions at the same time. The chart is drawn with Recharts, and the same numbers are available as a table."
+
+### 14. Low stock (30 seconds): FR-16
+**Do:** admin → **Low stock** (or click the **Need restocking** box on the Dashboard).
 **Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
 
-### 14. Automatic tests (1 minute): NFR-07
+### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "45 API tests run against a separate test database, so real data is never touched. 18 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports and reviews. The guide asks for at least 10 and 5."
+**Say:** "47 API tests run against a separate test database, so real data is never touched. 25 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard and the pop-up messages. The guide asks for at least 10 and 5."
 
-### 15. Wrap-up (30 seconds)
-**Say:** "Not built yet, because of the one-week deadline: the .NET reporting API with MySQL, the sales charts, and Docker. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
+### 16. Wrap-up (30 seconds)
+**Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
 **Ask the supervisor:** help with two GitHub settings that need the owner's login: making `master` the default branch, and enabling Actions.
 
 ## Questions you may be asked
@@ -94,4 +98,5 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 | Why is the total calculated on the server? | Anything sent from the browser can be changed by the user, so the server uses the prices in the database. |
 | Why a separate test database? | The tests delete and create data. A separate database keeps the real data safe. |
 | Why TypeScript? | Types catch many mistakes before the code runs, and the editor can suggest and check field names. |
-| What would you build next? | The .NET reporting API and dashboard (FR-13 to FR-15), and Docker, so the whole project starts with one command. |
+| How does the dashboard get its numbers? | One admin endpoint, `GET /api/reports/summary?days=30`. It runs 7 database queries at the same time with `Promise.all`: counts, a group-by on order status, the orders of the period (added up per day with Decimal, so no cents are lost) and a group-by on order items for the top 5. Cancelled orders are left out. |
+| What would you build next? | The separate .NET reporting API with MySQL and the data sync (FR-13), so heavy reports don't slow down the shop, and Docker, so the whole project starts with one command. |

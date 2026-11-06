@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { issuesApi } from "../api/issues";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
+import { useToast } from "../toast/useToast";
 import { LogoMark } from "./Logo";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -16,6 +17,8 @@ export function Layout() {
   const { user, logout } = useAuth();
   const { count, clear } = useCart();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const toast = useToast();
   // Admins see how many problem reports are still open (checked again every minute).
   const issues = useQuery({
     queryKey: ["issues", "OPEN"],
@@ -29,6 +32,7 @@ export function Layout() {
     clear(); // the next person on this browser starts with an empty cart
     logout();
     navigate("/products");
+    toast("You are logged out. See you soon!", "info");
   };
 
   return (
@@ -59,6 +63,9 @@ export function Layout() {
           )}
           {user?.role === "ADMIN" && (
             <>
+              <NavLink to="/admin" end className={linkClass}>
+                Dashboard
+              </NavLink>
               <NavLink to="/admin/products" className={linkClass}>
                 Manage products
               </NavLink>
@@ -104,7 +111,10 @@ export function Layout() {
       </nav>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
-        <Outlet />
+        {/* key: every new page fades in (see .page-fade in index.css) */}
+        <div key={pathname} className="page-fade">
+          <Outlet />
+        </div>
       </main>
 
       <footer className="border-t border-slate-200 bg-white">

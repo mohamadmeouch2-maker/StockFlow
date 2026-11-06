@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ordersApi } from "../../api/orders";
 import type { Order, OrderStatus } from "../../api/types";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
+import { RowsSkeleton } from "../../components/Skeleton";
+import { useToast } from "../../toast/useToast";
 
 // FR-12 (guide 4.11): all orders with a status filter. Each row shows only the valid next actions.
 const actions: Record<OrderStatus, { label: string; status: Exclude<OrderStatus, "PENDING"> }[]> = {
@@ -18,11 +20,13 @@ const actions: Record<OrderStatus, { label: string; status: Exclude<OrderStatus,
 export function AdminOrdersPage() {
   const [status, setStatus] = useState<OrderStatus>();
   const queryClient = useQueryClient();
+  const toast = useToast();
   const orders = useQuery({ queryKey: ["orders", "all", status], queryFn: () => ordersApi.all(status) });
 
   const change = useMutation({
     mutationFn: ({ id, next }: { id: number; next: Exclude<OrderStatus, "PENDING"> }) => ordersApi.setStatus(id, next),
-    onSuccess: () => {
+    onSuccess: (order) => {
+      toast(`Order #${order.id} is now ${order.status.toLowerCase()}`);
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] }); // a cancel gives stock back
       queryClient.invalidateQueries({ queryKey: ["product"] });
@@ -52,7 +56,7 @@ export function AdminOrdersPage() {
         </select>
       </div>
 
-      {orders.isLoading && <p className="text-slate-500">Loading...</p>}
+      {orders.isLoading && <RowsSkeleton />}
       {orders.isError && <p className="text-red-600">Could not load orders. {orders.error.message}</p>}
       {change.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not change the status. {change.error.message}</p>}
       {orders.data?.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}

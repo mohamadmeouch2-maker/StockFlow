@@ -4,6 +4,7 @@ import { reviewsApi } from "../api/reviews";
 import { useAuth } from "../auth/useAuth";
 import { RatingBadge } from "./RatingBadge";
 import { ReviewForm } from "./ReviewForm";
+import { RowsSkeleton } from "./Skeleton";
 
 // The "Ratings & reviews" section under a product.
 export function ProductReviews({ productId }: { productId: number }) {
@@ -28,7 +29,7 @@ export function ProductReviews({ productId }: { productId: number }) {
         </p>
       )}
 
-      {data.isLoading && <p className="text-slate-500">Loading...</p>}
+      {data.isLoading && <RowsSkeleton rows={2} />}
       {data.isError && <p className="text-red-600">Could not load the reviews. {data.error.message}</p>}
       {data.data?.reviews.length === 0 && <p className="text-slate-500">No reviews yet. Be the first to rate it!</p>}
 

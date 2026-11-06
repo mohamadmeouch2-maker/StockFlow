@@ -3,6 +3,8 @@ import { useState } from "react";
 import { issueLabel, issuesApi } from "../../api/issues";
 import type { IssueStatus, OrderIssue } from "../../api/types";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
+import { RowsSkeleton } from "../../components/Skeleton";
+import { useToast } from "../../toast/useToast";
 
 const filters: { value?: IssueStatus; label: string }[] = [
   { value: "OPEN", label: "Open" },
@@ -38,7 +40,7 @@ export function SupportPage() {
         </div>
       </div>
 
-      {issues.isLoading && <p className="text-slate-500">Loading...</p>}
+      {issues.isLoading && <RowsSkeleton rows={3} />}
       {issues.isError && <p className="text-red-600">Could not load the reports. {issues.error.message}</p>}
       {issues.data?.length === 0 && (
         <div className="card p-10 text-center text-slate-500">
@@ -54,11 +56,15 @@ export function SupportPage() {
 
 function IssueCard({ issue }: { issue: OrderIssue }) {
   const qc = useQueryClient();
+  const toast = useToast();
   const [reply, setReply] = useState(issue.adminReply ?? "");
 
   const update = useMutation({
     mutationFn: (body: { reply?: string; status?: IssueStatus }) => issuesApi.update(issue.id, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["issues"] }),
+    onSuccess: (_, body) => {
+      toast(body.status === "RESOLVED" ? "Reply sent. The problem is resolved." : body.status === "OPEN" ? "Problem reopened" : "Reply saved");
+      qc.invalidateQueries({ queryKey: ["issues"] });
+    },
   });
 
   const open = issue.status === "OPEN";

@@ -4,21 +4,24 @@ import { ApiError } from "../api/client";
 import { ordersApi } from "../api/orders";
 import { useCart } from "../cart/useCart";
 import { ProductImage } from "../components/ProductImage";
+import { useToast } from "../toast/useToast";
 
 // FR-06 / FR-07: review the cart and place the order (guide 4.8).
 export function CartPage() {
   const { items, setQuantity, remove, clear } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   const placeOrder = useMutation({
     mutationFn: () => ordersApi.create(items.map((i) => ({ productId: i.product.id, quantity: i.quantity }))),
-    onSuccess: () => {
+    onSuccess: (order) => {
       clear();
       queryClient.invalidateQueries({ queryKey: ["products"] }); // stock changed
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       navigate("/orders");
+      toast(`Order #${order.id} placed. Thank you!`);
     },
   });
 

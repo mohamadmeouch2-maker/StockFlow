@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { reportsApi } from "../../api/reports";
 import { ProductImage } from "../../components/ProductImage";
+import { RowsSkeleton } from "../../components/Skeleton";
 import { StockBadge } from "../../components/StockBadge";
 
 // FR-16: products that need restocking (stock at or below the reorder level), most urgent first.
@@ -15,7 +16,7 @@ export function LowStockPage() {
         <p className="text-sm text-slate-500">Products at or below their reorder level, the most urgent first.</p>
       </div>
 
-      {rows.isLoading && <p>Loading...</p>}
+      {rows.isLoading && <RowsSkeleton />}
       {rows.isError && <p className="text-red-600">Could not load the report. {rows.error.message}</p>}
       {rows.data?.length === 0 && <p>All products have enough stock. 🎉</p>}
 

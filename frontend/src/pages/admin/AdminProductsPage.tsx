@@ -6,12 +6,15 @@ import type { Product } from "../../api/types";
 import { Pagination } from "../../components/Pagination";
 import { ProductImage } from "../../components/ProductImage";
 import { RatingBadge } from "../../components/RatingBadge";
+import { RowsSkeleton } from "../../components/Skeleton";
 import { StockBadge } from "../../components/StockBadge";
+import { useToast } from "../../toast/useToast";
 
 // FR-11 (admin): table of all products with Edit and Delete, plus a "New product" button.
 export function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
+  const toast = useToast();
 
   const products = useQuery({
     queryKey: ["products", "admin", page],
@@ -20,15 +23,16 @@ export function AdminProductsPage() {
   });
 
   const remove = useMutation({
-    mutationFn: (id: number) => productsApi.remove(id),
-    onSuccess: () => {
+    mutationFn: (p: Product) => productsApi.remove(p.id),
+    onSuccess: (_, p) => {
+      toast(`"${p.name}" deleted`);
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["product"] });
     },
   });
 
   const onDelete = (p: Product) => {
-    if (confirm(`Delete "${p.name}"?`)) remove.mutate(p.id);
+    if (confirm(`Delete "${p.name}"?`)) remove.mutate(p);
   };
 
   const totalPages = products.data ? Math.max(1, Math.ceil(products.data.total / products.data.pageSize)) : 1;
@@ -45,7 +49,7 @@ export function AdminProductsPage() {
         </Link>
       </div>
 
-      {products.isLoading && <p className="text-slate-500">Loading...</p>}
+      {products.isLoading && <RowsSkeleton />}
       {products.isError && <p className="text-red-600">Could not load products. {products.error.message}</p>}
       {remove.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not delete. {remove.error.message}</p>}
 

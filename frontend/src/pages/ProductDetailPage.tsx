@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { productsApi } from "../api/products";
 import { reviewsApi } from "../api/reviews";
@@ -9,7 +9,9 @@ import { useCart } from "../cart/useCart";
 import { ProductImage } from "../components/ProductImage";
 import { ProductReviews } from "../components/ProductReviews";
 import { RatingBadge } from "../components/RatingBadge";
+import { ProductDetailSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
+import { useToast } from "../toast/useToast";
 
 // Counts one view per product per visit (not on every refresh).
 function useCountView(id: number) {
@@ -38,7 +40,7 @@ export function ProductDetailPage() {
         {p && <span className="text-slate-700">{p.name}</span>}
       </nav>
 
-      {product.isLoading && <p className="text-slate-500">Loading...</p>}
+      {product.isLoading && <ProductDetailSkeleton />}
       {product.isError && <p className="text-red-600">{product.error.message}</p>}
 
       {p && (
@@ -88,7 +90,7 @@ function BuyBox({ product }: { product: Product }) {
   const { user } = useAuth();
   const { items, add } = useCart();
   const location = useLocation();
-  const [added, setAdded] = useState(false);
+  const toast = useToast();
   const inCart = items.find((i) => i.product.id === product.id)?.quantity ?? 0;
 
   if (!user)
@@ -111,13 +113,12 @@ function BuyBox({ product }: { product: Product }) {
         disabled={!canAdd}
         onClick={() => {
           add(product);
-          setAdded(true);
+          toast(`${product.name} added to your cart`);
         }}
         className="btn btn-primary px-6 py-2.5"
       >
         Add to cart
       </button>
-      {added && <span className="text-sm font-medium text-emerald-700">Added to cart ✓</span>}
       {inCart > 0 && (
         <span className="text-sm text-slate-600">
           {inCart} in your{" "}

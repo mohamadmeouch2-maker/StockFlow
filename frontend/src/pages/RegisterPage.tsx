@@ -7,6 +7,7 @@ import { api, ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
+import { useToast } from "../toast/useToast";
 
 // FR-01: the same rules as the API, so most mistakes are shown before sending.
 const schema = z.object({
@@ -20,6 +21,7 @@ export function RegisterPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const toast = useToast();
 
   const {
     register,
@@ -33,6 +35,7 @@ export function RegisterPage() {
     try {
       await api("core", "/api/auth/register", { method: "POST", body: JSON.stringify(v) });
       await login(v.email, v.password); // log straight in after registering
+      toast(`Welcome to StockFlow, ${v.name}!`);
       navigate("/products", { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) setError("email", { message: "This email is already registered" });
