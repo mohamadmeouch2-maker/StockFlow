@@ -19,7 +19,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Ratings, reviews and views | Customers who bought a product rate it from 1 to 10 with an optional comment; every product shows its average rating and how many times it was viewed | extra |
 | Problem reports | Customers report a problem with an order (wrong item, damaged, missing, late); admins reply and resolve it on the Support page | extra |
 
-Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 15 sample products get free photos from Wikimedia Commons, some views and sample reviews (from three sample customers) when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
+Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 25 sample products get free photos from Wikimedia Commons, some views and sample reviews (from three sample customers) when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
 
 Not built (out of scope for the one-week plan): the .NET reporting API with MySQL, data sync and the sales charts (FR-13 to FR-15), and Docker.
 

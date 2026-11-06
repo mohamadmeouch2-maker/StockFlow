@@ -7,7 +7,7 @@ About 10 minutes. Each step says what to **do**, what to **say**, and which requ
 1. Start both servers in two terminals:
    - `cd api-node` → `npm run dev` (✅ `Core API on http://localhost:4000`)
    - `cd frontend` → `npm run dev` (✅ `Local: http://localhost:5173/`)
-2. *(Optional: start from clean sample data.)* This **deletes all orders and registered users** and restores the 15 products. Stop the API with **Ctrl+C** first, then run in `api-node`:
+2. *(Optional: start from clean sample data.)* This **deletes all orders and registered users** and restores the 25 sample products. Stop the API with **Ctrl+C** first, then run in `api-node`:
    ```
    npx prisma migrate reset --force
    npm run seed
