@@ -12,42 +12,43 @@ import { DELIVERY_OPTIONS, deliverBy } from "../src/modules/orders/delivery";
 
 const prisma = new PrismaClient();
 
+// reorderLevel 6 for every product: "Low stock" when fewer than 7 are left.
 type SeedProduct = [name: string, description: string | null, price: string, stock: number, reorderLevel: number, photo: string];
 
 // Photos are in prisma/seed-images (credits: prisma/seed-images/CREDITS.md).
 const products: Record<string, SeedProduct[]> = {
   Stationery: [
-    ["Stapler", "Metal stapler for up to 25 sheets.", "4.50", 40, 10, "stapler.jpg"],
-    ["Ballpoint Pens (12 pack)", "Blue ink, medium tip.", "3.20", 120, 20, "ballpoint-pens.jpg"],
-    ["A4 Paper (500 sheets)", "80 gsm white copy paper.", "6.99", 4, 10, "a4-paper.jpg"],
-    ["Sticky Notes", "Yellow, 76 x 76 mm, 12 pads.", "2.75", 0, 5, "sticky-notes.jpg"],
-    ["Highlighter Set", "Four colours.", "5.40", 25, 5, "highlighter-set.jpg"],
-    ["Spiral Notebook A5 (3 pack)", "80 lined pages each, perforated.", "5.90", 70, 15, "spiral-notebook.jpg"],
-    ["Office Scissors", "21 cm stainless steel blades, soft grip.", "3.50", 35, 10, "office-scissors.jpg"],
-    ["Paper Clips (box of 100)", "Mixed colours, 28 mm.", "1.20", 3, 20, "paper-clips.jpg"],
+    ["Stapler", "Metal stapler for up to 25 sheets.", "4.50", 40, 6, "stapler.jpg"],
+    ["Ballpoint Pens (12 pack)", "Blue ink, medium tip.", "3.20", 120, 6, "ballpoint-pens.jpg"],
+    ["A4 Paper (500 sheets)", "80 gsm white copy paper.", "6.99", 4, 6, "a4-paper.jpg"],
+    ["Sticky Notes", "Yellow, 76 x 76 mm, 12 pads.", "2.75", 0, 6, "sticky-notes.jpg"],
+    ["Highlighter Set", "Four colours.", "5.40", 25, 6, "highlighter-set.jpg"],
+    ["Spiral Notebook A5 (3 pack)", "80 lined pages each, perforated.", "5.90", 70, 6, "spiral-notebook.jpg"],
+    ["Office Scissors", "21 cm stainless steel blades, soft grip.", "3.50", 35, 6, "office-scissors.jpg"],
+    ["Paper Clips (box of 100)", "Mixed colours, 28 mm.", "1.20", 3, 6, "paper-clips.jpg"],
   ],
   Electronics: [
-    ["Wireless Mouse", "2.4 GHz with USB receiver.", "18.99", 15, 5, "wireless-mouse.jpg"],
-    ["USB Keyboard", "Full size, quiet keys.", "24.50", 3, 5, "usb-keyboard.jpg"],
-    ["HDMI Cable 2m", null, "9.99", 60, 10, "hdmi-cable.jpg"],
-    ["LED Desk Lamp", "Three brightness levels.", "29.00", 0, 5, "led-desk-lamp.jpg"],
-    ["USB Flash Drive 64 GB", "USB 3.2, up to 100 MB/s.", "12.99", 25, 5, "usb-flash-drive.jpg"],
-    ["HD Webcam", "1080p with built-in microphone, clips onto any screen.", "39.90", 0, 3, "hd-webcam.jpg"],
-    ["Desk Calculator", "12 digits, solar and battery powered.", "14.50", 18, 5, "desk-calculator.jpg"],
+    ["Wireless Mouse", "2.4 GHz with USB receiver.", "18.99", 15, 6, "wireless-mouse.jpg"],
+    ["USB Keyboard", "Full size, quiet keys.", "24.50", 3, 6, "usb-keyboard.jpg"],
+    ["HDMI Cable 2m", null, "9.99", 60, 6, "hdmi-cable.jpg"],
+    ["LED Desk Lamp", "Three brightness levels.", "29.00", 0, 6, "led-desk-lamp.jpg"],
+    ["USB Flash Drive 64 GB", "USB 3.2, up to 100 MB/s.", "12.99", 25, 6, "usb-flash-drive.jpg"],
+    ["HD Webcam", "1080p with built-in microphone, clips onto any screen.", "39.90", 0, 6, "hd-webcam.jpg"],
+    ["Desk Calculator", "12 digits, solar and battery powered.", "14.50", 18, 6, "desk-calculator.jpg"],
   ],
   Furniture: [
-    ["Office Chair", "Adjustable height, mesh back.", "149.00", 8, 3, "office-chair.jpg"],
-    ["Filing Cabinet", "Three drawers, lockable.", "89.90", 2, 3, "filing-cabinet.jpg"],
-    ["Monitor Stand", null, "34.75", 12, 3, "monitor-stand.jpg"],
-    ["Bookshelf (5 shelves)", "Oak finish, 180 x 80 cm.", "79.00", 4, 2, "bookshelf.jpg"],
-    ["Whiteboard 90 x 60 cm", "Magnetic surface with a pen tray.", "45.00", 6, 2, "whiteboard.jpg"],
+    ["Office Chair", "Adjustable height, mesh back.", "149.00", 8, 6, "office-chair.jpg"],
+    ["Filing Cabinet", "Three drawers, lockable.", "89.90", 2, 6, "filing-cabinet.jpg"],
+    ["Monitor Stand", null, "34.75", 12, 6, "monitor-stand.jpg"],
+    ["Bookshelf (5 shelves)", "Oak finish, 180 x 80 cm.", "79.00", 4, 6, "bookshelf.jpg"],
+    ["Whiteboard 90 x 60 cm", "Magnetic surface with a pen tray.", "45.00", 6, 6, "whiteboard.jpg"],
   ],
   Cleaning: [
-    ["Hand Sanitizer 500ml", "70% alcohol.", "3.99", 80, 15, "hand-sanitizer.jpg"],
-    ["Paper Towels (6 rolls)", null, "7.25", 5, 5, "paper-towels.jpg"],
-    ["Disinfectant Wipes", "Pack of 80 wipes.", "4.80", 0, 10, "disinfectant-wipes.jpg"],
-    ["Glass Cleaner Spray 750 ml", "Streak-free, for windows and screens.", "4.20", 50, 10, "glass-cleaner.jpg"],
-    ["Microfiber Cloths (10 pack)", "Washable, 30 x 30 cm.", "6.50", 2, 8, "microfiber-cloths.jpg"],
+    ["Hand Sanitizer 500ml", "70% alcohol.", "3.99", 80, 6, "hand-sanitizer.jpg"],
+    ["Paper Towels (6 rolls)", null, "7.25", 5, 6, "paper-towels.jpg"],
+    ["Disinfectant Wipes", "Pack of 80 wipes.", "4.80", 0, 6, "disinfectant-wipes.jpg"],
+    ["Glass Cleaner Spray 750 ml", "Streak-free, for windows and screens.", "4.20", 50, 6, "glass-cleaner.jpg"],
+    ["Microfiber Cloths (10 pack)", "Washable, 30 x 30 cm.", "6.50", 2, 6, "microfiber-cloths.jpg"],
   ],
 };
 

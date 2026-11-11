@@ -76,7 +76,7 @@ model Product {
   description   String?
   price         Decimal        @db.Decimal(10, 2)
   stock         Int            @default(0)
-  reorderLevel  Int            @default(5) @map("reorder_level")
+  reorderLevel  Int            @default(6) @map("reorder_level") // "Low stock" at or below this: 6 = fewer than 7 left
   imageUrl      String?        @map("image_url") // FR-17: path of the uploaded photo, e.g. /uploads/products/product-1-....jpg
   viewCount     Int            @default(0) @map("view_count") // how many times the product page was opened
   reviews       Review[]

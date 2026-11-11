@@ -17,7 +17,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Favourites | Customers save products with a heart and find them on a "My favourites" page, ready to add to the cart | extra |
 | Christmas sale | Admins start a sale (for example 30% off until Dec 31) on the products in stock that sold fewer than N pieces in the last days; customers see a festive pop-up with falling snow, a sale banner, red sale prices with the old price crossed out, and a "Christmas deals" filter; orders pay the sale price (calculated on the server) | extra |
 | Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders | FR-11, FR-12 |
-| Low stock | Admin list of products at or below their reorder level | FR-16 |
+| Low stock | Admin list of products at or below their reorder level (6 for every product, so "Low stock" = fewer than 7 left; the admin can change one product) | FR-16 |
 | Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
 | Ratings, reviews and views | Customers who bought a product rate it from 1 to 10 with an optional comment; every product shows its average rating and how many times it was viewed | extra |

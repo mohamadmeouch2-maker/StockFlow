@@ -42,7 +42,7 @@ test("submits valid data as numbers (FR-11)", async () => {
   await userEvent.selectOptions(screen.getByLabelText("Category"), "1");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   await vi.waitFor(() =>
-    expect(create).toHaveBeenCalledWith(expect.objectContaining({ name: "Stapler", price: 4.5, stock: 10, reorderLevel: 5, categoryId: 1 })),
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ name: "Stapler", price: 4.5, stock: 10, reorderLevel: 6, categoryId: 1 })),
   );
   expect(uploadImage).not.toHaveBeenCalled(); // no photo chosen
 });

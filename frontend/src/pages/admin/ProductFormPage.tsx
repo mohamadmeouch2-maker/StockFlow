@@ -40,7 +40,7 @@ export function ProductFormPage() {
     reset,
     setError,
     formState: { errors, isSubmitting },
-  } = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: { reorderLevel: 5 } });
+  } = useForm<FormInput, unknown, FormValues>({ resolver: zodResolver(schema), defaultValues: { reorderLevel: 6 } }); // Low stock = fewer than 7 left
 
   // When editing, fill the form once the product has loaded.
   useEffect(() => {
@@ -140,7 +140,7 @@ export function ProductFormPage() {
       {field("description", "Description")}
       {field("price", "Price", "number")}
       {field("stock", "Stock", "number")}
-      {field("reorderLevel", "Reorder level", "number")}
+      {field("reorderLevel", "Reorder level (Low stock at or below this number)", "number")}
       <div>
         <label htmlFor="categoryId" className="label">
           Category

@@ -35,7 +35,7 @@ const productBody = z.object({
   description: z.string().max(2000).optional(),
   price: z.number().positive(),
   stock: z.number().int().min(0),
-  reorderLevel: z.number().int().min(0).default(5),
+  reorderLevel: z.number().int().min(0).default(6), // Low stock = fewer than 7 left, unless the admin sets another number
   categoryId: z.number().int(),
 });
 
