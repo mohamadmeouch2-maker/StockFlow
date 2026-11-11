@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { AppError, notFound, parseId } from "../../lib/errors";
@@ -7,13 +8,24 @@ import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { ratingsFor } from "../reviews/reviews.routes";
 
-// FR-04: ?page=1&pageSize=12&search=&categoryId=
+// FR-04: ?page=1&pageSize=12&search=&categoryId=  plus  &sort=price_asc&inStock=true
+const SORTS = ["name", "price_asc", "price_desc", "rating", "newest"] as const;
 const listQuery = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(12),
   search: z.string().trim().optional(),
   categoryId: z.coerce.number().int().optional(),
+  sort: z.enum(SORTS).default("name"),
+  inStock: z.enum(["true", "false"]).optional(), // "true" = hide sold-out products
 });
+
+// How each sort orders the rows (the name breaks ties, so the order is always the same).
+const orderBy: Record<Exclude<(typeof SORTS)[number], "rating">, Prisma.ProductOrderByWithRelationInput[]> = {
+  name: [{ name: "asc" }],
+  price_asc: [{ price: "asc" }, { name: "asc" }],
+  price_desc: [{ price: "desc" }, { name: "asc" }],
+  newest: [{ createdAt: "desc" }, { id: "desc" }],
+};
 
 // FR-11: what an admin sends to create or update a product.
 const productBody = z.object({
@@ -35,15 +47,33 @@ export const productsRouter = Router();
 const admin = [requireAuth, requireRole("ADMIN")];
 
 productsRouter.get("/", validate(listQuery, "query"), async (_req, res) => {
-  const { page, pageSize, search, categoryId } = res.locals.query;
-  const where = {
+  const { page, pageSize, search, categoryId, sort, inStock } = res.locals.query as z.infer<typeof listQuery>;
+  const where: Prisma.ProductWhereInput = {
     ...(search && { name: { contains: search, mode: "insensitive" as const } }), // case-insensitive
     ...(categoryId && { categoryId }),
+    ...(inStock === "true" && { stock: { gt: 0 } }),
   };
-  const [items, total] = await prisma.$transaction([
-    prisma.product.findMany({ where, include: { category: true }, orderBy: { name: "asc" }, skip: (page - 1) * pageSize, take: pageSize }),
-    prisma.product.count({ where }),
-  ]);
+
+  let items;
+  let total;
+  if (sort === "rating") {
+    // The average rating is not a column, so the database can't sort by it. Instead: take the
+    // matching products' ids, get their averages, sort them here, then load only this page.
+    // (Fine for a shop of this size; a big shop would store the average in the products table.)
+    const all = await prisma.product.findMany({ where, select: { id: true, name: true } });
+    const ratings = await ratingsFor(all.map((p) => p.id));
+    const score = (id: number) => ratings(id).average ?? -1; // not rated yet -> last
+    all.sort((a, b) => score(b.id) - score(a.id) || ratings(b.id).count - ratings(a.id).count || a.name.localeCompare(b.name));
+    const pageIds = all.slice((page - 1) * pageSize, page * pageSize).map((p) => p.id);
+    const rows = await prisma.product.findMany({ where: { id: { in: pageIds } }, include: { category: true } });
+    items = pageIds.map((id) => rows.find((p) => p.id === id)!);
+    total = all.length;
+  } else {
+    [items, total] = await prisma.$transaction([
+      prisma.product.findMany({ where, include: { category: true }, orderBy: orderBy[sort], skip: (page - 1) * pageSize, take: pageSize }),
+      prisma.product.count({ where }),
+    ]);
+  }
   const rating = await ratingsFor(items.map((p) => p.id)); // average rating / 10 for each product
   res.json({ items: items.map((p) => ({ ...p, rating: rating(p.id) })), page, pageSize, total });
 });

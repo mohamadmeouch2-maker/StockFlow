@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, test, vi } from "vitest";
 import { productsApi } from "../api/products";
@@ -42,4 +43,12 @@ test("shows products with their stock status and the page count (FR-04, FR-05)",
   expect(screen.getByText("Low stock")).toBeInTheDocument();
   expect(screen.getByText("Out of stock")).toBeInTheDocument();
   expect(screen.getByText("Page 1 of 2")).toBeInTheDocument();
+});
+
+test("sorting and 'in stock only' are sent to the API and start again at page 1", async () => {
+  list.mockResolvedValue({ items: [product(1, 50)], page: 1, pageSize: 12, total: 1 });
+  renderPage();
+  await userEvent.selectOptions(await screen.findByLabelText("Sort by"), "Price: low to high");
+  await userEvent.click(screen.getByLabelText("In stock only"));
+  await vi.waitFor(() => expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ page: 1, sort: "price_asc", inStock: true })));
 });

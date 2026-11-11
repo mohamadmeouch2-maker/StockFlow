@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { productsApi } from "../api/products";
+import { productsApi, SORT_OPTIONS, type ProductSort } from "../api/products";
 import { Pagination } from "../components/Pagination";
 import { ProductImage } from "../components/ProductImage";
 import { RatingBadge } from "../components/RatingBadge";
@@ -14,13 +14,15 @@ export function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number>();
+  const [sort, setSort] = useState<ProductSort>("name");
+  const [inStock, setInStock] = useState(false); // true = hide sold-out products
   const debounced = useDebounce(search, 300);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: productsApi.categories });
 
   const products = useQuery({
-    queryKey: ["products", page, debounced, categoryId],
-    queryFn: () => productsApi.list({ page, search: debounced, categoryId }),
+    queryKey: ["products", page, debounced, categoryId, sort, inStock],
+    queryFn: () => productsApi.list({ page, search: debounced, categoryId, sort, inStock }),
     placeholderData: keepPreviousData, // keep showing the old page while the next one loads
   });
 
@@ -45,7 +47,14 @@ export function ProductsPage() {
           <label className="sr-only" htmlFor="search">
             Search
           </label>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pointer-events-none absolute top-2.5 left-3 h-5 w-5 text-slate-400" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="pointer-events-none absolute top-2.5 left-3 h-5 w-5 text-slate-400"
+            aria-hidden="true"
+          >
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>
@@ -62,23 +71,58 @@ export function ProductsPage() {
         </div>
       </div>
 
-      {/* Category buttons (FR-04 filter) */}
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Category">
-        {[{ id: undefined, name: "All categories" }, ...(categories.data ?? [])].map((c) => {
-          const active = categoryId === c.id;
-          return (
-            <button
-              key={c.id ?? "all"}
-              aria-pressed={active}
-              onClick={() => chooseCategory(c.id)}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                active ? "border-blue-600 bg-blue-600 text-white shadow-sm" : "border-slate-300 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
-              }`}
+      {/* Category buttons (FR-04 filter) on the left, sorting and "in stock only" on the right */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Category">
+          {[{ id: undefined, name: "All categories" }, ...(categories.data ?? [])].map((c) => {
+            const active = categoryId === c.id;
+            return (
+              <button
+                key={c.id ?? "all"}
+                aria-pressed={active}
+                onClick={() => chooseCategory(c.id)}
+                className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+                  active
+                    ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                    : "border-slate-300 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                }`}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-slate-600">
+            <input
+              type="checkbox"
+              checked={inStock}
+              onChange={(e) => {
+                setInStock(e.target.checked);
+                setPage(1);
+              }}
+              className="h-4 w-4 accent-blue-600"
+            />
+            In stock only
+          </label>
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
+            Sort by
+            <select
+              value={sort}
+              onChange={(e) => {
+                setSort(e.target.value as ProductSort);
+                setPage(1);
+              }}
+              className="input w-auto py-1.5"
             >
-              {c.name}
-            </button>
-          );
-        })}
+              {SORT_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {products.isLoading && <ProductCardsSkeleton />}
