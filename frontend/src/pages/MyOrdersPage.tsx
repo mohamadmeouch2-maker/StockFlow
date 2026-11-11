@@ -1,5 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { ordersApi } from "../api/orders";
+import { productsApi } from "../api/products";
+import type { Order } from "../api/types";
+import { useCart } from "../cart/useCart";
 import { OrderProblems } from "../components/OrderProblems";
 import { DeliveryBadge } from "../components/DeliveryBadge";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
@@ -11,6 +15,29 @@ export function MyOrdersPage() {
   const queryClient = useQueryClient();
   const toast = useToast();
   const orders = useQuery({ queryKey: ["orders", "mine"], queryFn: ordersApi.mine });
+  const { add } = useCart();
+  const navigate = useNavigate();
+
+  // "Buy again": put the same products back in the cart, with today's price and stock.
+  // Products that are sold out (or no longer sold) are skipped and named in the message.
+  const buyAgain = useMutation({
+    mutationFn: (o: Order) => Promise.allSettled(o.items.map((i) => productsApi.get(i.productId))),
+    onSuccess: (results, o) => {
+      const added: string[] = [];
+      const unavailable: string[] = [];
+      results.forEach((r, n) => {
+        if (r.status === "fulfilled" && r.value.stock > 0) {
+          add(r.value, o.items[n].quantity); // the cart never goes above the stock
+          added.push(r.value.name);
+        } else unavailable.push(o.items[n].product.name);
+      });
+      if (added.length === 0) return toast(`Sorry, ${unavailable.join(", ")} ${unavailable.length === 1 ? "is" : "are"} not available right now.`, "error");
+      const what = added.length === 1 ? added[0] : `${added.length} products`;
+      toast(`${what} added to your cart` + (unavailable.length ? `. Sold out: ${unavailable.join(", ")}` : ""));
+      navigate("/cart");
+    },
+    onError: () => toast("Could not add the products. Please try again.", "error"),
+  });
 
   const cancel = useMutation({
     mutationFn: (id: number) => ordersApi.cancel(id),
@@ -60,18 +87,23 @@ export function MyOrdersPage() {
               </li>
             ))}
           </ul>
-          <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
             <span className="font-semibold text-slate-900">
               Total: ${Number(o.total).toFixed(2)}
               {Number(o.deliveryFee) > 0 && (
                 <span className="ml-1 text-sm font-normal text-slate-500">(incl. ${Number(o.deliveryFee).toFixed(2)} delivery)</span>
               )}
             </span>
-            {o.status === "PENDING" && (
-              <button disabled={cancel.isPending} onClick={() => confirm(`Cancel order #${o.id}?`) && cancel.mutate(o.id)} className="btn btn-danger py-1.5">
-                Cancel order
+            <div className="flex flex-wrap gap-2">
+              <button disabled={buyAgain.isPending} onClick={() => buyAgain.mutate(o)} className="btn btn-outline py-1.5">
+                🔁 Buy again
               </button>
-            )}
+              {o.status === "PENDING" && (
+                <button disabled={cancel.isPending} onClick={() => confirm(`Cancel order #${o.id}?`) && cancel.mutate(o.id)} className="btn btn-danger py-1.5">
+                  Cancel order
+                </button>
+              )}
+            </div>
           </div>
           <OrderProblems orderId={o.id} issues={o.issues ?? []} />
         </div>
