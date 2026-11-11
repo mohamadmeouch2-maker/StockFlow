@@ -5,6 +5,7 @@ import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { useToast } from "../toast/useToast";
 import { LogoMark } from "./Logo";
+import { NotificationBell } from "./NotificationBell";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
@@ -83,6 +84,7 @@ export function Layout() {
           )}
 
           <div className="ml-auto flex items-center gap-2">
+            {user?.role === "ADMIN" && <NotificationBell />}
             {user ? (
               <>
                 <span className="hidden items-center gap-2 text-sm text-slate-600 sm:flex">

@@ -1,5 +1,5 @@
 // Sample data (guide 2.4): one admin, one customer, 4 categories and 25 products with photos,
-// plus sample reviews and two weeks of sample orders for the admin dashboard.
+// plus sample reviews, 30 days of sample orders for the admin dashboard and stock alerts.
 // Safe to run more than once: nothing is added twice.
 // The demo password is for local use only.
 import fs from "node:fs";
@@ -7,6 +7,7 @@ import path from "node:path";
 import { Prisma, PrismaClient, type Product } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { uploadRoot } from "../src/lib/uploads";
+import { stockAlert } from "../src/modules/notifications/notifications.service";
 
 const prisma = new PrismaClient();
 
@@ -150,9 +151,24 @@ async function main() {
     }
   }
 
+  // Stock alerts for the products that are already low, so the admin's bell starts with some.
+  // Added only while there are no alerts at all. Later alerts come from real orders.
+  let alerts = 0;
+  if ((await prisma.notification.count()) === 0) {
+    const lowProducts = await prisma.product.findMany({ where: { stock: { lte: prisma.product.fields.reorderLevel } }, orderBy: { id: "asc" } });
+    for (const product of lowProducts) {
+      // As if the last sale took it from above the reorder level down to today's stock.
+      const alert = stockAlert(product, product.reorderLevel + 1);
+      if (alert) {
+        await prisma.notification.create({ data: { ...alert, productId: product.id } });
+        alerts++;
+      }
+    }
+  }
+
   console.log(
     `Seeded: ${await prisma.user.count()} users, ${await prisma.category.count()} categories, ${await prisma.product.count()} products, ` +
-      `${photos} photos, ${reviews} reviews and ${orders} orders added`,
+      `${photos} photos, ${reviews} reviews, ${orders} orders and ${alerts} stock alerts added`,
   );
 }
 

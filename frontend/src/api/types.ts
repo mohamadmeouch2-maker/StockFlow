@@ -61,6 +61,17 @@ export type OrderIssue = {
   order?: Pick<Order, "id" | "status" | "total" | "createdAt" | "items">; // admin list only
 };
 
+// An automatic stock alert for the admins (the bell in the admin menu).
+export type Notification = {
+  id: number;
+  type: "LOW_STOCK" | "OUT_OF_STOCK";
+  message: string; // e.g. "Stapler is low on stock: 4 left (reorder level 5)"
+  productId: number;
+  readAt: string | null; // null = not read yet
+  createdAt: string;
+  product: { name: string; imageUrl: string | null };
+};
+
 export type ApiErrorBody = {
   error: { code: string; message: string; details: { field: string; message: string }[] };
 };

@@ -1,6 +1,7 @@
 import { OrderStatus, Prisma } from "@prisma/client";
 import { AppError, notFound } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
+import { stockAlert } from "../notifications/notifications.service";
 
 // Order lines come back with the product name, which the website shows.
 export const withItems = { items: { include: { product: { select: { name: true } } } } } as const;
@@ -31,6 +32,10 @@ export async function createOrder(userId: number, items: { productId: number; qu
         throw new AppError(409, "INSUFFICIENT_STOCK", `Not enough stock for ${product.name} (${product.stock} left)`);
       total = total.add(product.price.mul(quantity));
       orderLines.push({ productId, quantity, unitPrice: product.price });
+      // Automatic alert for the admins when this order makes the product low or sold out.
+      // It is inside the transaction, so a failed order leaves no alert behind.
+      const alert = stockAlert(product, quantity);
+      if (alert) await tx.notification.create({ data: { ...alert, productId } });
     }
     return tx.order.create({ data: { userId, total, items: { create: orderLines } }, include: withItems });
   });

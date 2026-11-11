@@ -65,6 +65,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] 30 days of sample orders from the sample customers, so the dashboard has data
   - [x] Grey loading placeholders instead of "Loading...", pop-up messages after actions, pages fade in, buttons press in
   - [x] Checked on desktop and phone widths. Tests: API 47, website 25
+- [x] **Automatic stock alerts for admins (Nov 11):** when an order takes a product down to its reorder level or to 0, an alert is saved in a new `notifications` table (in the same transaction as the order). Admins see a bell with the unread count, a list with Restock links and "Mark all as read", and new alerts pop up by themselves (checked every 20 seconds). One alert per crossing, not per order. Tests: API 53, website 27
 ## To do
 
 ### Friday, Nov 13: Demo

@@ -19,6 +19,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
 | Ratings, reviews and views | Customers who bought a product rate it from 1 to 10 with an optional comment; every product shows its average rating and how many times it was viewed | extra |
 | Problem reports | Customers report a problem with an order (wrong item, damaged, missing, late); admins reply and resolve it on the Support page | extra |
+| Stock alerts | When an order takes a product down to its reorder level or sells it out, admins get an automatic alert: a bell with the unread count, a pop-up message, and a Restock link | extra |
 | Look and feel | Grey placeholders while pages load, short pop-up messages after each action (added to cart, order placed, product saved, ...), pages fade in | extra |
 
 Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 25 sample products get free photos from Wikimedia Commons, some views, sample reviews and 30 days of sample orders (from three sample customers) when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
@@ -30,7 +31,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (47 API tests), Vitest + Testing Library (25 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (53 API tests), Vitest + Testing Library (27 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -109,10 +110,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 47 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 53 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 25 passed (no backend needed)
+npm test        # ✅ Tests: 27 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -146,6 +147,8 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/issues/mine` | logged in | My problem reports and the replies |
 | GET | `/api/issues?status=` | Admin | All problem reports, open ones first |
 | PATCH | `/api/issues/:id` | Admin | `{ "reply": "...", "status": "RESOLVED" }` |
+| GET | `/api/notifications` | Admin | The 20 newest stock alerts and the unread count |
+| POST | `/api/notifications/:id/read`, `/api/notifications/read-all` | Admin | Mark one alert, or all, as read |
 | POST / DELETE | `/api/products/:id/image` | Admin | Upload a photo (form field `image`) or remove it |
 | GET | `/uploads/products/<file>` | anyone | The uploaded photos |
 | GET | `/health` | anyone | Liveness check |

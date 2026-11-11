@@ -35,13 +35,18 @@ enum IssueStatus {
   RESOLVED
 }
 
+enum NotificationType {
+  LOW_STOCK // stock went down to the reorder level or below
+  OUT_OF_STOCK // stock went down to 0
+}
+
 model User {
-  id           Int      @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   name         String
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         Role     @default(CUSTOMER)
-  createdAt    DateTime @default(now()) @map("created_at")
+  email        String       @unique
+  passwordHash String       @map("password_hash")
+  role         Role         @default(CUSTOMER)
+  createdAt    DateTime     @default(now()) @map("created_at")
   orders       Order[]
   issues       OrderIssue[]
   reviews      Review[]
@@ -59,20 +64,21 @@ model Category {
 }
 
 model Product {
-  id           Int         @id @default(autoincrement())
-  name         String
-  description  String?
-  price        Decimal     @db.Decimal(10, 2)
-  stock        Int         @default(0)
-  reorderLevel Int         @default(5) @map("reorder_level")
-  imageUrl     String?     @map("image_url") // FR-17: path of the uploaded photo, e.g. /uploads/products/product-1-....jpg
-  viewCount    Int         @default(0) @map("view_count") // how many times the product page was opened
-  reviews      Review[]
-  categoryId   Int         @map("category_id")
-  category     Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  orderItems   OrderItem[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String?
+  price         Decimal        @db.Decimal(10, 2)
+  stock         Int            @default(0)
+  reorderLevel  Int            @default(5) @map("reorder_level")
+  imageUrl      String?        @map("image_url") // FR-17: path of the uploaded photo, e.g. /uploads/products/product-1-....jpg
+  viewCount     Int            @default(0) @map("view_count") // how many times the product page was opened
+  reviews       Review[]
+  notifications Notification[]
+  categoryId    Int            @map("category_id")
+  category      Category       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  orderItems    OrderItem[]
 
   @@index([name])
   @@index([categoryId])
@@ -80,13 +86,13 @@ model Product {
 }
 
 model Order {
-  id        Int         @id @default(autoincrement())
-  userId    Int         @map("user_id")
-  user      User        @relation(fields: [userId], references: [id])
-  status    OrderStatus @default(PENDING)
-  total     Decimal     @db.Decimal(10, 2)
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id        Int          @id @default(autoincrement())
+  userId    Int          @map("user_id")
+  user      User         @relation(fields: [userId], references: [id])
+  status    OrderStatus  @default(PENDING)
+  total     Decimal      @db.Decimal(10, 2)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
   items     OrderItem[]
   issues    OrderIssue[]
 
@@ -130,6 +136,22 @@ model OrderIssue {
   @@map("order_issues")
 }
 
+// An automatic alert for the admins, e.g. "Stapler is low on stock: 4 left".
+// Created when an order takes a product down to its reorder level or to 0.
+// The admins share the alerts: when one admin reads it, it is read for all of them.
+model Notification {
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
+  message   String
+  productId Int              @map("product_id")
+  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  readAt    DateTime?        @map("read_at") // null = not read yet
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([readAt])
+  @@map("notifications")
+}
+
 model OrderItem {
   id        Int     @id @default(autoincrement())
   orderId   Int     @map("order_id")
@@ -137,7 +159,7 @@ model OrderItem {
   productId Int     @map("product_id")
   product   Product @relation(fields: [productId], references: [id])
   quantity  Int
-  unitPrice Decimal @db.Decimal(10, 2) @map("unit_price")
+  unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
 
   @@map("order_items")
 }

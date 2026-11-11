@@ -5,6 +5,7 @@ import { errorHandler } from "./middleware/error";
 import { authRouter } from "./modules/auth/auth.routes";
 import { categoriesRouter } from "./modules/categories/categories.routes";
 import { issuesRouter } from "./modules/issues/issues.routes";
+import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { ordersRouter } from "./modules/orders/orders.routes";
 import { productsRouter } from "./modules/products/products.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
@@ -32,6 +33,7 @@ app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
 app.use("/api/issues", issuesRouter); // problems customers report with their orders
 app.use("/api/reports", reportsRouter);
+app.use("/api/notifications", notificationsRouter); // stock alerts for admins
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Route not found", details: [] } });
 });
