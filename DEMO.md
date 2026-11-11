@@ -36,8 +36,8 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Say:** "The password needs 8 characters with a letter and a number, and it is stored hashed with bcrypt, never as plain text. After a refresh I'm still logged in: the browser keeps a token that is valid for 1 hour."
 
 ### 5. Order, and the stock goes down (1 minute): FR-06, FR-07, FR-08
-**Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, choose **⚡ Express delivery** (the total goes up by $4.50), then **Place order**. Open the product again.
-**Say:** "A short message in the corner confirms each action. The cart never allows more than the stock. The customer chooses Standard delivery, which is free and takes 3 to 5 days, or Express for $4.50, next day. The delivery price comes from the server, not the browser, and the order saves the arrival date. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
+**Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, choose **⚡ Express delivery** (the total goes up by $4.50), fill in the **Delivery address** (phone number, city, address), then **Place order**. Open the product again.
+**Say:** "A short message in the corner confirms each action. The cart never allows more than the stock. The customer chooses Standard delivery, which is free and takes 3 to 5 days, or Express for $4.50, next day. The delivery price comes from the server, not the browser, and the order saves the arrival date. The order also needs a phone number and an address, checked on both sides; next time they are filled in from the last order. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
 
 ### 6. Cancel, and the stock comes back (30 seconds): FR-09, FR-10
 **Do:** on **My orders**, click **Cancel order** → **OK**. Open the product again.
@@ -66,7 +66,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 10. Admin: orders (1 minute): FR-12
 **Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter.
-**Say:** "Only valid changes are offered: Pending → Shipped → Delivered, or Pending → Cancelled. The server blocks anything else."
+**Say:** "Only valid changes are offered: Pending → Shipped → Delivered, or Pending → Cancelled. The server blocks anything else. Under each customer's name the admin sees where to deliver and the phone number, so the driver can call."
 
 ### 11. Rate a product (1 minute): extra feature
 **Do:** in the customer tab, open a product you ordered (for example the one shipped in step 10) → under **Ratings & reviews** click a score from **1 to 10**, write a short comment → **Submit review**. Show the new average on the page and in the product list, and the **👁 views** count.
@@ -91,7 +91,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "78 API tests run against a separate test database, so real data is never touched. 45 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "80 API tests run against a separate test database, so real data is never touched. 48 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

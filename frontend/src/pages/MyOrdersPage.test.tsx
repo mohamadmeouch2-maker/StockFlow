@@ -18,6 +18,9 @@ const order: Order = {
   delivery: "STANDARD",
   deliveryFee: "0.00",
   deliverBy: null,
+  phone: "+961 70 000 101",
+  city: "Beirut",
+  address: "Hamra Street, Cedar Building, 3rd floor",
   createdAt: "2026-11-01T10:00:00Z",
   items: [
     { productId: 1, quantity: 2, unitPrice: "4.50", product: { name: "Stapler" } },
@@ -28,7 +31,7 @@ const order: Order = {
 vi.spyOn(ordersApi, "mine").mockResolvedValue([order]);
 vi.spyOn(productsApi, "get").mockImplementation(async (id) => (id === 1 ? product(1, "Stapler", 10) : product(2, "Webcam", 0)));
 
-test("'Buy again' puts the products back in the cart and skips the sold-out ones", async () => {
+const renderPage = () =>
   render(
     <QueryClientProvider client={new QueryClient()}>
       <CartProvider>
@@ -41,6 +44,15 @@ test("'Buy again' puts the products back in the cart and skips the sold-out ones
       </CartProvider>
     </QueryClientProvider>,
   );
+
+test("each order shows where it goes and the phone number", async () => {
+  renderPage();
+  const where = await screen.findByText("Hamra Street, Cedar Building, 3rd floor, Beirut");
+  expect(where.parentElement).toHaveTextContent("Deliver to Hamra Street, Cedar Building, 3rd floor, Beirut · +961 70 000 101");
+});
+
+test("'Buy again' puts the products back in the cart and skips the sold-out ones", async () => {
+  renderPage();
   await userEvent.click(await screen.findByRole("button", { name: /Buy again/ }));
   expect(await screen.findByText("Cart page")).toBeInTheDocument(); // it went to the cart
   const cart = JSON.parse(sessionStorage.getItem("cart") ?? "[]");

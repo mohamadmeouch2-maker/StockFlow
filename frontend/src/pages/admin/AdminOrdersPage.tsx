@@ -83,7 +83,22 @@ export function AdminOrdersPage() {
                     <span className="font-medium text-slate-900">#{o.id}</span>
                     <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
                   </td>
-                  <td>{o.user?.name ?? o.userId}</td>
+                  <td className="max-w-60">
+                    <span className="font-medium text-slate-900">{o.user?.name ?? o.userId}</span>
+                    {/* Where to deliver; tap the number to call the customer */}
+                    {o.address ? (
+                      <>
+                        <a href={`tel:${(o.phone ?? "").replace(/[\s-]/g, "")}`} className="link block text-xs whitespace-nowrap">
+                          {o.phone}
+                        </a>
+                        <div className="text-xs text-slate-500">
+                          {o.address}, {o.city}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-xs text-slate-400">No address (older order)</div>
+                    )}
+                  </td>
                   <td>{items(o)}</td>
                   <td>${Number(o.total).toFixed(2)}</td>
                   <td>

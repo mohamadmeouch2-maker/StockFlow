@@ -104,6 +104,10 @@ model Order {
   delivery    DeliveryMethod @default(STANDARD)
   deliveryFee Decimal        @default(0) @map("delivery_fee") @db.Decimal(10, 2)
   deliverBy   DateTime?      @map("deliver_by") // the latest expected arrival day
+  // Where to bring the order, typed in the cart. null only for orders from before Nov 11.
+  phone       String?
+  city        String?
+  address     String? // street, building, floor
   // When each step happened, for the tracking timeline (null = not yet, or before Nov 11)
   shippedAt   DateTime?      @map("shipped_at")
   deliveredAt DateTime?      @map("delivered_at")

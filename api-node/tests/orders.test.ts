@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/lib/prisma";
-import { auth, createUser, resetDb } from "./helpers";
+import { auth, createUser, resetDb, shipTo } from "./helpers";
 
 // The most important test file (guide 5.1): it covers the stock rules.
 let customerToken = "";
@@ -21,7 +21,7 @@ beforeAll(async () => {
 afterAll(() => prisma.$disconnect());
 
 const order = (quantity: number, token = customerToken, id = productId) =>
-  request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: id, quantity }] });
+  request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: id, quantity }], ...shipTo });
 const stockOf = async (id: number) => (await prisma.product.findUniqueOrThrow({ where: { id } })).stock;
 const newProduct = async (stock: number) => (await prisma.product.create({ data: { name: "Gadget", price: 2.5, stock, categoryId } })).id;
 
@@ -54,7 +54,7 @@ test("one short line fails the whole order: no stock changes anywhere (FR-07)", 
   await request(app)
     .post("/api/orders")
     .set(auth(customerToken))
-    .send({ items: [{ productId: gadget, quantity: 2 }, { productId, quantity: 1 }] }) // Widget has 0 left
+    .send({ items: [{ productId: gadget, quantity: 2 }, { productId, quantity: 1 }], ...shipTo }) // Widget has 0 left
     .expect(409);
   expect(await stockOf(gadget)).toBe(5);
 });
@@ -135,7 +135,7 @@ test("standard delivery is free and arrives within 5 days; express adds $4.50 an
     await request(app)
       .post("/api/orders")
       .set(auth(customerToken))
-      .send({ items: [{ productId: gadget, quantity: 2 }], delivery: "EXPRESS" })
+      .send({ items: [{ productId: gadget, quantity: 2 }], delivery: "EXPRESS", ...shipTo })
       .expect(201)
   ).body;
   expect(express.delivery).toBe("EXPRESS");
@@ -146,7 +146,7 @@ test("standard delivery is free and arrives within 5 days; express adds $4.50 an
 
 test("the browser can't choose its own delivery fee, and unknown deliveries are refused", async () => {
   const gadget = await newProduct(10);
-  const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...body });
+  const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...shipTo, ...body });
   const sneaky = await send({ delivery: "EXPRESS", deliveryFee: 0 }).expect(201); // the extra field is ignored
   expect(Number(sneaky.body.deliveryFee)).toBe(4.5);
   const bad = await send({ delivery: "ROCKET" }).expect(400);
@@ -175,4 +175,39 @@ test("the order remembers when it was shipped, delivered or cancelled (tracking 
   const cancelled = (await request(app).post(`/api/orders/${other.id}/cancel`).set(auth(customerToken)).expect(200)).body;
   expect(cancelled).toMatchObject({ status: "CANCELLED", shippedAt: null });
   expect(cancelled.cancelledAt).not.toBeNull();
+});
+
+// Where to deliver: a phone number, a city and an address, typed in the cart.
+test("an order needs a phone number, a city and an address; without them nothing changes", async () => {
+  const gadget = await newProduct(5);
+  const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...body });
+  const missing = await send({}).expect(400);
+  expect(missing.body.error.details.map((d: { field: string }) => d.field)).toEqual(["phone", "city", "address"]);
+
+  const bad = await send({ phone: "call me", city: " ", address: "x" }).expect(400);
+  expect(bad.body.error.details).toEqual([
+    { field: "phone", message: "Enter a valid phone number, for example +961 70 123 456" },
+    { field: "city", message: "Enter the city" },
+    { field: "address", message: "Enter the street, building and floor" },
+  ]);
+  await send({ ...shipTo, phone: "12 34" }).expect(400); // too few digits
+  expect(await stockOf(gadget)).toBe(5);
+});
+
+test("the order saves where to deliver; the admin sees it and the cart can fill it in next time", async () => {
+  const gadget = await newProduct(5);
+  const token = await createUser("new@test.dev");
+  const lastAddress = () => request(app).get("/api/orders/last-address").set(auth(token)).expect(200);
+  const place = (where: object) => request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: gadget, quantity: 1 }], ...where }).expect(201);
+  expect((await lastAddress()).body).toBeNull(); // no orders yet
+
+  await place(shipTo);
+  const created = await place({ phone: " 03-123456 ", city: "Saida ", address: "  Riad Al Solh Street, Building 4, 2nd floor" });
+  const clean = { phone: "03-123456", city: "Saida", address: "Riad Al Solh Street, Building 4, 2nd floor" }; // extra spaces removed
+  expect(created.body).toMatchObject(clean);
+  expect((await lastAddress()).body).toEqual(clean); // the newest order's address
+
+  const all = await request(app).get("/api/orders").set(auth(adminToken)).expect(200);
+  expect(all.body.find((o: { id: number }) => o.id === created.body.id)).toMatchObject(clean);
+  await request(app).get("/api/orders/last-address").set(auth(adminToken)).expect(403); // customers only
 });

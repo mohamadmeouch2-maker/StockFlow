@@ -8,10 +8,13 @@ import { DELIVERY_OPTIONS, deliverBy } from "./delivery";
 // Order lines come back with the product name, which the website shows.
 export const withItems = { items: { include: { product: { select: { name: true } } } } } as const;
 
+// Where to bring the order: typed by the customer in the cart.
+export type ShipTo = { phone: string; city: string; address: string };
+
 // FR-07 / FR-08: one transaction checks and deducts the stock for every line and
 // computes the total from the current prices, plus the delivery fee the customer chose.
 // If any line fails, nothing changes.
-export async function createOrder(userId: number, items: { productId: number; quantity: number }[], delivery: DeliveryMethod = "STANDARD") {
+export async function createOrder(userId: number, items: { productId: number; quantity: number }[], delivery: DeliveryMethod, shipTo: ShipTo) {
   // Same product twice in one order -> add the quantities into one line.
   const quantities = new Map<number, number>();
   for (const { productId, quantity } of items) quantities.set(productId, (quantities.get(productId) ?? 0) + quantity);
@@ -45,7 +48,7 @@ export async function createOrder(userId: number, items: { productId: number; qu
     // Express costs more and arrives sooner. The fee comes from the server, never from the browser.
     const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
     return tx.order.create({
-      data: { userId, total: total.add(deliveryFee), delivery, deliveryFee, deliverBy: deliverBy(delivery), items: { create: orderLines } },
+      data: { userId, total: total.add(deliveryFee), delivery, deliveryFee, deliverBy: deliverBy(delivery), ...shipTo, items: { create: orderLines } },
       include: withItems,
     });
   });

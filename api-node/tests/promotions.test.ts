@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/lib/prisma";
-import { auth, createUser, resetDb } from "./helpers";
+import { auth, createUser, resetDb, shipTo } from "./helpers";
 
 // The sale: 30% off the products in stock that sold fewer than 5 pieces in the last 30 days.
 let adminToken = "";
@@ -53,7 +53,7 @@ test("sale products show the sale price; the others don't", async () => {
 });
 
 test("an order pays the sale price (calculated on the server)", async () => {
-  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: id["Slow"], quantity: 2 }] }).expect(201);
+  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: id["Slow"], quantity: 2 }], ...shipTo }).expect(201);
   expect(Number(res.body.items[0].unitPrice)).toBe(7);
   expect(Number(res.body.total)).toBe(14);
 });

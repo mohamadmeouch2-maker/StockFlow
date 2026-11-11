@@ -89,6 +89,15 @@ export function MyOrdersPage() {
               </li>
             ))}
           </ul>
+          {o.address && (
+            <p className="border-t border-slate-100 px-5 py-2.5 text-sm text-slate-600">
+              <span aria-hidden="true">📍 </span>Deliver to{" "}
+              <span className="font-medium text-slate-900">
+                {o.address}, {o.city}
+              </span>{" "}
+              · <span className="whitespace-nowrap">{o.phone}</span>
+            </p>
+          )}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
             <span className="font-semibold text-slate-900">
               Total: ${Number(o.total).toFixed(2)}

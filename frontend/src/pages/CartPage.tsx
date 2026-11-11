@@ -1,13 +1,29 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import { z } from "zod";
 import { ApiError } from "../api/client";
 import { ordersApi } from "../api/orders";
-import type { DeliveryMethod, DeliveryOption } from "../api/types";
+import type { DeliveryMethod, DeliveryOption, ShipTo } from "../api/types";
 import { useCart } from "../cart/useCart";
+import { FormField } from "../components/FormField";
 import { ProductImage } from "../components/ProductImage";
 import { useToast } from "../toast/useToast";
 import { addDays, effectivePrice, shortDate } from "../utils/format";
+
+// Where to deliver: the same rules as the API, so mistakes show before sending.
+// A phone number like "+961 70 123 456", "03-123456" or "70123456" (7 to 15 digits).
+const digits = (v: string) => v.replace(/\D/g, "").length;
+const shipToSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .refine((v) => /^\+?[\d\s-]+$/.test(v) && digits(v) >= 7 && digits(v) <= 15, { message: "Enter a valid phone number, for example +961 70 123 456" }),
+  city: z.string().trim().min(2, "Enter the city").max(60, "At most 60 characters"),
+  address: z.string().trim().min(5, "Enter the street, building and floor").max(300, "At most 300 characters"),
+});
 
 // "Next day" or "3–5 days"
 const howLong = (o: DeliveryOption) => (o.maxDays === 1 ? "Next day" : o.minDays === o.maxDays ? `${o.maxDays} days` : `${o.minDays}–${o.maxDays} days`);
@@ -22,11 +38,26 @@ export function CartPage() {
   const [delivery, setDelivery] = useState<DeliveryMethod>("STANDARD");
   const options = useQuery({ queryKey: ["delivery-options"], queryFn: ordersApi.deliveryOptions, staleTime: Infinity });
 
+  // Where to deliver. The address of the last order is filled in, and the customer can change it.
+  const lastAddress = useQuery({ queryKey: ["orders", "last-address"], queryFn: ordersApi.lastAddress, staleTime: Infinity, enabled: items.length > 0 });
+  const {
+    register,
+    handleSubmit,
+    setError,
+    formState: { errors },
+  } = useForm<ShipTo>({
+    resolver: zodResolver(shipToSchema),
+    defaultValues: { phone: "", city: "", address: "" },
+    values: lastAddress.data ?? undefined,
+    resetOptions: { keepDirtyValues: true }, // anything the customer already typed stays
+  });
+
   const placeOrder = useMutation({
-    mutationFn: () =>
+    mutationFn: (shipTo: ShipTo) =>
       ordersApi.create(
         items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
         delivery,
+        shipTo,
       ),
     onSuccess: (order) => {
       clear();
@@ -35,6 +66,11 @@ export function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       navigate("/orders");
       toast(`Order #${order.id} placed. It arrives by ${shortDate(order.deliverBy ?? new Date())}. Thank you!`);
+    },
+    // A field the server didn't accept: its message goes under that field
+    onError: (err) => {
+      if (err instanceof ApiError)
+        for (const d of err.details) if (d.field in shipToSchema.shape) setError(d.field as keyof ShipTo, { message: d.message });
     },
   });
 
@@ -61,39 +97,64 @@ export function CartPage() {
     <div className="space-y-5">
       <h1 className="page-title">Your cart</h1>
       <div className="grid gap-6 lg:grid-cols-3">
-        <ul className="card divide-y divide-slate-100 lg:col-span-2">
-          {items.map(({ product, quantity }) => (
-            <li key={product.id} className="flex flex-wrap items-center gap-4 p-4">
-              <ProductImage src={product.imageUrl} alt={product.name} className="h-16 w-16" />
-              <div className="min-w-0 flex-1">
-                <Link to={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-brand-700">
-                  {product.name}
-                </Link>
-                <p className="text-sm text-slate-500">
-                  {product.salePrice && <del className="mr-1">${Number(product.price).toFixed(2)}</del>}
-                  <span className={product.salePrice ? "font-medium text-sale-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
-                  {product.promotion && <span className="ml-1 rounded bg-sale-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
-                </p>
-              </div>
-              <label className="sr-only" htmlFor={`qty-${product.id}`}>
-                Quantity of {product.name}
+        <div className="space-y-6 lg:col-span-2">
+          <ul className="card divide-y divide-slate-100">
+            {items.map(({ product, quantity }) => (
+              <li key={product.id} className="flex flex-wrap items-center gap-4 p-4">
+                <ProductImage src={product.imageUrl} alt={product.name} className="h-16 w-16" />
+                <div className="min-w-0 flex-1">
+                  <Link to={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-brand-700">
+                    {product.name}
+                  </Link>
+                  <p className="text-sm text-slate-500">
+                    {product.salePrice && <del className="mr-1">${Number(product.price).toFixed(2)}</del>}
+                    <span className={product.salePrice ? "font-medium text-sale-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
+                    {product.promotion && <span className="ml-1 rounded bg-sale-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
+                  </p>
+                </div>
+                <label className="sr-only" htmlFor={`qty-${product.id}`}>
+                  Quantity of {product.name}
+                </label>
+                <input
+                  id={`qty-${product.id}`}
+                  type="number"
+                  min={1}
+                  max={product.stock}
+                  value={quantity}
+                  onChange={(e) => setQuantity(product.id, Number(e.target.value))}
+                  className="input w-20"
+                />
+                <span className="w-20 text-right font-semibold">${(effectivePrice(product) * quantity).toFixed(2)}</span>
+                <button onClick={() => remove(product.id)} className="text-sm text-danger-600 hover:underline">
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          {/* Where to deliver. The "Place order" button in the summary sends this form. */}
+          <form id="checkout" onSubmit={handleSubmit((shipTo) => placeOrder.mutate(shipTo))} className="card space-y-4 p-6">
+            <div>
+              <h2 className="font-semibold text-slate-900">
+                <span aria-hidden="true">📍 </span>Delivery address
+              </h2>
+              <p className="text-sm text-slate-500">
+                {lastAddress.data ? "Filled in from your last order. Change it if this one goes somewhere else." : "Where should we bring your order?"}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <FormField id="phone" label="Phone number" type="tel" autoComplete="tel" placeholder="+961 70 123 456" maxLength={25} {...register("phone")} error={errors.phone?.message} />
+              <FormField id="city" label="City" autoComplete="address-level2" placeholder="Beirut" maxLength={60} {...register("city")} error={errors.city?.message} />
+            </div>
+            <div>
+              <label htmlFor="address" className="label">
+                Address
               </label>
-              <input
-                id={`qty-${product.id}`}
-                type="number"
-                min={1}
-                max={product.stock}
-                value={quantity}
-                onChange={(e) => setQuantity(product.id, Number(e.target.value))}
-                className="input w-20"
-              />
-              <span className="w-20 text-right font-semibold">${(effectivePrice(product) * quantity).toFixed(2)}</span>
-              <button onClick={() => remove(product.id)} className="text-sm text-danger-600 hover:underline">
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
+              <textarea id="address" rows={2} autoComplete="street-address" placeholder="Street, building, floor" maxLength={300} {...register("address")} className="input" />
+              {errors.address && <p className="field-error">{errors.address.message}</p>}
+            </div>
+          </form>
+        </div>
 
         <div className="card h-fit space-y-4 p-6">
           <h2 className="font-semibold text-slate-900">Order summary</h2>
@@ -150,7 +211,7 @@ export function CartPage() {
             placeOrder.isError && <p className="alert-danger">Could not place the order. {placeOrder.error.message}</p>
           )}
 
-          <button disabled={placeOrder.isPending} onClick={() => placeOrder.mutate()} className="btn btn-primary w-full py-2.5">
+          <button type="submit" form="checkout" disabled={placeOrder.isPending} className="btn btn-primary w-full py-2.5">
             {placeOrder.isPending ? "Placing order..." : "Place order"}
           </button>
         </div>

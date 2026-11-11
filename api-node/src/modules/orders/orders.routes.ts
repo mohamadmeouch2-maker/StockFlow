@@ -8,9 +8,18 @@ import { reportBody, reportIssue } from "../issues/issues.routes";
 import { deliveryOptionsJson } from "./delivery";
 import { changeStatus, createOrder, withItems } from "./orders.service";
 
+// A phone number like "+961 70 123 456", "03-123456" or "70123456": digits, spaces, dashes and
+// an optional "+" at the start, with 7 to 15 digits in all.
+const digits = (v: string) => v.replace(/\D/g, "").length;
+const isPhone = (v: string) => /^\+?[\d\s-]+$/.test(v) && digits(v) >= 7 && digits(v) <= 15;
+
 const createBody = z.object({
   items: z.array(z.object({ productId: z.number().int(), quantity: z.number().int().min(1) })).min(1),
   delivery: z.enum(["STANDARD", "EXPRESS"]).default("STANDARD"), // how fast; Express costs more
+  // Where to bring the order (the website checks the same rules before sending)
+  phone: z.string({ error: "Enter a phone number" }).trim().refine(isPhone, { message: "Enter a valid phone number, for example +961 70 123 456" }),
+  city: z.string({ error: "Enter the city" }).trim().min(2, "Enter the city").max(60, "At most 60 characters"),
+  address: z.string({ error: "Enter the address" }).trim().min(5, "Enter the street, building and floor").max(300, "At most 300 characters"),
 });
 const statusBody = z.object({ status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]) });
 const listQuery = z.object({ status: z.enum(["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"]).optional() });
@@ -20,13 +29,23 @@ ordersRouter.use(requireAuth); // every orders route needs a login
 
 // FR-07: a customer places an order. The total is computed on the server (FR-08).
 ordersRouter.post("/", requireRole("CUSTOMER"), validate(createBody), async (_req, res) => {
-  const { items, delivery } = res.locals.body;
-  res.status(201).json(await createOrder(res.locals.user.id, items, delivery));
+  const { items, delivery, phone, city, address } = res.locals.body;
+  res.status(201).json(await createOrder(res.locals.user.id, items, delivery, { phone, city, address }));
 });
 
 // The delivery choices for the cart: Standard (free, 3-5 days) or Express (extra fee, next day).
 ordersRouter.get("/delivery-options", (_req, res) => {
   res.json(deliveryOptionsJson());
+});
+
+// The address of my last order, so the cart can fill it in for me. null = none yet.
+ordersRouter.get("/last-address", requireRole("CUSTOMER"), async (_req, res) => {
+  const last = await prisma.order.findFirst({
+    where: { userId: res.locals.user.id, address: { not: null } },
+    select: { phone: true, city: true, address: true },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+  });
+  res.json(last);
 });
 
 // FR-09: only my own orders, newest first, with any problems I reported.

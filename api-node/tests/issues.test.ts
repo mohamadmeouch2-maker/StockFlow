@@ -1,7 +1,7 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/lib/prisma";
-import { auth, createUser, resetDb } from "./helpers";
+import { auth, createUser, resetDb, shipTo } from "./helpers";
 
 // Customers report problems with their orders; the admin replies and resolves them.
 let customerToken = "";
@@ -16,7 +16,7 @@ beforeAll(async () => {
   adminToken = await createUser("admin@test.dev", "ADMIN");
   const categoryId = (await prisma.category.create({ data: { name: "Test" } })).id;
   const productId = (await prisma.product.create({ data: { name: "Widget", price: 10, stock: 5, categoryId } })).id;
-  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId, quantity: 1 }] });
+  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId, quantity: 1 }], ...shipTo });
   orderId = res.body.id;
 });
 afterAll(() => prisma.$disconnect());

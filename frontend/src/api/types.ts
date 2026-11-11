@@ -31,6 +31,9 @@ export type OrderStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 export type DeliveryMethod = "STANDARD" | "EXPRESS";
 export type DeliveryOption = { id: DeliveryMethod; label: string; fee: string; minDays: number; maxDays: number };
 
+// Where to bring the order, typed in the cart.
+export type ShipTo = { phone: string; city: string; address: string };
+
 export type Order = {
   id: number;
   userId: number;
@@ -39,6 +42,10 @@ export type Order = {
   delivery: DeliveryMethod;
   deliveryFee: string;
   deliverBy: string | null; // the latest expected arrival day
+  // Where to deliver. null only for orders from before Nov 11.
+  phone?: string | null;
+  city?: string | null;
+  address?: string | null;
   // When each step happened (tracking timeline). null = not yet, or unknown for orders from before Nov 11.
   shippedAt?: string | null;
   deliveredAt?: string | null;

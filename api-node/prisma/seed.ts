@@ -53,10 +53,11 @@ const products: Record<string, SeedProduct[]> = {
 };
 
 // Sample reviewers and comments, so every product starts with some ratings (local demo data).
-const sampleReviewers: [name: string, email: string][] = [
-  ["Sara", "sara@stockflow.test"],
-  ["Omar", "omar@stockflow.test"],
-  ["Lina", "lina@stockflow.test"],
+// Their orders go to these sample addresses (made up, with "000" phone numbers).
+const sampleReviewers: [name: string, email: string, shipTo: { phone: string; city: string; address: string }][] = [
+  ["Sara", "sara@stockflow.test", { phone: "+961 70 000 101", city: "Beirut", address: "Hamra Street, Cedar Building, 3rd floor" }],
+  ["Omar", "omar@stockflow.test", { phone: "+961 71 000 202", city: "Tripoli", address: "Azmi Street, Building 8, 1st floor" }],
+  ["Lina", "lina@stockflow.test", { phone: "+961 76 000 303", city: "Jounieh", address: "Main Road, Rose Building, 5th floor" }],
 ];
 const sampleComments = [
   "Exactly what our office needed.",
@@ -92,8 +93,11 @@ async function main() {
 
   // Three sample customers who wrote the sample reviews
   const reviewers = [];
-  for (const [name, email] of sampleReviewers) {
-    reviewers.push(await prisma.user.upsert({ where: { email }, update: {}, create: { name, email, passwordHash: hash } }));
+  for (const [name, email, shipTo] of sampleReviewers) {
+    const user = await prisma.user.upsert({ where: { email }, update: {}, create: { name, email, passwordHash: hash } });
+    // Their orders from before addresses existed (Nov 11) get the sample address
+    await prisma.order.updateMany({ where: { userId: user.id, address: null }, data: shipTo });
+    reviewers.push({ ...user, shipTo });
   }
 
   let photos = 0;
@@ -158,9 +162,11 @@ async function main() {
               : status === "DELIVERED"
                 ? { shippedAt: after(20), deliveredAt: after(delivery === "EXPRESS" ? 24 : 72) }
                 : {};
+        const customer = reviewers[(day + k) % reviewers.length];
         await prisma.order.create({
           data: {
-            userId: reviewers[(day + k) % reviewers.length].id,
+            userId: customer.id,
+            ...customer.shipTo,
             status,
             total: total.add(deliveryFee),
             delivery,

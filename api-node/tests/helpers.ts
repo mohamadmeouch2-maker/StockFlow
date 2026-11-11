@@ -26,3 +26,6 @@ export async function createUser(email: string, role: "CUSTOMER" | "ADMIN" = "CU
 }
 
 export const auth = (token: string) => ({ Authorization: `Bearer ${token}` });
+
+// Where to deliver: every new order needs a phone number, a city and an address.
+export const shipTo = { phone: "+961 70 000 101", city: "Beirut", address: "Hamra Street, Cedar Building, 3rd floor" };
