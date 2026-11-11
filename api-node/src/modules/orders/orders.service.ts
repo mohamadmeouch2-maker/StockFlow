@@ -1,5 +1,6 @@
 import { OrderStatus, Prisma, type DeliveryMethod } from "@prisma/client";
 import { AppError, notFound } from "../../lib/errors";
+import { salePrice } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
 import { stockAlert } from "../notifications/notifications.service";
 import { DELIVERY_OPTIONS, deliverBy } from "./delivery";
@@ -27,13 +28,15 @@ export async function createOrder(userId: number, items: { productId: number; qu
         where: { id: productId, stock: { gte: quantity } },
         data: { stock: { decrement: quantity } },
       });
-      const product = await tx.product.findUnique({ where: { id: productId } });
+      const product = await tx.product.findUnique({ where: { id: productId }, include: { promotion: true } });
       if (!product)
         throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "items", message: `Product ${productId} does not exist` }]);
       if (count === 0)
         throw new AppError(409, "INSUFFICIENT_STOCK", `Not enough stock for ${product.name} (${product.stock} left)`);
-      total = total.add(product.price.mul(quantity));
-      orderLines.push({ productId, quantity, unitPrice: product.price });
+      // During a sale the customer pays the sale price (e.g. 30% off), worked out here on the server
+      const unitPrice = salePrice(product) ?? product.price;
+      total = total.add(unitPrice.mul(quantity));
+      orderLines.push({ productId, quantity, unitPrice });
       // Automatic alert for the admins when this order makes the product low or sold out.
       // It is inside the transaction, so a failed order leaves no alert behind.
       const alert = stockAlert(product, quantity);

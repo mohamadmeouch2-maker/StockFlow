@@ -80,6 +80,9 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Do:** admin → **Dashboard**. Point at the tallest column in the chart. Click **Last 7 days**, then **Last 30 days**. Open **Show as a table**.
 **Say:** "This is the admin's home page. The top boxes compare this week with the week before and show what needs attention: products to restock and open problems. Below, for the chosen period: sales per day, orders by status and the 5 best sellers. Cancelled orders are not counted as sales. It all comes from one API call, which asks the database 7 questions at the same time. The chart is drawn with Recharts, and the same numbers are available as a table."
 
+**Then:** in the **🎄 Sale** card, click **Start Christmas Sale** (30% off the products that sold fewer than 5 pieces in 30 days, until Dec 31). Open the shop in a new tab without logging in.
+**Say:** "The products that didn't sell well get 30% off. Visitors see a Christmas window once per visit, red sale prices and a deals filter, and the order is charged the sale price by the server. After Dec 31 the prices go back by themselves."
+
 ### 14. Low stock (30 seconds): FR-16
 **Do:** admin → **Low stock** (or click the **Need restocking** box on the Dashboard).
 **Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
@@ -88,7 +91,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "72 API tests run against a separate test database, so real data is never touched. 42 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the categories page, sorting, favourites, Buy again and order tracking. The guide asks for at least 10 and 5."
+**Say:** "78 API tests run against a separate test database, so real data is never touched. 45 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

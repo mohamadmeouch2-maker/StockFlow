@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import { z } from "zod";
 import { AppError, notFound, parseId } from "../../lib/errors";
+import { withSale } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
 import { deleteUpload, productImageUpload } from "../../lib/uploads";
 import { requireAuth, requireRole } from "../../middleware/auth";
@@ -17,6 +18,7 @@ const listQuery = z.object({
   categoryId: z.coerce.number().int().optional(),
   sort: z.enum(SORTS).default("name"),
   inStock: z.enum(["true", "false"]).optional(), // "true" = hide sold-out products
+  onSale: z.enum(["true", "false"]).optional(), // "true" = only the products in a sale that is on
 });
 
 // How each sort orders the rows (the name breaks ties, so the order is always the same).
@@ -47,11 +49,12 @@ export const productsRouter = Router();
 const admin = [requireAuth, requireRole("ADMIN")];
 
 productsRouter.get("/", validate(listQuery, "query"), async (_req, res) => {
-  const { page, pageSize, search, categoryId, sort, inStock } = res.locals.query as z.infer<typeof listQuery>;
+  const { page, pageSize, search, categoryId, sort, inStock, onSale } = res.locals.query as z.infer<typeof listQuery>;
   const where: Prisma.ProductWhereInput = {
     ...(search && { name: { contains: search, mode: "insensitive" as const } }), // case-insensitive
     ...(categoryId && { categoryId }),
     ...(inStock === "true" && { stock: { gt: 0 } }),
+    ...(onSale === "true" && { promotion: { endsAt: { gt: new Date() } } }),
   };
 
   let items;
@@ -65,25 +68,25 @@ productsRouter.get("/", validate(listQuery, "query"), async (_req, res) => {
     const score = (id: number) => ratings(id).average ?? -1; // not rated yet -> last
     all.sort((a, b) => score(b.id) - score(a.id) || ratings(b.id).count - ratings(a.id).count || a.name.localeCompare(b.name));
     const pageIds = all.slice((page - 1) * pageSize, page * pageSize).map((p) => p.id);
-    const rows = await prisma.product.findMany({ where: { id: { in: pageIds } }, include: { category: true } });
+    const rows = await prisma.product.findMany({ where: { id: { in: pageIds } }, include: { category: true, promotion: true } });
     items = pageIds.map((id) => rows.find((p) => p.id === id)!);
     total = all.length;
   } else {
     [items, total] = await prisma.$transaction([
-      prisma.product.findMany({ where, include: { category: true }, orderBy: orderBy[sort], skip: (page - 1) * pageSize, take: pageSize }),
+      prisma.product.findMany({ where, include: { category: true, promotion: true }, orderBy: orderBy[sort], skip: (page - 1) * pageSize, take: pageSize }),
       prisma.product.count({ where }),
     ]);
   }
   const rating = await ratingsFor(items.map((p) => p.id)); // average rating / 10 for each product
-  res.json({ items: items.map((p) => ({ ...p, rating: rating(p.id) })), page, pageSize, total });
+  res.json({ items: items.map((p) => ({ ...withSale(p), rating: rating(p.id) })), page, pageSize, total }); // withSale: the sale price, if any
 });
 
 // FR-05
 productsRouter.get("/:id", async (req, res) => {
   const id = parseId(req.params.id, "Product");
-  const product = await prisma.product.findUnique({ where: { id }, include: { category: true } });
+  const product = await prisma.product.findUnique({ where: { id }, include: { category: true, promotion: true } });
   if (!product) throw notFound("Product");
-  res.json({ ...product, rating: (await ratingsFor([id]))(id) });
+  res.json({ ...withSale(product), rating: (await ratingsFor([id]))(id) });
 });
 
 // Counts one view of the product page. The website calls it once per visit.

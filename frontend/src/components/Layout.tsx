@@ -5,6 +5,7 @@ import { issuesApi } from "../api/issues";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { useToast } from "../toast/useToast";
+import { ChristmasSalePopup } from "./ChristmasSalePopup";
 import { LogoMark } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 
@@ -124,6 +125,8 @@ export function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <ChristmasSalePopup />
 
       <footer className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-slate-500">

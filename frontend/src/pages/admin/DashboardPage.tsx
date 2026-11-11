@@ -5,6 +5,7 @@ import { reportsApi, type Summary } from "../../api/reports";
 import type { OrderStatus } from "../../api/types";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
 import { ProductImage } from "../../components/ProductImage";
+import { SaleCard } from "../../components/SaleCard";
 import { SalesChart } from "../../components/SalesChart";
 import { DashboardSkeleton } from "../../components/Skeleton";
 import { dayToDate, money } from "../../utils/format";
@@ -99,6 +100,8 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
           note={s.openIssues > 0 ? <span className="text-amber-700">⚠ Waiting for an answer</span> : <span className="text-emerald-700">✓ All answered</span>}
         />
       </div>
+
+      <SaleCard />
 
       {/* The period: everything below shows only these days */}
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Period">

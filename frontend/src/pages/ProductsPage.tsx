@@ -1,11 +1,13 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { productsApi, SORT_OPTIONS, type ProductSort } from "../api/products";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { Pagination } from "../components/Pagination";
+import { Price } from "../components/Price";
 import { ProductImage } from "../components/ProductImage";
 import { RatingBadge } from "../components/RatingBadge";
+import { SaleBanner } from "../components/SaleBanner";
 import { ProductCardsSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useDebounce } from "../hooks/useDebounce";
@@ -17,13 +19,20 @@ export function ProductsPage() {
   const [categoryId, setCategoryId] = useState<number>();
   const [sort, setSort] = useState<ProductSort>("name");
   const [inStock, setInStock] = useState(false); // true = hide sold-out products
+  // "?sale=1" in the address shows only the products on sale (the Christmas popup links here)
+  const [params, setParams] = useSearchParams();
+  const onSale = params.get("sale") === "1";
+  const toggleDeals = () => {
+    setParams(onSale ? {} : { sale: "1" });
+    setPage(1);
+  };
   const debounced = useDebounce(search, 300);
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: productsApi.categories });
 
   const products = useQuery({
-    queryKey: ["products", page, debounced, categoryId, sort, inStock],
-    queryFn: () => productsApi.list({ page, search: debounced, categoryId, sort, inStock }),
+    queryKey: ["products", page, debounced, categoryId, sort, inStock, onSale],
+    queryFn: () => productsApi.list({ page, search: debounced, categoryId, sort, inStock, onSale }),
     placeholderData: keepPreviousData, // keep showing the old page while the next one loads
   });
 
@@ -39,9 +48,10 @@ export function ProductsPage() {
 
   return (
     <section id="catalog" className="scroll-mt-20 space-y-5">
+      <SaleBanner showingDeals={onSale} onToggle={toggleDeals} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="page-title">Our products</h2>
+          <h2 className="page-title">{onSale ? "Christmas deals 🎁" : "Our products"}</h2>
           <p className="text-sm text-slate-500">{showing}</p>
         </div>
         <div className="relative w-full sm:w-80">
@@ -139,15 +149,22 @@ export function ProductsPage() {
         {products.data?.items.map((p) => (
           <li key={p.id} className="card card-hover group relative flex gap-4 p-4">
             <FavoriteButton product={p} className="absolute top-2 right-2" />
-            <Link to={`/products/${p.id}`} className="shrink-0">
+            <Link to={`/products/${p.id}`} className="relative shrink-0">
               <ProductImage src={p.imageUrl} alt={p.name} className="h-24 w-24" />
+              {p.salePrice && (
+                <span className="absolute -top-2 -left-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white shadow" aria-hidden="true">
+                  🎁 Sale
+                </span>
+              )}
             </Link>
             <div className="flex min-w-0 flex-1 flex-col pr-6">
               <span className="text-xs font-medium tracking-wide text-slate-400 uppercase">{p.category?.name}</span>
               <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 group-hover:text-blue-700">
                 {p.name}
               </Link>
-              <p className="mt-1 text-lg font-bold text-slate-900">${Number(p.price).toFixed(2)}</p>
+              <p className="mt-1">
+                <Price product={p} />
+              </p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <RatingBadge rating={p.rating} />
                 {p.viewCount !== undefined && <span className="text-xs whitespace-nowrap text-slate-400">👁 {p.viewCount} views</span>}

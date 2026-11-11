@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, test, vi } from "vitest";
+import { promotionsApi } from "../../api/promotions";
 import { reportsApi, type Summary } from "../../api/reports";
 import { DashboardPage } from "./DashboardPage";
 
@@ -21,6 +22,7 @@ const summary: Summary = {
     { productId: 3, name: "A4 Paper (500 sheets)", imageUrl: null, sold: 11 },
   ],
 };
+vi.spyOn(promotionsApi, "current").mockResolvedValue(null); // no sale on
 const load = vi.spyOn(reportsApi, "summary").mockImplementation(async (days = 30) => ({ ...summary, days, salesByDay: salesByDay.slice(-days) }));
 
 const renderPage = () =>

@@ -74,6 +74,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] "Buy again" in My orders: the same products go back in the cart at today's price; sold-out ones are skipped
   - [x] Order tracking: a timeline Placed → Shipped → Delivered (or Cancelled) with the date of each step (new `shipped_at`, `delivered_at`, `cancelled_at` columns)
   - [x] Tests: API 72, website 42
+- [x] **Christmas sale (Nov 11):** admins start a sale from the Dashboard: a percentage off (30%) until a date (Dec 31) for the products in stock that sold fewer than N pieces (5) in the last days (30). New `promotions` table; each product can belong to a sale; after the end date prices go back by themselves. Customers see a festive pop-up with falling snow (once per visit), a sale banner and a "Christmas deals" filter, and red sale prices with the old price crossed out on the list, product page, favourites and cart. Orders pay the sale price, calculated on the server. Tests: API 78, website 45
 ## To do
 
 ### Friday, Nov 13: Demo

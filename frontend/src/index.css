@@ -116,9 +116,55 @@
   animation: toast-in 0.25s ease-out both;
 }
 
+/* Christmas sale window: it pops in, snow falls, the garland lights blink */
+@keyframes sale-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.sale-pop {
+  animation: sale-pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+@keyframes snow-fall {
+  0% {
+    transform: translateY(-20px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(560px) rotate(180deg);
+    opacity: 0;
+  }
+}
+.snowflake {
+  position: absolute;
+  top: -20px;
+  color: white;
+  opacity: 0;
+  animation: snow-fall linear infinite;
+}
+@keyframes garland-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+.garland-light {
+  animation: garland-blink 1.2s ease-in-out infinite;
+}
+
 /* People who turned off animations in their system settings get no movement */
 @media (prefers-reduced-motion: reduce) {
   .splash-pop,
+  .sale-pop,
+  .snowflake,
+  .garland-light,
   .page-fade,
   .toast-in,
   .card-hover,

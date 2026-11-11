@@ -7,7 +7,7 @@ import type { DeliveryMethod, DeliveryOption } from "../api/types";
 import { useCart } from "../cart/useCart";
 import { ProductImage } from "../components/ProductImage";
 import { useToast } from "../toast/useToast";
-import { addDays, shortDate } from "../utils/format";
+import { addDays, effectivePrice, shortDate } from "../utils/format";
 
 // "Next day" or "3–5 days"
 const howLong = (o: DeliveryOption) => (o.maxDays === 1 ? "Next day" : o.minDays === o.maxDays ? `${o.maxDays} days` : `${o.minDays}–${o.maxDays} days`);
@@ -39,7 +39,7 @@ export function CartPage() {
   });
 
   // For information only: the server calculates the real total (FR-08).
-  const subtotal = items.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0);
+  const subtotal = items.reduce((sum, i) => sum + effectivePrice(i.product) * i.quantity, 0);
   const deliveryFee = Number(options.data?.find((o) => o.id === delivery)?.fee ?? 0);
   const total = subtotal + deliveryFee;
 
@@ -69,7 +69,11 @@ export function CartPage() {
                 <Link to={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-blue-700">
                   {product.name}
                 </Link>
-                <p className="text-sm text-slate-500">${Number(product.price).toFixed(2)} each</p>
+                <p className="text-sm text-slate-500">
+                  {product.salePrice && <del className="mr-1">${Number(product.price).toFixed(2)}</del>}
+                  <span className={product.salePrice ? "font-medium text-red-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
+                  {product.promotion && <span className="ml-1 rounded bg-red-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
+                </p>
               </div>
               <label className="sr-only" htmlFor={`qty-${product.id}`}>
                 Quantity of {product.name}
@@ -83,7 +87,7 @@ export function CartPage() {
                 onChange={(e) => setQuantity(product.id, Number(e.target.value))}
                 className="input w-20"
               />
-              <span className="w-20 text-right font-semibold">${(Number(product.price) * quantity).toFixed(2)}</span>
+              <span className="w-20 text-right font-semibold">${(effectivePrice(product) * quantity).toFixed(2)}</span>
               <button onClick={() => remove(product.id)} className="text-sm text-red-600 hover:underline">
                 Remove
               </button>

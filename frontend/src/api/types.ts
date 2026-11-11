@@ -14,9 +14,14 @@ export type Product = {
   imageUrl?: string | null; // FR-17: e.g. "/uploads/products/product-1-....jpg", null = no photo
   viewCount?: number; // how many times the product page was opened
   rating?: Rating; // average rating out of 10
+  salePrice?: string | null; // the price during a sale (e.g. 30% off for Christmas), null = no sale
+  promotion?: Promotion | null; // the sale this product is in
   categoryId: number;
   category?: Category;
 };
+
+// A sale campaign: a percentage off some products until a date (e.g. "Christmas Sale", 30%).
+export type Promotion = { id: number; name: string; percent: number; endsAt: string; productCount?: number };
 
 export type Paged<T> = { items: T[]; page: number; pageSize: number; total: number };
 

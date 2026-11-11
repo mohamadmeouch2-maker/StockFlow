@@ -9,6 +9,7 @@ import { issuesRouter } from "./modules/issues/issues.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { ordersRouter } from "./modules/orders/orders.routes";
 import { productsRouter } from "./modules/products/products.routes";
+import { promotionsRouter } from "./modules/promotions/promotions.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
 import { reviewsRouter } from "./modules/reviews/reviews.routes";
 
@@ -36,6 +37,7 @@ app.use("/api/issues", issuesRouter); // problems customers report with their or
 app.use("/api/reports", reportsRouter);
 app.use("/api/notifications", notificationsRouter); // stock alerts for admins
 app.use("/api/favorites", favoritesRouter); // customers' saved products
+app.use("/api/promotions", promotionsRouter); // sales, e.g. the Christmas Sale
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Route not found", details: [] } });
 });

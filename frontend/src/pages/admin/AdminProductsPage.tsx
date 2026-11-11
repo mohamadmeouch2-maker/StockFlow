@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { productsApi } from "../../api/products";
 import type { Product } from "../../api/types";
 import { Pagination } from "../../components/Pagination";
+import { Price } from "../../components/Price";
 import { ProductImage } from "../../components/ProductImage";
 import { RatingBadge } from "../../components/RatingBadge";
 import { RowsSkeleton } from "../../components/Skeleton";
@@ -81,7 +82,9 @@ export function AdminProductsPage() {
                   </div>
                 </td>
                 <td className="text-slate-500">{p.category?.name}</td>
-                <td className="font-medium">${Number(p.price).toFixed(2)}</td>
+                <td>
+                  <Price product={p} size="sm" />
+                </td>
                 <td>
                   <div className="flex items-center gap-2">
                     <span className="w-8 text-right">{p.stock}</span>

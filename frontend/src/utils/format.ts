@@ -29,3 +29,6 @@ export const addDays = (days: number, from = new Date()) => {
   d.setDate(d.getDate() + days);
   return d;
 };
+
+// The price a customer pays now: the sale price during a sale, otherwise the normal price.
+export const effectivePrice = (p: { price: string; salePrice?: string | null }) => Number(p.salePrice ?? p.price);

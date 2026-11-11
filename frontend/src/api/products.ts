@@ -20,12 +20,13 @@ export const MAX_IMAGE_MB = 2;
 // Guide 4.4: calls to the Core API for products and categories.
 // (Until Nov 5 this file returned mock data with the same functions.)
 export const productsApi = {
-  list: (p: { page: number; search?: string; categoryId?: number; sort?: ProductSort; inStock?: boolean }) => {
+  list: (p: { page: number; search?: string; categoryId?: number; sort?: ProductSort; inStock?: boolean; onSale?: boolean }) => {
     const q = new URLSearchParams({ page: String(p.page), pageSize: "12" });
     if (p.search) q.set("search", p.search);
     if (p.categoryId) q.set("categoryId", String(p.categoryId));
     if (p.sort && p.sort !== "name") q.set("sort", p.sort);
     if (p.inStock) q.set("inStock", "true");
+    if (p.onSale) q.set("onSale", "true");
     return api<Paged<Product>>("core", `/api/products?${q}`);
   },
   get: (id: number) => api<Product>("core", `/api/products/${id}`),

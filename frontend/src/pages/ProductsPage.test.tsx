@@ -4,9 +4,11 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { expect, test, vi } from "vitest";
 import { productsApi } from "../api/products";
+import { promotionsApi } from "../api/promotions";
 import type { Product } from "../api/types";
 import { ProductsPage } from "./ProductsPage";
 
+vi.spyOn(promotionsApi, "current").mockResolvedValue(null); // no sale on
 vi.spyOn(productsApi, "categories").mockResolvedValue([{ id: 1, name: "Office" }]);
 const list = vi.spyOn(productsApi, "list");
 

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { notFound, parseId } from "../../lib/errors";
+import { withSale } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { ratingsFor } from "../reviews/reviews.routes";
@@ -12,12 +13,12 @@ favoritesRouter.use(requireAuth, requireRole("CUSTOMER"));
 favoritesRouter.get("/", async (_req, res) => {
   const favorites = await prisma.favorite.findMany({
     where: { userId: res.locals.user.id },
-    include: { product: { include: { category: true } } },
+    include: { product: { include: { category: true, promotion: true } } },
     orderBy: { createdAt: "desc" },
   });
   const products = favorites.map((f) => f.product);
   const rating = await ratingsFor(products.map((p) => p.id));
-  res.json(products.map((p) => ({ ...p, rating: rating(p.id) })));
+  res.json(products.map((p) => ({ ...withSale(p), rating: rating(p.id) })));
 });
 
 // Save a product. Saving it twice is fine (nothing changes).

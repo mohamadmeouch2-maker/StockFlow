@@ -7,12 +7,14 @@ import type { Product } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { Price } from "../components/Price";
 import { ProductImage } from "../components/ProductImage";
 import { ProductReviews } from "../components/ProductReviews";
 import { RatingBadge } from "../components/RatingBadge";
 import { ProductDetailSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useToast } from "../toast/useToast";
+import { shortDate } from "../utils/format";
 
 // Counts one view per product per visit (not on every refresh).
 function useCountView(id: number) {
@@ -63,7 +65,14 @@ export function ProductDetailPage() {
               <RatingBadge rating={p.rating} />
               {p.viewCount !== undefined && <span className="text-sm text-slate-400">👁 {p.viewCount} views</span>}
             </div>
-            <p className="text-3xl font-bold text-slate-900">${Number(p.price).toFixed(2)}</p>
+            <div>
+              <Price product={p} size="lg" />
+              {p.promotion && (
+                <p className="mt-1 text-sm font-medium text-red-600">
+                  🎄 {p.promotion.name}: {p.promotion.percent}% off until {shortDate(p.promotion.endsAt)}
+                </p>
+              )}
+            </div>
             <div className="flex items-center gap-3">
               <StockBadge product={p} />
               <span className="text-sm text-slate-500">{p.stock} left</span>

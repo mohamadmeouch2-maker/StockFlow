@@ -13,6 +13,7 @@ export async function resetDb() {
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
+  await prisma.promotion.deleteMany();
   await prisma.user.deleteMany();
 }
 

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { favoritesApi } from "../api/favorites";
 import { useCart } from "../cart/useCart";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { Price } from "../components/Price";
 import { ProductImage } from "../components/ProductImage";
 import { RatingBadge } from "../components/RatingBadge";
 import { ProductCardsSkeleton } from "../components/Skeleton";
@@ -52,7 +53,9 @@ export function FavoritesPage() {
                 <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 hover:text-blue-700">
                   {p.name}
                 </Link>
-                <p className="mt-1 text-lg font-bold text-slate-900">${Number(p.price).toFixed(2)}</p>
+                <p className="mt-1">
+                  <Price product={p} />
+                </p>
                 <RatingBadge rating={p.rating} />
                 <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                   <StockBadge product={p} />
