@@ -160,3 +160,19 @@ test("the cart can ask for the delivery options", async () => {
     { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
   ]);
 });
+
+test("the order remembers when it was shipped, delivered or cancelled (tracking timeline)", async () => {
+  const gadget = await newProduct(10);
+  const { id } = (await order(1, customerToken, gadget).expect(201)).body;
+  const patch = (status: string) => request(app).patch(`/api/orders/${id}/status`).set(auth(adminToken)).send({ status }).expect(200);
+  const shipped = (await patch("SHIPPED")).body;
+  expect(shipped.shippedAt).not.toBeNull();
+  expect(shipped.deliveredAt).toBeNull();
+  const delivered = (await patch("DELIVERED")).body;
+  expect(new Date(delivered.deliveredAt).getTime()).toBeGreaterThanOrEqual(new Date(delivered.shippedAt).getTime());
+
+  const other = (await order(1, customerToken, gadget).expect(201)).body;
+  const cancelled = (await request(app).post(`/api/orders/${other.id}/cancel`).set(auth(customerToken)).expect(200)).body;
+  expect(cancelled).toMatchObject({ status: "CANCELLED", shippedAt: null });
+  expect(cancelled.cancelledAt).not.toBeNull();
+});

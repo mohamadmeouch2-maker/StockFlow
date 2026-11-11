@@ -42,6 +42,8 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 ### 6. Cancel, and the stock comes back (30 seconds): FR-09, FR-10
 **Do:** on **My orders**, click **Cancel order** → **OK**. Open the product again.
 **Say:** "Customers can cancel only Pending orders, and the stock is restored. Even a double click restores it only once."
+**Then:** point at an order's **timeline** (Placed → Shipped → Delivered), click **🔁 Buy again**, then go to **Products**, choose **Sort by: Price: low to high**, tick **In stock only**, and click the ♡ on a product → open **Favourites**.
+**Say:** "Every order shows when it was placed, shipped and delivered. Buy again refills the cart at today's prices. Customers can sort and filter the shop, and save products for later with the heart."
 
 ### 7. Not enough stock (1.5 minutes): FR-07
 **Do:**
@@ -86,7 +88,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "61 API tests run against a separate test database, so real data is never touched. 35 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice and the categories page. The guide asks for at least 10 and 5."
+**Say:** "72 API tests run against a separate test database, so real data is never touched. 42 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the categories page, sorting, favourites, Buy again and order tracking. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

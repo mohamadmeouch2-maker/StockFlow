@@ -10,10 +10,11 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 |---|---|---|
 | Accounts | Register, log in, log out, stay logged in after a refresh (JWT valid for 1 hour) | FR-01, FR-02 |
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role | FR-03 |
-| Products | List with search, category filter and 12 per page; detail page with stock status | FR-04, FR-05 |
+| Products | List with search, category filter and 12 per page; sort by price, rating or newest, and "In stock only"; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
 | Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$4.50, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
-| My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
+| My orders | Own orders, newest first, each with a tracking timeline (placed → shipped → delivered, with dates); cancel a Pending order, which gives the stock back; "Buy again" puts an order's products back in the cart | FR-09, FR-10 |
+| Favourites | Customers save products with a heart and find them on a "My favourites" page, ready to add to the cart | extra |
 | Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
 | Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
@@ -32,7 +33,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (61 API tests), Vitest + Testing Library (35 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (72 API tests), Vitest + Testing Library (42 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -111,10 +112,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 61 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 72 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 35 passed (no backend needed)
+npm test        # ✅ Tests: 42 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -128,7 +129,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | POST | `/api/auth/register` | anyone | Create a customer account |
 | POST | `/api/auth/login` | anyone | Get a token |
 | GET | `/api/auth/me` | logged in | Current user |
-| GET | `/api/products?page=&pageSize=&search=&categoryId=` | anyone | Paged product list |
+| GET | `/api/products?page=&pageSize=&search=&categoryId=&sort=&inStock=` | anyone | Paged product list; `sort` = `name` (default), `price_asc`, `price_desc`, `rating` or `newest`; `inStock=true` hides sold-out products |
 | GET | `/api/products/:id` | anyone | One product |
 | POST / PUT / DELETE | `/api/products[/:id]` | Admin | Manage products |
 | GET | `/api/categories` | anyone | List categories A-Z, with how many products each has |
@@ -140,6 +141,8 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/orders?status=` | Admin | All orders |
 | PATCH | `/api/orders/:id/status` | Admin | `{ "status": "SHIPPED" }`, then `DELIVERED`, or `CANCELLED` |
 | POST | `/api/products/:id/view` | anyone | Count one view of the product page |
+| GET | `/api/favorites` | Customer | My favourite products, the last saved first |
+| PUT / DELETE | `/api/favorites/:productId` | Customer | Save a product as a favourite, or remove it |
 | GET | `/api/products/:id/reviews` | anyone | Average rating, count and all reviews |
 | GET | `/api/products/:id/reviews/me` | Customer | May I rate it (did I buy it?) and my review |
 | PUT / DELETE | `/api/products/:id/reviews` | Customer (buyer) | Add or change my review `{ "rating": 9, "comment": "..." }`, or delete it |

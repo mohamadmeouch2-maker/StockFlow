@@ -147,6 +147,16 @@ async function main() {
         // Every second order of a day chose Express delivery (it costs more and arrives the next day).
         const delivery = k === 1 ? "EXPRESS" : "STANDARD";
         const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
+        // When each step happened, for the tracking timeline
+        const after = (hours: number) => new Date(createdAt.getTime() + hours * 60 * 60 * 1000);
+        const steps =
+          status === "CANCELLED"
+            ? { cancelledAt: after(2) }
+            : status === "SHIPPED"
+              ? { shippedAt: after(20) }
+              : status === "DELIVERED"
+                ? { shippedAt: after(20), deliveredAt: after(delivery === "EXPRESS" ? 24 : 72) }
+                : {};
         await prisma.order.create({
           data: {
             userId: reviewers[(day + k) % reviewers.length].id,
@@ -155,6 +165,7 @@ async function main() {
             delivery,
             deliveryFee,
             deliverBy: deliverBy(delivery, createdAt),
+            ...steps,
             createdAt,
             items: { create: items },
           },

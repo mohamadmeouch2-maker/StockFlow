@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { productsApi, SORT_OPTIONS, type ProductSort } from "../api/products";
+import { FavoriteButton } from "../components/FavoriteButton";
 import { Pagination } from "../components/Pagination";
 import { ProductImage } from "../components/ProductImage";
 import { RatingBadge } from "../components/RatingBadge";
@@ -136,11 +137,12 @@ export function ProductsPage() {
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.data?.items.map((p) => (
-          <li key={p.id} className="card card-hover group flex gap-4 p-4">
+          <li key={p.id} className="card card-hover group relative flex gap-4 p-4">
+            <FavoriteButton product={p} className="absolute top-2 right-2" />
             <Link to={`/products/${p.id}`} className="shrink-0">
               <ProductImage src={p.imageUrl} alt={p.name} className="h-24 w-24" />
             </Link>
-            <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex min-w-0 flex-1 flex-col pr-6">
               <span className="text-xs font-medium tracking-wide text-slate-400 uppercase">{p.category?.name}</span>
               <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 group-hover:text-blue-700">
                 {p.name}

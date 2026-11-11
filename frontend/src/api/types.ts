@@ -34,6 +34,10 @@ export type Order = {
   delivery: DeliveryMethod;
   deliveryFee: string;
   deliverBy: string | null; // the latest expected arrival day
+  // When each step happened (tracking timeline). null = not yet, or unknown for orders from before Nov 11.
+  shippedAt?: string | null;
+  deliveredAt?: string | null;
+  cancelledAt?: string | null;
   createdAt: string;
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
   user?: { name: string; email: string }; // only in the admin list

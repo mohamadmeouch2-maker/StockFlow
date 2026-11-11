@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { favoritesApi } from "../api/favorites";
 import { issuesApi } from "../api/issues";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
@@ -8,9 +9,7 @@ import { LogoMark } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-    isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-  }`;
+  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
 
 // The frame around every page: a nav bar on top, the current page, and a footer.
 // The links depend on who is logged in (guide 4.6).
@@ -28,6 +27,9 @@ export function Layout() {
     refetchInterval: 60_000,
   });
   const openIssues = issues.data?.length ?? 0;
+  // Customers see how many products they saved (the same list the hearts use)
+  const favorites = useQuery({ queryKey: ["favorites"], queryFn: favoritesApi.list, enabled: user?.role === "CUSTOMER" });
+  const favoriteCount = favorites.data?.length ?? 0;
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
@@ -56,6 +58,10 @@ export function Layout() {
               <NavLink to="/cart" className={linkClass}>
                 Cart
                 {count > 0 && <span className="ml-1.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-xs text-white">{count}</span>}
+              </NavLink>
+              <NavLink to="/favorites" className={linkClass}>
+                Favourites
+                {favoriteCount > 0 && <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-xs text-white">{favoriteCount}</span>}
               </NavLink>
               <NavLink to="/orders" className={linkClass}>
                 My orders

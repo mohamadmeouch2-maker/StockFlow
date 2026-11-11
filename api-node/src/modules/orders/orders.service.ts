@@ -68,7 +68,9 @@ export async function changeStatus(orderId: number, next: OrderStatus, actor: { 
   return prisma.$transaction(async (tx) => {
     // Change the status only if nobody changed it in the meantime. This stops a double
     // click on "Cancel" from giving the stock back twice.
-    const { count } = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: { status: next } });
+    // Also note WHEN it happened, for the customer's tracking timeline.
+    const when = { SHIPPED: { shippedAt: new Date() }, DELIVERED: { deliveredAt: new Date() }, CANCELLED: { cancelledAt: new Date() }, PENDING: {} }[next];
+    const { count } = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: { status: next, ...when } });
     if (count === 0) throw new AppError(409, "INVALID_STATUS", "The order was changed by someone else, please reload");
     if (next === "CANCELLED")
       for (const i of order.items)

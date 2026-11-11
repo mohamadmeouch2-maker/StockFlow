@@ -6,6 +6,7 @@ import { reviewsApi } from "../api/reviews";
 import type { Product } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
+import { FavoriteButton } from "../components/FavoriteButton";
 import { ProductImage } from "../components/ProductImage";
 import { ProductReviews } from "../components/ProductReviews";
 import { RatingBadge } from "../components/RatingBadge";
@@ -51,9 +52,12 @@ export function ProductDetailPage() {
           </div>
 
           <div className="flex flex-1 flex-col gap-4">
-            <div>
-              <span className="text-xs font-semibold tracking-wide text-blue-600 uppercase">{p.category?.name}</span>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">{p.name}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-xs font-semibold tracking-wide text-blue-600 uppercase">{p.category?.name}</span>
+                <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">{p.name}</h1>
+              </div>
+              <FavoriteButton product={p} className="mt-1" />
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <RatingBadge rating={p.rating} />

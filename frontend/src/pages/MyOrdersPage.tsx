@@ -7,6 +7,7 @@ import { useCart } from "../cart/useCart";
 import { OrderProblems } from "../components/OrderProblems";
 import { DeliveryBadge } from "../components/DeliveryBadge";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
+import { OrderTimeline } from "../components/OrderTimeline";
 import { RowsSkeleton } from "../components/Skeleton";
 import { useToast } from "../toast/useToast";
 
@@ -77,7 +78,8 @@ export function MyOrdersPage() {
             />
             <span className="ml-auto text-sm text-slate-500">{new Date(o.createdAt).toLocaleString()}</span>
           </div>
-          <ul className="divide-y divide-slate-100 px-5 text-sm">
+          <OrderTimeline order={o} />
+          <ul className="divide-y divide-slate-100 border-t border-slate-100 px-5 text-sm">
             {o.items.map((i) => (
               <li key={i.productId} className="flex justify-between py-2">
                 <span>

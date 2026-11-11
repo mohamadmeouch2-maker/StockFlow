@@ -16,6 +16,7 @@ import { SupportPage } from "./pages/admin/SupportPage";
 import { ProductFormPage } from "./pages/admin/ProductFormPage";
 import { CartPage } from "./pages/CartPage";
 import { LoginPage } from "./pages/LoginPage";
+import { FavoritesPage } from "./pages/FavoritesPage";
 import { MyOrdersPage } from "./pages/MyOrdersPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
@@ -56,6 +57,7 @@ export default function App() {
                   <Route element={<ProtectedRoute role="CUSTOMER" />}>
                     <Route path="cart" element={<CartPage />} />
                     <Route path="orders" element={<MyOrdersPage />} />
+                    <Route path="favorites" element={<FavoritesPage />} />
                   </Route>
                   <Route path="admin" element={<ProtectedRoute role="ADMIN" />}>
                     <Route
