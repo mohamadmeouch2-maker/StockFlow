@@ -22,6 +22,12 @@ enum OrderStatus {
   CANCELLED
 }
 
+// How fast the customer wants the order (chosen in the cart). Express costs more.
+enum DeliveryMethod {
+  STANDARD // free, 3 to 5 days
+  EXPRESS // extra fee, next day
+}
+
 enum IssueType {
   WRONG_ITEM
   DAMAGED
@@ -86,15 +92,18 @@ model Product {
 }
 
 model Order {
-  id        Int          @id @default(autoincrement())
-  userId    Int          @map("user_id")
-  user      User         @relation(fields: [userId], references: [id])
-  status    OrderStatus  @default(PENDING)
-  total     Decimal      @db.Decimal(10, 2)
-  createdAt DateTime     @default(now()) @map("created_at")
-  updatedAt DateTime     @updatedAt @map("updated_at")
-  items     OrderItem[]
-  issues    OrderIssue[]
+  id          Int            @id @default(autoincrement())
+  userId      Int            @map("user_id")
+  user        User           @relation(fields: [userId], references: [id])
+  status      OrderStatus    @default(PENDING)
+  total       Decimal        @db.Decimal(10, 2) // the products + the delivery fee
+  delivery    DeliveryMethod @default(STANDARD)
+  deliveryFee Decimal        @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  deliverBy   DateTime?      @map("deliver_by") // the latest expected arrival day
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+  items       OrderItem[]
+  issues      OrderIssue[]
 
   @@index([userId])
   @@map("orders")

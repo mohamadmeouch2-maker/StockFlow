@@ -19,3 +19,13 @@ export const timeAgo = (iso: string, now = Date.now()) => {
   const days = Math.floor(hours / 24);
   return `${days} ${days === 1 ? "day" : "days"} ago`;
 };
+
+// "Thu, Nov 12"
+export const shortDate = (d: Date | string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+
+// Today + n days, e.g. the last day a delivery should arrive.
+export const addDays = (days: number, from = new Date()) => {
+  const d = new Date(from);
+  d.setDate(d.getDate() + days);
+  return d;
+};

@@ -12,6 +12,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role | FR-03 |
 | Products | List with search, category filter and 12 per page; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
+| Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$9.99, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
 | My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
 | Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
@@ -31,7 +32,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (53 API tests), Vitest + Testing Library (27 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (56 API tests), Vitest + Testing Library (29 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -110,10 +111,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 53 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 56 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 27 passed (no backend needed)
+npm test        # ✅ Tests: 29 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -132,7 +133,8 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | POST / PUT / DELETE | `/api/products[/:id]` | Admin | Manage products |
 | GET | `/api/categories` | anyone | List categories |
 | POST / PUT / DELETE | `/api/categories[/:id]` | Admin | Manage categories |
-| POST | `/api/orders` | Customer | Place an order: `{ "items": [{ "productId": 1, "quantity": 2 }] }` |
+| POST | `/api/orders` | Customer | Place an order: `{ "items": [{ "productId": 1, "quantity": 2 }], "delivery": "EXPRESS" }` (delivery is optional, default `STANDARD`) |
+| GET | `/api/orders/delivery-options` | logged in | The delivery choices with their price and days |
 | GET | `/api/orders/mine` | logged in | My orders, newest first |
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
 | GET | `/api/orders?status=` | Admin | All orders |

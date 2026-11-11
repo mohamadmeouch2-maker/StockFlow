@@ -8,6 +8,7 @@ import { Prisma, PrismaClient, type Product } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { uploadRoot } from "../src/lib/uploads";
 import { stockAlert } from "../src/modules/notifications/notifications.service";
+import { DELIVERY_OPTIONS, deliverBy } from "../src/modules/orders/delivery";
 
 const prisma = new PrismaClient();
 
@@ -143,8 +144,20 @@ async function main() {
         // Older orders were delivered (one was cancelled), recent ones are on the way or waiting.
         const status = (day === 9 && k === 0) || day === 21 ? "CANCELLED" : day >= 5 ? "DELIVERED" : day >= 2 ? "SHIPPED" : "PENDING";
         const createdAt = new Date(Date.now() - day * 24 * 60 * 60 * 1000 - (k * 2 + 1) * 60 * 60 * 1000);
+        // Every second order of a day chose Express delivery (it costs more and arrives the next day).
+        const delivery = k === 1 ? "EXPRESS" : "STANDARD";
+        const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
         await prisma.order.create({
-          data: { userId: reviewers[(day + k) % reviewers.length].id, status, total, createdAt, items: { create: items } },
+          data: {
+            userId: reviewers[(day + k) % reviewers.length].id,
+            status,
+            total: total.add(deliveryFee),
+            delivery,
+            deliveryFee,
+            deliverBy: deliverBy(delivery, createdAt),
+            createdAt,
+            items: { create: items },
+          },
         });
         orders++;
       }

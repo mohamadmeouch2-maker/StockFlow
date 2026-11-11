@@ -1,10 +1,16 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { ordersApi } from "../api/orders";
+import type { DeliveryMethod, DeliveryOption } from "../api/types";
 import { useCart } from "../cart/useCart";
 import { ProductImage } from "../components/ProductImage";
 import { useToast } from "../toast/useToast";
+import { addDays, shortDate } from "../utils/format";
+
+// "Next day" or "3–5 days"
+const howLong = (o: DeliveryOption) => (o.maxDays === 1 ? "Next day" : o.minDays === o.maxDays ? `${o.maxDays} days` : `${o.minDays}–${o.maxDays} days`);
 
 // FR-06 / FR-07: review the cart and place the order (guide 4.8).
 export function CartPage() {
@@ -12,21 +18,30 @@ export function CartPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
+  // Standard (free) or Express (costs more, arrives sooner). The prices come from the API.
+  const [delivery, setDelivery] = useState<DeliveryMethod>("STANDARD");
+  const options = useQuery({ queryKey: ["delivery-options"], queryFn: ordersApi.deliveryOptions, staleTime: Infinity });
 
   const placeOrder = useMutation({
-    mutationFn: () => ordersApi.create(items.map((i) => ({ productId: i.product.id, quantity: i.quantity }))),
+    mutationFn: () =>
+      ordersApi.create(
+        items.map((i) => ({ productId: i.product.id, quantity: i.quantity })),
+        delivery,
+      ),
     onSuccess: (order) => {
       clear();
       queryClient.invalidateQueries({ queryKey: ["products"] }); // stock changed
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       navigate("/orders");
-      toast(`Order #${order.id} placed. Thank you!`);
+      toast(`Order #${order.id} placed. It arrives by ${shortDate(order.deliverBy ?? new Date())}. Thank you!`);
     },
   });
 
   // For information only: the server calculates the real total (FR-08).
-  const total = items.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0);
+  const subtotal = items.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0);
+  const deliveryFee = Number(options.data?.find((o) => o.id === delivery)?.fee ?? 0);
+  const total = subtotal + deliveryFee;
 
   if (items.length === 0)
     return (
@@ -78,9 +93,46 @@ export function CartPage() {
 
         <div className="card h-fit space-y-4 p-6">
           <h2 className="font-semibold text-slate-900">Order summary</h2>
-          <div className="flex justify-between text-sm text-slate-600">
-            <span>Items</span>
-            <span>{pieces}</span>
+          {/* Delivery: the same products, faster for a higher price */}
+          <fieldset className="space-y-2">
+            <legend className="label">Delivery</legend>
+            {options.data?.map((o) => {
+              const chosen = delivery === o.id;
+              return (
+                <label
+                  key={o.id}
+                  className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
+                    chosen ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600" : "border-slate-200 hover:border-blue-300"
+                  }`}
+                >
+                  <input type="radio" name="delivery" value={o.id} checked={chosen} onChange={() => setDelivery(o.id)} className="mt-1 accent-blue-600" />
+                  <span className="flex-1">
+                    <span className="flex justify-between gap-2 font-medium text-slate-900">
+                      <span>
+                        <span aria-hidden="true">{o.id === "EXPRESS" ? "⚡ " : "🚚 "}</span>
+                        {o.label}
+                      </span>
+                      <span>{Number(o.fee) === 0 ? "Free" : `+$${o.fee}`}</span>
+                    </span>
+                    <span className="block text-sm text-slate-500">
+                      {howLong(o)} · arrives by {shortDate(addDays(o.maxDays))}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+            {options.isError && <p className="text-sm text-slate-500">Standard delivery (free) will be used.</p>}
+          </fieldset>
+
+          <div className="space-y-1.5 border-t border-slate-100 pt-4 text-sm text-slate-600">
+            <div className="flex justify-between">
+              <span>Items ({pieces})</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Delivery</span>
+              <span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span>
+            </div>
           </div>
           <div className="flex justify-between border-t border-slate-100 pt-4 text-lg font-bold text-slate-900">
             <span>Total</span>
@@ -93,9 +145,7 @@ export function CartPage() {
               Some items are no longer available ({placeOrder.error.message}). Adjust quantities and try again.
             </p>
           ) : (
-            placeOrder.isError && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not place the order. {placeOrder.error.message}</p>
-            )
+            placeOrder.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not place the order. {placeOrder.error.message}</p>
           )}
 
           <button disabled={placeOrder.isPending} onClick={() => placeOrder.mutate()} className="btn btn-primary w-full py-2.5">

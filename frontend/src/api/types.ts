@@ -22,11 +22,18 @@ export type Paged<T> = { items: T[]; page: number; pageSize: number; total: numb
 
 export type OrderStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
+// How fast the order arrives. Express costs more (the API sets the price).
+export type DeliveryMethod = "STANDARD" | "EXPRESS";
+export type DeliveryOption = { id: DeliveryMethod; label: string; fee: string; minDays: number; maxDays: number };
+
 export type Order = {
   id: number;
   userId: number;
   status: OrderStatus;
-  total: string;
+  total: string; // products + delivery fee
+  delivery: DeliveryMethod;
+  deliveryFee: string;
+  deliverBy: string | null; // the latest expected arrival day
   createdAt: string;
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
   user?: { name: string; email: string }; // only in the admin list

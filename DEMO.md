@@ -36,8 +36,8 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Say:** "The password needs 8 characters with a letter and a number, and it is stored hashed with bcrypt, never as plain text. After a refresh I'm still logged in: the browser keeps a token that is valid for 1 hour."
 
 ### 5. Order, and the stock goes down (1 minute): FR-06, FR-07, FR-08
-**Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, then **Place order**. Open the product again.
-**Say:** "A short message in the corner confirms each action. The cart never allows more than the stock. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
+**Do:** open a product with stock (for example **Ballpoint Pens**), note the stock, and click **Add to cart** twice. Open **Cart**, choose **⚡ Express delivery** (the total goes up by $9.99), then **Place order**. Open the product again.
+**Say:** "A short message in the corner confirms each action. The cart never allows more than the stock. The customer chooses Standard delivery, which is free and takes 3 to 5 days, or Express for $9.99, next day. The delivery price comes from the server, not the browser, and the order saves the arrival date. The server calculates the total from the current prices; it never trusts the browser. The stock went down by 2."
 
 ### 6. Cancel, and the stock comes back (30 seconds): FR-09, FR-10
 **Do:** on **My orders**, click **Cancel order** → **OK**. Open the product again.
@@ -84,7 +84,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "53 API tests run against a separate test database, so real data is never touched. 27 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages and the stock alerts. The guide asks for at least 10 and 5."
+**Say:** "56 API tests run against a separate test database, so real data is never touched. 29 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts and the delivery choice. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

@@ -5,10 +5,12 @@ import { prisma } from "../../lib/prisma";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { reportBody, reportIssue } from "../issues/issues.routes";
+import { deliveryOptionsJson } from "./delivery";
 import { changeStatus, createOrder, withItems } from "./orders.service";
 
 const createBody = z.object({
   items: z.array(z.object({ productId: z.number().int(), quantity: z.number().int().min(1) })).min(1),
+  delivery: z.enum(["STANDARD", "EXPRESS"]).default("STANDARD"), // how fast; Express costs more
 });
 const statusBody = z.object({ status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]) });
 const listQuery = z.object({ status: z.enum(["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"]).optional() });
@@ -18,7 +20,13 @@ ordersRouter.use(requireAuth); // every orders route needs a login
 
 // FR-07: a customer places an order. The total is computed on the server (FR-08).
 ordersRouter.post("/", requireRole("CUSTOMER"), validate(createBody), async (_req, res) => {
-  res.status(201).json(await createOrder(res.locals.user.id, res.locals.body.items));
+  const { items, delivery } = res.locals.body;
+  res.status(201).json(await createOrder(res.locals.user.id, items, delivery));
+});
+
+// The delivery choices for the cart: Standard (free, 3-5 days) or Express (extra fee, next day).
+ordersRouter.get("/delivery-options", (_req, res) => {
+  res.json(deliveryOptionsJson());
 });
 
 // FR-09: only my own orders, newest first, with any problems I reported.

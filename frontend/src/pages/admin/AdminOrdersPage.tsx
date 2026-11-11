@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ordersApi } from "../../api/orders";
 import type { Order, OrderStatus } from "../../api/types";
+import { DeliveryBadge } from "../../components/DeliveryBadge";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
 import { RowsSkeleton } from "../../components/Skeleton";
 import { useToast } from "../../toast/useToast";
@@ -70,6 +71,7 @@ export function AdminOrdersPage() {
                 <th>Customer</th>
                 <th>Items</th>
                 <th>Total</th>
+                <th>Delivery</th>
                 <th>Status</th>
                 <th></th>
               </tr>
@@ -84,6 +86,10 @@ export function AdminOrdersPage() {
                   <td>{o.user?.name ?? o.userId}</td>
                   <td>{items(o)}</td>
                   <td>${Number(o.total).toFixed(2)}</td>
+                  <td>
+                    {/* Express orders first: they must arrive the next day */}
+                    <DeliveryBadge delivery={o.delivery} deliverBy={o.status === "PENDING" || o.status === "SHIPPED" ? o.deliverBy : null} onTheWay />
+                  </td>
                   <td>
                     <OrderStatusBadge status={o.status} />
                   </td>

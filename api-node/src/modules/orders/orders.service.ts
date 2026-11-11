@@ -1,14 +1,16 @@
-import { OrderStatus, Prisma } from "@prisma/client";
+import { OrderStatus, Prisma, type DeliveryMethod } from "@prisma/client";
 import { AppError, notFound } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
 import { stockAlert } from "../notifications/notifications.service";
+import { DELIVERY_OPTIONS, deliverBy } from "./delivery";
 
 // Order lines come back with the product name, which the website shows.
 export const withItems = { items: { include: { product: { select: { name: true } } } } } as const;
 
 // FR-07 / FR-08: one transaction checks and deducts the stock for every line and
-// computes the total from the current prices. If any line fails, nothing changes.
-export async function createOrder(userId: number, items: { productId: number; quantity: number }[]) {
+// computes the total from the current prices, plus the delivery fee the customer chose.
+// If any line fails, nothing changes.
+export async function createOrder(userId: number, items: { productId: number; quantity: number }[], delivery: DeliveryMethod = "STANDARD") {
   // Same product twice in one order -> add the quantities into one line.
   const quantities = new Map<number, number>();
   for (const { productId, quantity } of items) quantities.set(productId, (quantities.get(productId) ?? 0) + quantity);
@@ -37,7 +39,12 @@ export async function createOrder(userId: number, items: { productId: number; qu
       const alert = stockAlert(product, quantity);
       if (alert) await tx.notification.create({ data: { ...alert, productId } });
     }
-    return tx.order.create({ data: { userId, total, items: { create: orderLines } }, include: withItems });
+    // Express costs more and arrives sooner. The fee comes from the server, never from the browser.
+    const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
+    return tx.order.create({
+      data: { userId, total: total.add(deliveryFee), delivery, deliveryFee, deliverBy: deliverBy(delivery), items: { create: orderLines } },
+      include: withItems,
+    });
   });
 }
 

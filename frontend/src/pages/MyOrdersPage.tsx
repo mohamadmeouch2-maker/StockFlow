@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ordersApi } from "../api/orders";
 import { OrderProblems } from "../components/OrderProblems";
+import { DeliveryBadge } from "../components/DeliveryBadge";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { RowsSkeleton } from "../components/Skeleton";
 import { useToast } from "../toast/useToast";
@@ -42,6 +43,11 @@ export function MyOrdersPage() {
           <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-3">
             <span className="font-semibold text-slate-900">Order #{o.id}</span>
             <OrderStatusBadge status={o.status} />
+            <DeliveryBadge
+              delivery={o.delivery}
+              deliverBy={o.status === "CANCELLED" ? null : o.deliverBy}
+              onTheWay={o.status === "PENDING" || o.status === "SHIPPED"}
+            />
             <span className="ml-auto text-sm text-slate-500">{new Date(o.createdAt).toLocaleString()}</span>
           </div>
           <ul className="divide-y divide-slate-100 px-5 text-sm">
@@ -55,13 +61,14 @@ export function MyOrdersPage() {
             ))}
           </ul>
           <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
-            <span className="font-semibold text-slate-900">Total: ${Number(o.total).toFixed(2)}</span>
+            <span className="font-semibold text-slate-900">
+              Total: ${Number(o.total).toFixed(2)}
+              {Number(o.deliveryFee) > 0 && (
+                <span className="ml-1 text-sm font-normal text-slate-500">(incl. ${Number(o.deliveryFee).toFixed(2)} delivery)</span>
+              )}
+            </span>
             {o.status === "PENDING" && (
-              <button
-                disabled={cancel.isPending}
-                onClick={() => confirm(`Cancel order #${o.id}?`) && cancel.mutate(o.id)}
-                className="btn btn-danger py-1.5"
-              >
+              <button disabled={cancel.isPending} onClick={() => confirm(`Cancel order #${o.id}?`) && cancel.mutate(o.id)} className="btn btn-danger py-1.5">
                 Cancel order
               </button>
             )}
