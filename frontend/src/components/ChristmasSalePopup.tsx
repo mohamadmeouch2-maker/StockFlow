@@ -111,7 +111,7 @@ export function Snow({ count = 18 }: { count?: number }) {
           className="snowflake"
           style={{ left: `${(i * 37) % 100}%`, animationDelay: `${(i * 0.7) % 6}s`, animationDuration: `${6 + (i % 5)}s`, fontSize: `${10 + (i % 4) * 4}px` }}
         >
-          ❄
+          {"❄︎" /* ❄ as a plain white character, not a coloured emoji */}
         </span>
       ))}
     </div>
