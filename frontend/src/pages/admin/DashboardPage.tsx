@@ -205,6 +205,9 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
             <Link to="/admin/products/new" className="btn btn-primary">
               + Add a product
             </Link>
+            <Link to="/admin/categories" className="btn btn-outline">
+              Manage categories
+            </Link>
             <Link to="/admin/low-stock" className="btn btn-outline">
               Restock low items ({s.products.lowStock})
             </Link>

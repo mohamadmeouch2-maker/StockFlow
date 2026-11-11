@@ -2,7 +2,7 @@ export type Role = "CUSTOMER" | "ADMIN";
 
 export type User = { id: number; name: string; email: string; role: Role };
 
-export type Category = { id: number; name: string };
+export type Category = { id: number; name: string; productCount?: number }; // productCount: how many products are in it
 
 export type Product = {
   id: number;

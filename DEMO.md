@@ -59,6 +59,8 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 ### 9. Admin: products with validation (1 minute): FR-11
 **Do:** in the admin tab, **Manage products** → **New product** → type price `-5` → **Save**. Then fill it in correctly and save.
 **Say:** "Every field is checked in the browser and again on the server with Zod. The server's messages appear next to the right field."
+**Then:** click **Categories** → add `Kitchen` → try to add `kitchen` again → rename it → delete it. Point at a faded **Delete** button.
+**Say:** "Admins manage the categories here. A name can't be used twice, even with other capital letters. A category that still has products can't be deleted, so no product is ever left without a category."
 
 ### 10. Admin: orders (1 minute): FR-12
 **Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter.
@@ -84,7 +86,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "56 API tests run against a separate test database, so real data is never touched. 32 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts and the delivery choice. The guide asks for at least 10 and 5."
+**Say:** "61 API tests run against a separate test database, so real data is never touched. 35 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice and the categories page. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

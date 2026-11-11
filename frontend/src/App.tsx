@@ -10,6 +10,7 @@ import { DashboardSkeleton } from "./components/Skeleton";
 import { SplashScreen } from "./components/SplashScreen";
 import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
 import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
+import { CategoriesPage } from "./pages/admin/CategoriesPage";
 import { LowStockPage } from "./pages/admin/LowStockPage";
 import { SupportPage } from "./pages/admin/SupportPage";
 import { ProductFormPage } from "./pages/admin/ProductFormPage";
@@ -71,6 +72,7 @@ export default function App() {
                     <Route path="orders" element={<AdminOrdersPage />} />
                     <Route path="low-stock" element={<LowStockPage />} />
                     <Route path="support" element={<SupportPage />} />
+                    <Route path="categories" element={<CategoriesPage />} />
                   </Route>
                   <Route path="*" element={<p className="p-6">Page not found</p>} />
                 </Route>

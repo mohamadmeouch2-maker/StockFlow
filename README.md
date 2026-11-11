@@ -14,7 +14,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
 | Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$4.50, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
 | My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
-| Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
+| Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |
 | Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
@@ -32,7 +32,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (56 API tests), Vitest + Testing Library (32 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (61 API tests), Vitest + Testing Library (35 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -111,10 +111,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 56 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 61 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 32 passed (no backend needed)
+npm test        # ✅ Tests: 35 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -131,8 +131,8 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/products?page=&pageSize=&search=&categoryId=` | anyone | Paged product list |
 | GET | `/api/products/:id` | anyone | One product |
 | POST / PUT / DELETE | `/api/products[/:id]` | Admin | Manage products |
-| GET | `/api/categories` | anyone | List categories |
-| POST / PUT / DELETE | `/api/categories[/:id]` | Admin | Manage categories |
+| GET | `/api/categories` | anyone | List categories A-Z, with how many products each has |
+| POST / PUT / DELETE | `/api/categories[/:id]` | Admin | Add, rename or delete a category `{ "name": "Kitchen" }` (names are unique, ignoring capital letters) |
 | POST | `/api/orders` | Customer | Place an order: `{ "items": [{ "productId": 1, "quantity": 2 }], "delivery": "EXPRESS" }` (delivery is optional, default `STANDARD`) |
 | GET | `/api/orders/delivery-options` | logged in | The delivery choices with their price and days |
 | GET | `/api/orders/mine` | logged in | My orders, newest first |

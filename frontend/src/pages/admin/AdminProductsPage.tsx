@@ -44,9 +44,14 @@ export function AdminProductsPage() {
           <h1 className="page-title">Manage products</h1>
           <p className="text-sm text-slate-500">{products.data ? `${products.data.total} products` : ""}</p>
         </div>
-        <Link to="/admin/products/new" className="btn btn-primary">
-          + New product
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/admin/categories" className="btn btn-outline">
+            Categories
+          </Link>
+          <Link to="/admin/products/new" className="btn btn-primary">
+            + New product
+          </Link>
+        </div>
       </div>
 
       {products.isLoading && <RowsSkeleton />}
