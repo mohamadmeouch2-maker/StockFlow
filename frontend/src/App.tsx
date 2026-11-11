@@ -8,12 +8,6 @@ import { HomeHero } from "./components/HomeHero";
 import { Layout } from "./components/Layout";
 import { DashboardSkeleton } from "./components/Skeleton";
 import { SplashScreen } from "./components/SplashScreen";
-import { AdminOrdersPage } from "./pages/admin/AdminOrdersPage";
-import { AdminProductsPage } from "./pages/admin/AdminProductsPage";
-import { CategoriesPage } from "./pages/admin/CategoriesPage";
-import { LowStockPage } from "./pages/admin/LowStockPage";
-import { SupportPage } from "./pages/admin/SupportPage";
-import { ProductFormPage } from "./pages/admin/ProductFormPage";
 import { CartPage } from "./pages/CartPage";
 import { LoginPage } from "./pages/LoginPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
@@ -23,9 +17,15 @@ import { ProductsPage } from "./pages/ProductsPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ToastProvider } from "./toast/ToastProvider";
 
-// The dashboard (and its chart library) is downloaded only when an admin opens it,
-// so customers get a smaller, faster website.
+// The admin pages (and the dashboard's chart library) are downloaded only when an admin
+// opens them, so customers get a smaller, faster website. (Layout shows grey boxes meanwhile.)
 const DashboardPage = lazy(() => import("./pages/admin/DashboardPage").then((m) => ({ default: m.DashboardPage })));
+const AdminProductsPage = lazy(() => import("./pages/admin/AdminProductsPage").then((m) => ({ default: m.AdminProductsPage })));
+const ProductFormPage = lazy(() => import("./pages/admin/ProductFormPage").then((m) => ({ default: m.ProductFormPage })));
+const AdminOrdersPage = lazy(() => import("./pages/admin/AdminOrdersPage").then((m) => ({ default: m.AdminOrdersPage })));
+const LowStockPage = lazy(() => import("./pages/admin/LowStockPage").then((m) => ({ default: m.LowStockPage })));
+const SupportPage = lazy(() => import("./pages/admin/SupportPage").then((m) => ({ default: m.SupportPage })));
+const CategoriesPage = lazy(() => import("./pages/admin/CategoriesPage").then((m) => ({ default: m.CategoriesPage })));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } });
 

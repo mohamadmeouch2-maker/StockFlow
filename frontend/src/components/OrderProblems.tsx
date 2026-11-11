@@ -37,10 +37,10 @@ export function OrderProblems({ orderId, issues }: { orderId: number; issues: Or
   return (
     <div className="space-y-3 border-t border-slate-100 px-5 py-3">
       {issues.map((i) => (
-        <div key={i.id} className={`rounded-lg p-3 text-sm ${i.status === "OPEN" ? "bg-amber-50" : "bg-emerald-50"}`}>
+        <div key={i.id} className={`rounded-lg p-3 text-sm ${i.status === "OPEN" ? "bg-warning-50" : "bg-success-50"}`}>
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-slate-800">⚠️ Problem reported: {issueLabel(i.type)}</span>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${i.status === "OPEN" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
+            <span className={`badge ${i.status === "OPEN" ? "badge-warning" : "badge-success"}`}>
               {i.status === "OPEN" ? "Waiting for an answer" : "Resolved"}
             </span>
             <span className="ml-auto text-xs text-slate-500">{new Date(i.createdAt).toLocaleString()}</span>
@@ -48,14 +48,14 @@ export function OrderProblems({ orderId, issues }: { orderId: number; issues: Or
           <p className="mt-1 text-slate-700">“{i.message}”</p>
           {i.adminReply && (
             <p className="mt-2 rounded-md bg-white p-2 text-slate-700">
-              <span className="font-semibold text-blue-700">Reply from StockFlow:</span> {i.adminReply}
+              <span className="font-semibold text-brand-700">Reply from StockFlow:</span> {i.adminReply}
             </p>
           )}
         </div>
       ))}
 
       {!open && !hasOpen && (
-        <button onClick={() => setOpen(true)} className="text-sm font-medium text-slate-600 hover:text-blue-700">
+        <button onClick={() => setOpen(true)} className="text-sm font-medium text-slate-600 hover:text-brand-700">
           Something wrong with this order? <span className="underline">Report a problem</span>
         </button>
       )}

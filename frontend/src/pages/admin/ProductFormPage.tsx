@@ -126,7 +126,7 @@ export function ProductFormPage() {
   // Wait for the categories too: the select can only show the product's
   // category once its <option> exists.
   if (categories.isLoading || (isEdit && existing.isLoading)) return <FormSkeleton />;
-  if (isEdit && existing.isError) return <p className="text-red-600">{existing.error.message}</p>;
+  if (isEdit && existing.isError) return <p className="text-danger-600">{existing.error.message}</p>;
 
   const currentImage = photoRemoved ? null : existing.data?.imageUrl;
 
@@ -172,7 +172,7 @@ export function ProductFormPage() {
               type="file"
               accept={IMAGE_TYPES.join(",")}
               onChange={(e) => choosePhoto(e.target.files?.[0])}
-              className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-blue-700"
+              className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700"
             />
             <p className="text-xs text-slate-500">JPG, PNG, WebP or GIF, up to {MAX_IMAGE_MB} MB. It is uploaded when you click Save.</p>
             {isEdit && currentImage && !photo && (
@@ -191,9 +191,7 @@ export function ProductFormPage() {
         {removePhoto.isError && <p className="field-error">Could not remove the photo. {removePhoto.error.message}</p>}
       </div>
 
-      {save.isError && !(save.error instanceof ApiError && save.error.details.length) && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not save. {save.error.message}</p>
-      )}
+      {save.isError && !(save.error instanceof ApiError && save.error.details.length) && <p className="alert-danger">Could not save. {save.error.message}</p>}
       <div className="flex gap-3 border-t border-slate-100 pt-5">
         <button disabled={isSubmitting || save.isPending} className="btn btn-primary px-6">
           {save.isPending ? "Saving..." : "Save"}

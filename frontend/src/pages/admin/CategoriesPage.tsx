@@ -84,7 +84,7 @@ export function CategoriesPage() {
       </form>
 
       {categories.isLoading && <RowsSkeleton rows={4} />}
-      {categories.isError && <p className="text-red-600">Could not load the categories. {categories.error.message}</p>}
+      {categories.isError && <p className="text-danger-600">Could not load the categories. {categories.error.message}</p>}
       {categories.data?.length === 0 && <div className="card p-10 text-center text-slate-500">No categories yet. Add the first one above.</div>}
 
       {!!categories.data?.length && (

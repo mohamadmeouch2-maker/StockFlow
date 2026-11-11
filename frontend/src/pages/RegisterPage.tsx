@@ -13,7 +13,11 @@ import { useToast } from "../toast/useToast";
 const schema = z.object({
   name: z.string().trim().min(2, "At least 2 characters"),
   email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "At least 8 characters").regex(/[A-Za-z]/, "Needs a letter").regex(/\d/, "Needs a number"),
+  password: z
+    .string()
+    .min(8, "At least 8 characters")
+    .regex(/[A-Za-z]/, "Needs a letter")
+    .regex(/\d/, "Needs a number"),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -57,7 +61,7 @@ export function RegisterPage() {
         <FormField id="password" label="Password" type="password" autoComplete="new-password" {...register("password")} error={errors.password?.message} />
         <p className="mt-1 text-xs text-slate-500">At least 8 characters, with a letter and a number.</p>
       </div>
-      {serverError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>}
+      {serverError && <p className="alert-danger">{serverError}</p>}
       <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
         {isSubmitting ? "Creating account..." : "Register"}
       </button>

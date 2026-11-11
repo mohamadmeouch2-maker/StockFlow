@@ -75,6 +75,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Order tracking: a timeline Placed → Shipped → Delivered (or Cancelled) with the date of each step (new `shipped_at`, `delivered_at`, `cancelled_at` columns)
   - [x] Tests: API 72, website 42
 - [x] **Christmas sale (Nov 11):** admins start a sale from the Dashboard: a percentage off (30%) until a date (Dec 31) for the products in stock that sold fewer than N pieces (5) in the last days (30). New `promotions` table; each product can belong to a sale; after the end date prices go back by themselves. Customers see a festive pop-up with falling snow (once per visit), a sale banner and a "Christmas deals" filter, and red sale prices with the old price crossed out on the list, product page, favourites and cart. Orders pay the sale price, calculated on the server. Tests: API 78, website 45
+- [x] **Consistent colours (Nov 11):** every colour has one meaning, named in one place (`frontend/src/index.css`): brand = blue (buttons, links, Shipped, Express, counts), success = green (In stock, Delivered, Resolved), warning = amber (Low stock, Pending, Open problem), danger = red (errors, Delete, Late, things that need action), sale = red (sale prices only), grey = neutral (Sold out, Cancelled, Standard). One badge shape for every status label, one calm rating style, and the admin pages load on demand so the website stays small
 ## To do
 
 ### Friday, Nov 13: Demo

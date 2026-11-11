@@ -48,7 +48,7 @@ export function SaleCard() {
       {promo ? (
         <div className="flex flex-wrap items-center justify-between gap-3 p-5">
           <p className="text-slate-700">
-            <strong className="text-slate-900">{promo.name}</strong> is on: <strong className="text-red-600">-{promo.percent}%</strong> on {promo.productCount}{" "}
+            <strong className="text-slate-900">{promo.name}</strong> is on: <strong className="text-sale-600">-{promo.percent}%</strong> on {promo.productCount}{" "}
             products until {shortDate(promo.endsAt)}. Customers see a festive message when they open the shop.
           </p>
           <div className="flex gap-2">

@@ -30,13 +30,13 @@ export function ProductReviews({ productId }: { productId: number }) {
       )}
 
       {data.isLoading && <RowsSkeleton rows={2} />}
-      {data.isError && <p className="text-red-600">Could not load the reviews. {data.error.message}</p>}
+      {data.isError && <p className="text-danger-600">Could not load the reviews. {data.error.message}</p>}
       {data.data?.reviews.length === 0 && <p className="text-slate-500">No reviews yet. Be the first to rate it!</p>}
 
       <ul className="divide-y divide-slate-100">
         {data.data?.reviews.map((r) => (
           <li key={r.id} className="flex gap-4 py-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
               {r.userName.charAt(0).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1">

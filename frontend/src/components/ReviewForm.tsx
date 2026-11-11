@@ -40,11 +40,10 @@ export function ReviewForm({ productId }: { productId: number }) {
   });
 
   if (mine.isLoading) return null;
-  if (!mine.data?.canReview)
-    return <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">You can rate this product after you buy it.</p>;
+  if (!mine.data?.canReview) return <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">You can rate this product after you buy it.</p>;
 
   return (
-    <div className="space-y-3 rounded-lg border border-blue-100 bg-blue-50/40 p-4">
+    <div className="space-y-3 rounded-lg border border-brand-100 bg-brand-50/40 p-4">
       <p className="font-semibold text-slate-900">{existing ? "Your review" : "Rate this product"}</p>
       <div role="radiogroup" aria-label="Your rating out of 10" className="flex flex-wrap gap-1.5">
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
@@ -58,7 +57,7 @@ export function ReviewForm({ productId }: { productId: number }) {
               aria-label={`${n} out of 10`}
               onClick={() => setRating(n)}
               className={`h-9 w-9 rounded-lg border text-sm font-semibold transition ${
-                active ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-blue-400"
+                active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
               }`}
             >
               {n}

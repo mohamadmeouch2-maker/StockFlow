@@ -94,8 +94,8 @@ export function ProductsPage() {
                 onClick={() => chooseCategory(c.id)}
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                   active
-                    ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                    : "border-slate-300 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                    ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                    : "border-slate-300 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700"
                 }`}
               >
                 {c.name}
@@ -112,7 +112,7 @@ export function ProductsPage() {
                 setInStock(e.target.checked);
                 setPage(1);
               }}
-              className="h-4 w-4 accent-blue-600"
+              className="h-4 w-4 accent-brand-600"
             />
             In stock only
           </label>
@@ -137,7 +137,7 @@ export function ProductsPage() {
       </div>
 
       {products.isLoading && <ProductCardsSkeleton />}
-      {products.isError && <p className="text-red-600">Could not load products. {products.error.message}</p>}
+      {products.isError && <p className="text-danger-600">Could not load products. {products.error.message}</p>}
       {products.data?.items.length === 0 && (
         <div className="card p-10 text-center text-slate-500">
           <p className="text-lg font-medium text-slate-700">No products match your search.</p>
@@ -152,14 +152,14 @@ export function ProductsPage() {
             <Link to={`/products/${p.id}`} className="relative shrink-0">
               <ProductImage src={p.imageUrl} alt={p.name} className="h-24 w-24" />
               {p.salePrice && (
-                <span className="absolute -top-2 -left-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-bold text-white shadow" aria-hidden="true">
+                <span className="absolute -top-2 -left-2 rounded-full bg-sale-600 px-2 py-0.5 text-xs font-bold text-white shadow" aria-hidden="true">
                   🎁 Sale
                 </span>
               )}
             </Link>
             <div className="flex min-w-0 flex-1 flex-col pr-6">
               <span className="text-xs font-medium tracking-wide text-slate-400 uppercase">{p.category?.name}</span>
-              <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 group-hover:text-blue-700">
+              <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 group-hover:text-brand-700">
                 {p.name}
               </Link>
               <p className="mt-1">
@@ -171,7 +171,7 @@ export function ProductsPage() {
               </div>
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                 <StockBadge product={p} />
-                <Link to={`/products/${p.id}`} className="text-sm font-medium whitespace-nowrap text-blue-600 hover:underline">
+                <Link to={`/products/${p.id}`} className="text-sm font-medium whitespace-nowrap text-brand-600 hover:underline">
                   View details →
                 </Link>
               </div>

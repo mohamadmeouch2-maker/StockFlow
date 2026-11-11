@@ -4,9 +4,9 @@ import { ToastContext, type ToastKind } from "./toastContext";
 type Toast = { id: number; message: string; kind: ToastKind };
 
 const looks: Record<ToastKind, { icon: string; color: string }> = {
-  success: { icon: "✓", color: "bg-emerald-500" },
-  error: { icon: "!", color: "bg-red-500" },
-  info: { icon: "i", color: "bg-blue-500" },
+  success: { icon: "✓", color: "bg-success-500" },
+  error: { icon: "!", color: "bg-danger-500" },
+  info: { icon: "i", color: "bg-brand-500" },
 };
 
 // Small messages that pop up in the bottom-right corner ("Added to cart", "Order placed", ...)

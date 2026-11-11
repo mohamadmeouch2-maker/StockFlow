@@ -74,7 +74,7 @@ export function NotificationBell() {
           <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
         </svg>
         {unread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-red-600 px-1 text-center text-[11px] leading-5 font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 min-w-5 rounded-full bg-danger-600 px-1 text-center text-[11px] leading-5 font-bold text-white">
             {unread > 9 ? "9+" : unread}
           </span>
         )}
@@ -85,7 +85,7 @@ export function NotificationBell() {
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <span className="font-semibold text-slate-900">Stock alerts</span>
             {unread > 0 && (
-              <button onClick={() => readAll.mutate()} disabled={readAll.isPending} className="text-sm font-medium text-blue-600 hover:underline">
+              <button onClick={() => readAll.mutate()} disabled={readAll.isPending} className="text-sm font-medium text-brand-600 hover:underline">
                 Mark all as read
               </button>
             )}
@@ -94,7 +94,7 @@ export function NotificationBell() {
           {alerts.data?.items.length === 0 && <p className="px-4 py-6 text-center text-sm text-slate-500">No alerts. Every product has enough stock.</p>}
           <ul className="max-h-96 divide-y divide-slate-100 overflow-y-auto">
             {alerts.data?.items.map((n) => (
-              <li key={n.id} className={`flex gap-3 px-4 py-3 ${n.readAt ? "" : "bg-blue-50/60"}`}>
+              <li key={n.id} className={`flex gap-3 px-4 py-3 ${n.readAt ? "" : "bg-brand-50/60"}`}>
                 <ProductImage src={n.product.imageUrl} alt={n.product.name} className="h-10 w-10 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-slate-800">
@@ -109,14 +109,14 @@ export function NotificationBell() {
                         if (!n.readAt) readOne.mutate(n.id);
                         setOpen(false);
                       }}
-                      className="font-medium text-blue-600 hover:underline"
+                      className="font-medium text-brand-600 hover:underline"
                     >
                       Restock
                     </Link>
                   </div>
                 </div>
                 {!n.readAt && (
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-blue-600">
+                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600">
                     <span className="sr-only">Unread</span>
                   </span>
                 )}
@@ -126,7 +126,7 @@ export function NotificationBell() {
           <Link
             to="/admin/low-stock"
             onClick={() => setOpen(false)}
-            className="block border-t border-slate-100 px-4 py-2.5 text-center text-sm font-medium text-blue-600 hover:bg-slate-50"
+            className="block border-t border-slate-100 px-4 py-2.5 text-center text-sm font-medium text-brand-600 hover:bg-slate-50"
           >
             See the low-stock list →
           </Link>

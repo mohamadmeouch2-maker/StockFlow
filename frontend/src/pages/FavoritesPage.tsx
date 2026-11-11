@@ -24,7 +24,7 @@ export function FavoritesPage() {
       </div>
 
       {favorites.isLoading && <ProductCardsSkeleton count={3} />}
-      {favorites.isError && <p className="text-red-600">Could not load your favourites. {favorites.error.message}</p>}
+      {favorites.isError && <p className="text-danger-600">Could not load your favourites. {favorites.error.message}</p>}
       {favorites.data?.length === 0 && (
         <div className="card mx-auto max-w-md space-y-3 p-10 text-center">
           <div className="text-3xl" aria-hidden="true">
@@ -50,7 +50,7 @@ export function FavoritesPage() {
               </Link>
               <div className="flex min-w-0 flex-1 flex-col pr-6">
                 <span className="text-xs font-medium tracking-wide text-slate-400 uppercase">{p.category?.name}</span>
-                <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 hover:text-blue-700">
+                <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 hover:text-brand-700">
                   {p.name}
                 </Link>
                 <p className="mt-1">

@@ -48,7 +48,7 @@ export function LoginPage() {
       </div>
       <FormField id="email" label="Email" type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
       <FormField id="password" label="Password" type="password" autoComplete="current-password" {...register("password")} error={errors.password?.message} />
-      {serverError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{serverError}</p>}
+      {serverError && <p className="alert-danger">{serverError}</p>}
       <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
         {isSubmitting ? "Logging in..." : "Log in"}
       </button>

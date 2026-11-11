@@ -44,7 +44,7 @@ export function ProductDetailPage() {
       </nav>
 
       {product.isLoading && <ProductDetailSkeleton />}
-      {product.isError && <p className="text-red-600">{product.error.message}</p>}
+      {product.isError && <p className="text-danger-600">{product.error.message}</p>}
 
       {p && (
         <div className="card flex flex-col gap-8 p-6 sm:p-8 md:flex-row">
@@ -56,7 +56,7 @@ export function ProductDetailPage() {
           <div className="flex flex-1 flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className="text-xs font-semibold tracking-wide text-blue-600 uppercase">{p.category?.name}</span>
+                <span className="text-xs font-semibold tracking-wide text-brand-600 uppercase">{p.category?.name}</span>
                 <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900">{p.name}</h1>
               </div>
               <FavoriteButton product={p} className="mt-1" />
@@ -68,7 +68,7 @@ export function ProductDetailPage() {
             <div>
               <Price product={p} size="lg" />
               {p.promotion && (
-                <p className="mt-1 text-sm font-medium text-red-600">
+                <p className="mt-1 text-sm font-medium text-sale-600">
                   🎄 {p.promotion.name}: {p.promotion.percent}% off until {shortDate(p.promotion.endsAt)}
                 </p>
               )}

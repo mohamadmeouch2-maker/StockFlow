@@ -58,8 +58,8 @@ export function AdminOrdersPage() {
       </div>
 
       {orders.isLoading && <RowsSkeleton />}
-      {orders.isError && <p className="text-red-600">Could not load orders. {orders.error.message}</p>}
-      {change.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not change the status. {change.error.message}</p>}
+      {orders.isError && <p className="text-danger-600">Could not load orders. {orders.error.message}</p>}
+      {change.isError && <p className="alert-danger">Could not change the status. {change.error.message}</p>}
       {orders.data?.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}
 
       {!!orders.data?.length && (

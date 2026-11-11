@@ -31,7 +31,7 @@ export function SupportPage() {
               aria-pressed={status === f.value}
               onClick={() => setStatus(f.value)}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                status === f.value ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-600 hover:border-blue-300"
+                status === f.value ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-600 hover:border-brand-300"
               }`}
             >
               {f.label}
@@ -41,7 +41,7 @@ export function SupportPage() {
       </div>
 
       {issues.isLoading && <RowsSkeleton rows={3} />}
-      {issues.isError && <p className="text-red-600">Could not load the reports. {issues.error.message}</p>}
+      {issues.isError && <p className="text-danger-600">Could not load the reports. {issues.error.message}</p>}
       {issues.data?.length === 0 && (
         <div className="card p-10 text-center text-slate-500">
           <p className="text-lg font-medium text-slate-700">{status === "OPEN" ? "No open problems 🎉" : "No reports."}</p>
@@ -49,7 +49,9 @@ export function SupportPage() {
         </div>
       )}
 
-      {issues.data?.map((i) => <IssueCard key={i.id} issue={i} />)}
+      {issues.data?.map((i) => (
+        <IssueCard key={i.id} issue={i} />
+      ))}
     </div>
   );
 }
@@ -71,12 +73,10 @@ function IssueCard({ issue }: { issue: OrderIssue }) {
   const order = issue.order;
 
   return (
-    <div className={`card overflow-hidden ${open ? "border-l-4 border-l-amber-400" : ""}`}>
+    <div className={`card overflow-hidden ${open ? "border-l-4 border-l-warning-400" : ""}`}>
       <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm">
         <span className="font-semibold text-slate-900">{issueLabel(issue.type)}</span>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${open ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>
-          {open ? "Open" : "Resolved"}
-        </span>
+        <span className={`badge ${open ? "badge-warning" : "badge-success"}`}>{open ? "Open" : "Resolved"}</span>
         <span className="text-slate-500">
           Order #{issue.orderId} · {issue.user?.name} ({issue.user?.email})
         </span>

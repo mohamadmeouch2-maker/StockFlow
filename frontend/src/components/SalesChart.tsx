@@ -2,7 +2,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import type { Summary } from "../api/reports";
 import { dayToDate, money } from "../utils/format";
 
-const BLUE = "#2563eb"; // the site's blue (Tailwind blue-600); checked for contrast on white
+const BLUE = "#2563eb"; // the brand colour (brand-600 = Tailwind blue-600); checked for contrast on white
 const BLUE_DARK = "#1d4ed8"; // the bar under the mouse
 const GRID = "#e2e8f0"; // slate-200: thin and quiet
 const TEXT = "#64748b"; // slate-500

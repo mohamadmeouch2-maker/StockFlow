@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { Suspense } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { favoritesApi } from "../api/favorites";
 import { issuesApi } from "../api/issues";
@@ -8,9 +9,10 @@ import { useToast } from "../toast/useToast";
 import { ChristmasSalePopup } from "./ChristmasSalePopup";
 import { LogoMark } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
+import { RowsSkeleton } from "./Skeleton";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
+  `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
 
 // The frame around every page: a nav bar on top, the current page, and a footer.
 // The links depend on who is logged in (guide 4.6).
@@ -47,7 +49,7 @@ export function Layout() {
           <Link to="/" className="mr-4 flex items-center gap-2 text-lg font-bold text-slate-900">
             <LogoMark className="h-8 w-8" />
             <span>
-              Stock<span className="text-blue-600">Flow</span>
+              Stock<span className="text-brand-600">Flow</span>
             </span>
           </Link>
           <NavLink to="/products" end className={linkClass}>
@@ -58,11 +60,11 @@ export function Layout() {
             <>
               <NavLink to="/cart" className={linkClass}>
                 Cart
-                {count > 0 && <span className="ml-1.5 rounded-full bg-blue-600 px-1.5 py-0.5 text-xs text-white">{count}</span>}
+                {count > 0 && <span className="count count-brand">{count}</span>}
               </NavLink>
               <NavLink to="/favorites" className={linkClass}>
                 Favourites
-                {favoriteCount > 0 && <span className="ml-1.5 rounded-full bg-rose-500 px-1.5 py-0.5 text-xs text-white">{favoriteCount}</span>}
+                {favoriteCount > 0 && <span className="count count-brand">{favoriteCount}</span>}
               </NavLink>
               <NavLink to="/orders" className={linkClass}>
                 My orders
@@ -85,7 +87,7 @@ export function Layout() {
               </NavLink>
               <NavLink to="/admin/support" className={linkClass}>
                 Support
-                {openIssues > 0 && <span className="ml-1.5 rounded-full bg-amber-500 px-1.5 py-0.5 text-xs text-white">{openIssues}</span>}
+                {openIssues > 0 && <span className="count count-alert">{openIssues}</span>}
               </NavLink>
             </>
           )}
@@ -95,7 +97,7 @@ export function Layout() {
             {user ? (
               <>
                 <span className="hidden items-center gap-2 text-sm text-slate-600 sm:flex">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                   {user.name}
@@ -122,7 +124,10 @@ export function Layout() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">
         {/* key: every new page fades in (see .page-fade in index.css) */}
         <div key={pathname} className="page-fade">
-          <Outlet />
+          {/* Pages that are downloaded on demand (the admin pages) show grey boxes while they load */}
+          <Suspense fallback={<RowsSkeleton rows={4} />}>
+            <Outlet />
+          </Suspense>
         </div>
       </main>
 

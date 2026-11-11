@@ -17,7 +17,7 @@ export function LowStockPage() {
       </div>
 
       {rows.isLoading && <RowsSkeleton />}
-      {rows.isError && <p className="text-red-600">Could not load the report. {rows.error.message}</p>}
+      {rows.isError && <p className="text-danger-600">Could not load the report. {rows.error.message}</p>}
       {rows.data?.length === 0 && <p>All products have enough stock. 🎉</p>}
 
       {!!rows.data?.length && (

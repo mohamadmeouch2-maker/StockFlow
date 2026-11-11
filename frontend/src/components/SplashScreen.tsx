@@ -30,7 +30,7 @@ export function SplashScreen() {
     >
       <LogoMark className="splash-pop h-24 w-24" />
       <p className="splash-pop text-3xl font-bold text-slate-900">
-        Stock<span className="text-blue-600">Flow</span>
+        Stock<span className="text-brand-600">Flow</span>
       </p>
       <p className="text-sm text-slate-500">Inventory and orders, made simple</p>
     </div>

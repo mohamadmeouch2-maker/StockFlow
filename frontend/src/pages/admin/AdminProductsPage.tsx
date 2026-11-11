@@ -56,8 +56,8 @@ export function AdminProductsPage() {
       </div>
 
       {products.isLoading && <RowsSkeleton />}
-      {products.isError && <p className="text-red-600">Could not load products. {products.error.message}</p>}
-      {remove.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not delete. {remove.error.message}</p>}
+      {products.isError && <p className="text-danger-600">Could not load products. {products.error.message}</p>}
+      {remove.isError && <p className="alert-danger">Could not delete. {remove.error.message}</p>}
 
       <div className="data-table-wrap">
         <table className="data-table">

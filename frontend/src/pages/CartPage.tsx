@@ -46,7 +46,7 @@ export function CartPage() {
   if (items.length === 0)
     return (
       <div className="card mx-auto max-w-md space-y-4 p-10 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-2xl">🛒</div>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-2xl">🛒</div>
         <h1 className="page-title">Your cart is empty</h1>
         <p className="text-slate-500">Find something you need and add it to your cart.</p>
         <Link to="/products" className="btn btn-primary">
@@ -66,13 +66,13 @@ export function CartPage() {
             <li key={product.id} className="flex flex-wrap items-center gap-4 p-4">
               <ProductImage src={product.imageUrl} alt={product.name} className="h-16 w-16" />
               <div className="min-w-0 flex-1">
-                <Link to={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-blue-700">
+                <Link to={`/products/${product.id}`} className="font-medium text-slate-900 hover:text-brand-700">
                   {product.name}
                 </Link>
                 <p className="text-sm text-slate-500">
                   {product.salePrice && <del className="mr-1">${Number(product.price).toFixed(2)}</del>}
-                  <span className={product.salePrice ? "font-medium text-red-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
-                  {product.promotion && <span className="ml-1 rounded bg-red-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
+                  <span className={product.salePrice ? "font-medium text-sale-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
+                  {product.promotion && <span className="ml-1 rounded bg-sale-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
                 </p>
               </div>
               <label className="sr-only" htmlFor={`qty-${product.id}`}>
@@ -88,7 +88,7 @@ export function CartPage() {
                 className="input w-20"
               />
               <span className="w-20 text-right font-semibold">${(effectivePrice(product) * quantity).toFixed(2)}</span>
-              <button onClick={() => remove(product.id)} className="text-sm text-red-600 hover:underline">
+              <button onClick={() => remove(product.id)} className="text-sm text-danger-600 hover:underline">
                 Remove
               </button>
             </li>
@@ -106,10 +106,10 @@ export function CartPage() {
                 <label
                   key={o.id}
                   className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition ${
-                    chosen ? "border-blue-600 bg-blue-50/60 ring-1 ring-blue-600" : "border-slate-200 hover:border-blue-300"
+                    chosen ? "border-brand-600 bg-brand-50/60 ring-1 ring-brand-600" : "border-slate-200 hover:border-brand-300"
                   }`}
                 >
-                  <input type="radio" name="delivery" value={o.id} checked={chosen} onChange={() => setDelivery(o.id)} className="mt-1 accent-blue-600" />
+                  <input type="radio" name="delivery" value={o.id} checked={chosen} onChange={() => setDelivery(o.id)} className="mt-1 accent-brand-600" />
                   <span className="flex-1">
                     <span className="flex justify-between gap-2 font-medium text-slate-900">
                       <span>
@@ -145,11 +145,9 @@ export function CartPage() {
           <p className="text-xs text-slate-500">The final total is calculated by the server from the current prices.</p>
 
           {placeOrder.error instanceof ApiError && placeOrder.error.code === "INSUFFICIENT_STOCK" ? (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-              Some items are no longer available ({placeOrder.error.message}). Adjust quantities and try again.
-            </p>
+            <p className="alert-danger">Some items are no longer available ({placeOrder.error.message}). Adjust quantities and try again.</p>
           ) : (
-            placeOrder.isError && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">Could not place the order. {placeOrder.error.message}</p>
+            placeOrder.isError && <p className="alert-danger">Could not place the order. {placeOrder.error.message}</p>
           )}
 
           <button disabled={placeOrder.isPending} onClick={() => placeOrder.mutate()} className="btn btn-primary w-full py-2.5">

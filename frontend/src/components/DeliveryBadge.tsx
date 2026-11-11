@@ -13,13 +13,9 @@ export function DeliveryBadge({ delivery, deliverBy, onTheWay = false }: Props) 
   const [now] = useState(() => Date.now()); // read the clock once, when the badge appears
   const express = delivery === "EXPRESS";
   const late = onTheWay && !!deliverBy && new Date(deliverBy).setHours(23, 59, 59, 999) < now; // the whole due day has passed
-  const color = late
-    ? "bg-red-50 text-red-700 ring-red-200"
-    : express
-      ? "bg-violet-50 text-violet-700 ring-violet-200"
-      : "bg-slate-50 text-slate-600 ring-slate-200";
+  const color = late ? "badge-danger" : express ? "badge-brand" : "badge-neutral";
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ${color}`}>
+    <span className={`badge gap-1 ${color}`}>
       <span aria-hidden="true">{late ? "⚠" : express ? "⚡" : "🚚"}</span>
       {express ? "Express" : "Standard"}
       {deliverBy && <span className="font-normal opacity-80">· {late ? `late (due ${shortDate(deliverBy)})` : `by ${shortDate(deliverBy)}`}</span>}

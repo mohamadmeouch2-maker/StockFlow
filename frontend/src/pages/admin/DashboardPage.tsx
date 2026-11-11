@@ -37,7 +37,7 @@ export function DashboardPage() {
       </div>
 
       {summary.isLoading && <DashboardSkeleton />}
-      {summary.isError && <p className="text-red-600">Could not load the dashboard. {summary.error.message}</p>}
+      {summary.isError && <p className="text-danger-600">Could not load the dashboard. {summary.error.message}</p>}
       {s && <Dashboard s={s} days={days} onDays={setDays} updating={summary.isPlaceholderData} />}
     </div>
   );
@@ -66,7 +66,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
             change === null ? (
               <span className="text-slate-500">No sales the week before</span>
             ) : (
-              <span className={change >= 0 ? "text-emerald-700" : "text-red-600"}>
+              <span className={change >= 0 ? "text-success-700" : "text-danger-600"}>
                 {change >= 0 ? "▲" : "▼"} {Math.abs(change)}% <span className="text-slate-500">vs the week before</span>
               </span>
             )
@@ -86,7 +86,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
           to="/admin/low-stock"
           note={
             s.products.soldOut > 0 ? (
-              <span className="text-amber-700">⚠ {s.products.soldOut} sold out</span>
+              <span className="text-warning-700">⚠ {s.products.soldOut} sold out</span>
             ) : (
               <span className="text-slate-500">of {s.products.total} products</span>
             )
@@ -97,7 +97,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
           icon="💬"
           value={String(s.openIssues)}
           to="/admin/support"
-          note={s.openIssues > 0 ? <span className="text-amber-700">⚠ Waiting for an answer</span> : <span className="text-emerald-700">✓ All answered</span>}
+          note={s.openIssues > 0 ? <span className="text-warning-700">⚠ Waiting for an answer</span> : <span className="text-success-700">✓ All answered</span>}
         />
       </div>
 
@@ -113,8 +113,8 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
             onClick={() => onDays(d)}
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
               days === d
-                ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                : "border-slate-300 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-700"
+                ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                : "border-slate-300 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700"
             }`}
           >
             Last {d} days
@@ -132,7 +132,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
             <SalesChart days={s.salesByDay} />
             {/* The same numbers as a table, for people who can't see the chart */}
             <details className="mt-3 text-sm">
-              <summary className="cursor-pointer font-medium text-blue-600 hover:underline">Show as a table</summary>
+              <summary className="cursor-pointer font-medium text-brand-600 hover:underline">Show as a table</summary>
               <table className="data-table mt-2">
                 <thead>
                   <tr>
@@ -190,7 +190,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
                   <ProductImage src={b.imageUrl} alt={b.name} className="h-10 w-10 shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="mb-1.5 flex items-center justify-between gap-2 text-sm">
-                      <Link to={`/products/${b.productId}`} className="truncate font-medium text-slate-900 hover:text-blue-700">
+                      <Link to={`/products/${b.productId}`} className="truncate font-medium text-slate-900 hover:text-brand-700">
                         {b.name}
                       </Link>
                       <span className="whitespace-nowrap text-slate-500">{b.sold} sold</span>
@@ -233,7 +233,7 @@ function StatTile({ label, icon, value, note, to }: { label: string; icon: strin
     <>
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium text-slate-500">{label}</p>
-        <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-lg">
+        <span aria-hidden="true" className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-50 text-lg">
           {icon}
         </span>
       </div>
@@ -254,7 +254,7 @@ function StatTile({ label, icon, value, note, to }: { label: string; icon: strin
 function Meter({ value, max }: { value: number; max: number }) {
   return (
     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-      <div className="h-full rounded-full bg-blue-600" style={{ width: `${max > 0 ? (value / max) * 100 : 0}%` }} />
+      <div className="h-full rounded-full bg-brand-600" style={{ width: `${max > 0 ? (value / max) * 100 : 0}%` }} />
     </div>
   );
 }

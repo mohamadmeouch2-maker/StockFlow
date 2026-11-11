@@ -14,18 +14,17 @@ export function HomeHero() {
 
   return (
     <div className="mb-8 space-y-6">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700 px-6 py-10 text-white shadow-lg sm:px-10">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-600 to-indigo-700 px-6 py-10 text-white shadow-lg sm:px-10">
         {/* Big faded logo in the corner, just for decoration */}
         <LogoMark className="pointer-events-none absolute -right-10 -bottom-12 h-64 w-64 rotate-12 opacity-15" />
         <div className="relative max-w-xl space-y-4">
-          <p className="text-sm font-semibold tracking-wider text-blue-100 uppercase">Welcome to StockFlow</p>
+          <p className="text-sm font-semibold tracking-wider text-brand-100 uppercase">Welcome to StockFlow</p>
           <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything your office needs, always in stock</h1>
-          <p className="text-blue-100">
-            Browse stationery, electronics, furniture and cleaning supplies. You always see the real stock, and your order is
-            reserved the moment you place it.
+          <p className="text-brand-100">
+            Browse stationery, electronics, furniture and cleaning supplies. You always see the real stock, and your order is reserved the moment you place it.
           </p>
           <div className="flex flex-wrap gap-3 pt-1">
-            <a href="#catalog" className="btn bg-white text-blue-700 shadow-sm hover:bg-blue-50">
+            <a href="#catalog" className="btn bg-white text-brand-700 shadow-sm hover:bg-brand-50">
               Browse products
             </a>
             {!user && (
@@ -74,7 +73,7 @@ function Stat({ value, label }: { value?: number | string; label: string }) {
   return (
     <div>
       <span className="block text-2xl font-bold">{value ?? "–"}</span>
-      <span className="text-blue-100">{label}</span>
+      <span className="text-brand-100">{label}</span>
     </div>
   );
 }
@@ -82,8 +81,17 @@ function Stat({ value, label }: { value?: number | string; label: string }) {
 function Feature({ title, text, children }: { title: string; text: string; children: ReactNode }) {
   return (
     <div className="card flex gap-4 p-5">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-6 w-6"
+          aria-hidden="true"
+        >
           {children}
         </svg>
       </div>

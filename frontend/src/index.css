@@ -1,5 +1,71 @@
 @import "tailwindcss";
 
+/* The colours, by meaning. Pages use these names (bg-brand-600, text-danger-700, ...),
+   so each colour means the same thing everywhere, and one line here changes it everywhere.
+   brand = blue: buttons, links, active, Shipped, Express, counts
+   success = green: In stock, Delivered, Resolved, saved
+   warning = amber: Low stock, Pending, Open problem
+   danger = red: errors, Delete, Late, things that need action
+   sale = red: only sale prices and sale tags
+   (grey/slate = neutral: Sold out, Cancelled, Standard, secondary text) */
+@theme {
+  --color-brand-50: oklch(97% 0.014 254.604);
+  --color-brand-100: oklch(93.2% 0.032 255.585);
+  --color-brand-200: oklch(88.2% 0.059 254.128);
+  --color-brand-300: oklch(80.9% 0.105 251.813);
+  --color-brand-400: oklch(70.7% 0.165 254.624);
+  --color-brand-500: oklch(62.3% 0.214 259.815);
+  --color-brand-600: oklch(54.6% 0.245 262.881);
+  --color-brand-700: oklch(48.8% 0.243 264.376);
+  --color-brand-800: oklch(42.4% 0.199 265.638);
+  --color-brand-900: oklch(37.9% 0.146 265.522);
+  --color-brand-950: oklch(28.2% 0.091 267.935);
+  --color-success-50: oklch(97.9% 0.021 166.113);
+  --color-success-100: oklch(95% 0.052 163.051);
+  --color-success-200: oklch(90.5% 0.093 164.15);
+  --color-success-300: oklch(84.5% 0.143 164.978);
+  --color-success-400: oklch(76.5% 0.177 163.223);
+  --color-success-500: oklch(69.6% 0.17 162.48);
+  --color-success-600: oklch(59.6% 0.145 163.225);
+  --color-success-700: oklch(50.8% 0.118 165.612);
+  --color-success-800: oklch(43.2% 0.095 166.913);
+  --color-success-900: oklch(37.8% 0.077 168.94);
+  --color-success-950: oklch(26.2% 0.051 172.552);
+  --color-warning-50: oklch(98.7% 0.022 95.277);
+  --color-warning-100: oklch(96.2% 0.059 95.617);
+  --color-warning-200: oklch(92.4% 0.12 95.746);
+  --color-warning-300: oklch(87.9% 0.169 91.605);
+  --color-warning-400: oklch(82.8% 0.189 84.429);
+  --color-warning-500: oklch(76.9% 0.188 70.08);
+  --color-warning-600: oklch(66.6% 0.179 58.318);
+  --color-warning-700: oklch(55.5% 0.163 48.998);
+  --color-warning-800: oklch(47.3% 0.137 46.201);
+  --color-warning-900: oklch(41.4% 0.112 45.904);
+  --color-warning-950: oklch(27.9% 0.077 45.635);
+  --color-danger-50: oklch(97.1% 0.013 17.38);
+  --color-danger-100: oklch(93.6% 0.032 17.717);
+  --color-danger-200: oklch(88.5% 0.062 18.334);
+  --color-danger-300: oklch(80.8% 0.114 19.571);
+  --color-danger-400: oklch(70.4% 0.191 22.216);
+  --color-danger-500: oklch(63.7% 0.237 25.331);
+  --color-danger-600: oklch(57.7% 0.245 27.325);
+  --color-danger-700: oklch(50.5% 0.213 27.518);
+  --color-danger-800: oklch(44.4% 0.177 26.899);
+  --color-danger-900: oklch(39.6% 0.141 25.723);
+  --color-danger-950: oklch(25.8% 0.092 26.042);
+  --color-sale-50: oklch(97.1% 0.013 17.38);
+  --color-sale-100: oklch(93.6% 0.032 17.717);
+  --color-sale-200: oklch(88.5% 0.062 18.334);
+  --color-sale-300: oklch(80.8% 0.114 19.571);
+  --color-sale-400: oklch(70.4% 0.191 22.216);
+  --color-sale-500: oklch(63.7% 0.237 25.331);
+  --color-sale-600: oklch(57.7% 0.245 27.325);
+  --color-sale-700: oklch(50.5% 0.213 27.518);
+  --color-sale-800: oklch(44.4% 0.177 26.899);
+  --color-sale-900: oklch(39.6% 0.141 25.723);
+  --color-sale-950: oklch(25.8% 0.092 26.042);
+}
+
 /* The shared look of the whole website. Pages use these class names
    (card, btn, input, ...) so every page looks the same. */
 @layer base {
@@ -14,24 +80,24 @@
     @apply rounded-xl border border-slate-200 bg-white shadow-sm;
   }
   .card-hover {
-    @apply transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md;
+    @apply transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md;
   }
 
   /* Buttons */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition
-      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600
+      focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600
       disabled:cursor-not-allowed disabled:opacity-50
       active:not-disabled:scale-[0.97]; /* pressed buttons sink in a little */
   }
   .btn-primary {
-    @apply bg-blue-600 text-white shadow-sm hover:bg-blue-700;
+    @apply bg-brand-600 text-white shadow-sm hover:bg-brand-700;
   }
   .btn-outline {
     @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
   }
   .btn-danger {
-    @apply border border-red-200 bg-white text-red-600 hover:bg-red-50;
+    @apply border border-danger-200 bg-white text-danger-600 hover:bg-danger-50;
   }
 
   /* Form fields */
@@ -40,10 +106,10 @@
   }
   .input {
     @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition
-      placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none;
+      placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none;
   }
   .field-error {
-    @apply mt-1 text-sm text-red-600;
+    @apply mt-1 text-sm text-danger-600;
   }
 
   /* Text */
@@ -51,7 +117,43 @@
     @apply text-2xl font-bold tracking-tight text-slate-900;
   }
   .link {
-    @apply font-medium text-blue-600 hover:text-blue-700 hover:underline;
+    @apply font-medium text-brand-600 hover:text-brand-700 hover:underline;
+  }
+
+  /* Small labels (stock, order status, delivery, problems): one shape; the colour says what it means */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset;
+  }
+  .badge-brand {
+    @apply bg-brand-50 text-brand-700 ring-brand-200;
+  }
+  .badge-success {
+    @apply bg-success-50 text-success-700 ring-success-200;
+  }
+  .badge-warning {
+    @apply bg-warning-50 text-warning-800 ring-warning-200;
+  }
+  .badge-danger {
+    @apply bg-danger-50 text-danger-700 ring-danger-200;
+  }
+  .badge-neutral {
+    @apply bg-slate-100 text-slate-600 ring-slate-200;
+  }
+
+  /* Numbers next to menu links: blue = just a count, red = something needs your attention */
+  .count {
+    @apply ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold text-white;
+  }
+  .count-brand {
+    @apply bg-brand-600;
+  }
+  .count-alert {
+    @apply bg-danger-600;
+  }
+
+  /* Message boxes, e.g. "Could not place the order" */
+  .alert-danger {
+    @apply rounded-lg bg-danger-50 px-3 py-2 text-sm text-danger-700;
   }
 
   /* Admin tables */
@@ -68,7 +170,7 @@
     @apply border-t border-slate-100 px-4 py-3 align-middle;
   }
   .data-table tbody tr {
-    @apply transition hover:bg-blue-50/40;
+    @apply transition hover:bg-brand-50/40;
   }
 }
 

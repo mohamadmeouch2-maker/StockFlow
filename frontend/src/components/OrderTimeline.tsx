@@ -23,14 +23,14 @@ export function OrderTimeline({ order }: { order: Order }) {
     <ol className="flex items-start px-5 pt-4 pb-3" aria-label={`Tracking for order #${order.id}`}>
       {steps.map((s, i) => {
         const isCancel = cancelled && i === 1;
-        const color = !s.done ? "bg-slate-200 text-slate-500" : isCancel ? "bg-red-500 text-white" : "bg-blue-600 text-white";
+        const color = !s.done ? "bg-slate-200 text-slate-500" : isCancel ? "bg-danger-500 text-white" : "bg-brand-600 text-white";
         return (
           <li key={s.label} className="relative flex flex-1 flex-col items-center text-center">
             {/* The line from the step before to this one */}
             {i > 0 && (
               <span
                 aria-hidden="true"
-                className={`absolute top-3 right-1/2 h-0.5 w-full ${s.done ? (isCancel ? "bg-red-300" : "bg-blue-600") : "bg-slate-200"}`}
+                className={`absolute top-3 right-1/2 h-0.5 w-full ${s.done ? (isCancel ? "bg-danger-300" : "bg-brand-600") : "bg-slate-200"}`}
               />
             )}
             <span aria-hidden="true" className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${color}`}>
