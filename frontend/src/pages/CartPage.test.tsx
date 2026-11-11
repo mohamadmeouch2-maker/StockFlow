@@ -14,7 +14,7 @@ beforeEach(() => sessionStorage.setItem("cart", JSON.stringify([{ product: stapl
 
 vi.spyOn(ordersApi, "deliveryOptions").mockResolvedValue([
   { id: "STANDARD", label: "Standard delivery", fee: "0.00", minDays: 3, maxDays: 5 },
-  { id: "EXPRESS", label: "Express delivery", fee: "9.99", minDays: 1, maxDays: 1 },
+  { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
 ]);
 const create = vi.spyOn(ordersApi, "create").mockResolvedValue({ id: 41, deliverBy: new Date().toISOString() } as Order);
 
@@ -37,11 +37,11 @@ test("standard delivery is chosen first and is free", async () => {
   expect(totalRow()).toHaveTextContent("$9.00");
 });
 
-test("choosing Express adds $9.99 to the total and sends EXPRESS with the order", async () => {
+test("choosing Express adds $4.50 to the total and sends EXPRESS with the order", async () => {
   renderCart();
   await userEvent.click(await screen.findByRole("radio", { name: /Express delivery/ }));
   expect(screen.getByRole("radio", { name: /Express delivery/ })).toHaveAccessibleName(/Next day/);
-  expect(totalRow()).toHaveTextContent("$18.99"); // $9.00 + $9.99
+  expect(totalRow()).toHaveTextContent("$13.50"); // $9.00 + $4.50
 
   await userEvent.click(screen.getByRole("button", { name: "Place order" }));
   expect(create).toHaveBeenCalledWith([{ productId: 5, quantity: 2 }], "EXPRESS");

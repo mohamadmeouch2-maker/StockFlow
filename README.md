@@ -12,7 +12,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role | FR-03 |
 | Products | List with search, category filter and 12 per page; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
-| Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$9.99, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
+| Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$4.50, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
 | My orders | Own orders, newest first; cancel a Pending order, which gives the stock back | FR-09, FR-10 |
 | Admin | Create, edit and delete products and categories; ship and deliver orders | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level | FR-16 |

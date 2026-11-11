@@ -119,11 +119,11 @@ test("a product that appears in orders cannot be deleted", async () => {
   expect(res.body.error.code).toBe("IN_USE");
 });
 
-// Delivery options: Standard (free, 3-5 days) or Express (+$9.99, next day).
+// Delivery options: Standard (free, 3-5 days) or Express (+$4.50, next day).
 const DAY = 24 * 60 * 60 * 1000;
 const daysFromNow = (iso: string) => (new Date(iso).getTime() - Date.now()) / DAY;
 
-test("standard delivery is free and arrives within 5 days; express adds $9.99 and arrives the next day", async () => {
+test("standard delivery is free and arrives within 5 days; express adds $4.50 and arrives the next day", async () => {
   const gadget = await newProduct(10); // $2.50 each
   const standard = (await order(2, customerToken, gadget).expect(201)).body; // no choice sent = standard
   expect(standard.delivery).toBe("STANDARD");
@@ -139,8 +139,8 @@ test("standard delivery is free and arrives within 5 days; express adds $9.99 an
       .expect(201)
   ).body;
   expect(express.delivery).toBe("EXPRESS");
-  expect(Number(express.deliveryFee)).toBe(9.99);
-  expect(Number(express.total)).toBe(14.99); // 2 x $2.50 + $9.99
+  expect(Number(express.deliveryFee)).toBe(4.5);
+  expect(Number(express.total)).toBe(9.5); // 2 x $2.50 + $4.50
   expect(daysFromNow(express.deliverBy)).toBeCloseTo(1, 1);
 });
 
@@ -148,7 +148,7 @@ test("the browser can't choose its own delivery fee, and unknown deliveries are 
   const gadget = await newProduct(10);
   const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...body });
   const sneaky = await send({ delivery: "EXPRESS", deliveryFee: 0 }).expect(201); // the extra field is ignored
-  expect(Number(sneaky.body.deliveryFee)).toBe(9.99);
+  expect(Number(sneaky.body.deliveryFee)).toBe(4.5);
   const bad = await send({ delivery: "ROCKET" }).expect(400);
   expect(bad.body.error.details[0].field).toBe("delivery");
 });
@@ -157,6 +157,6 @@ test("the cart can ask for the delivery options", async () => {
   const res = await request(app).get("/api/orders/delivery-options").set(auth(customerToken)).expect(200);
   expect(res.body).toEqual([
     { id: "STANDARD", label: "Standard delivery", fee: "0.00", minDays: 3, maxDays: 5 },
-    { id: "EXPRESS", label: "Express delivery", fee: "9.99", minDays: 1, maxDays: 1 },
+    { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
   ]);
 });
