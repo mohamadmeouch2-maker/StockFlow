@@ -52,6 +52,10 @@ model User {
   email        String       @unique
   passwordHash String       @map("password_hash")
   role         Role         @default(CUSTOMER)
+  // The delivery address saved in My account (customers); the cart fills it in. null = none saved.
+  phone        String?
+  city         String?
+  address      String?
   createdAt    DateTime     @default(now()) @map("created_at")
   orders       Order[]
   issues       OrderIssue[]

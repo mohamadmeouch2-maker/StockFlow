@@ -6,6 +6,7 @@ export type AuthState = {
   loading: boolean; // true while we check a saved token after a page refresh
   login: (email: string, password: string) => Promise<User>;
   logout: () => void;
+  updateUser: (user: User) => void; // after a change in My account (e.g. a new name)
 };
 
 export const AuthContext = createContext<AuthState | null>(null);

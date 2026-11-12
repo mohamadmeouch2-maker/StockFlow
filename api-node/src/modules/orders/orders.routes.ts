@@ -2,24 +2,17 @@ import { Router } from "express";
 import { z } from "zod";
 import { parseId } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
+import { shipToFields } from "../../lib/shipTo";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { reportBody, reportIssue } from "../issues/issues.routes";
 import { deliveryOptionsJson } from "./delivery";
 import { changeStatus, createOrder, withItems } from "./orders.service";
 
-// A phone number like "+961 70 123 456", "03-123456" or "70123456": digits, spaces, dashes and
-// an optional "+" at the start, with 7 to 15 digits in all.
-const digits = (v: string) => v.replace(/\D/g, "").length;
-const isPhone = (v: string) => /^\+?[\d\s-]+$/.test(v) && digits(v) >= 7 && digits(v) <= 15;
-
 const createBody = z.object({
   items: z.array(z.object({ productId: z.number().int(), quantity: z.number().int().min(1) })).min(1),
   delivery: z.enum(["STANDARD", "EXPRESS"]).default("STANDARD"), // how fast; Express costs more
-  // Where to bring the order (the website checks the same rules before sending)
-  phone: z.string({ error: "Enter a phone number" }).trim().refine(isPhone, { message: "Enter a valid phone number, for example +961 70 123 456" }),
-  city: z.string({ error: "Enter the city" }).trim().min(2, "Enter the city").max(60, "At most 60 characters"),
-  address: z.string({ error: "Enter the address" }).trim().min(5, "Enter the street, building and floor").max(300, "At most 300 characters"),
+  ...shipToFields, // where to bring the order: phone, city, address
 });
 const statusBody = z.object({ status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]) });
 // Admin list: one page at a time (20 orders by default), so it stays fast with thousands of orders
@@ -43,14 +36,18 @@ ordersRouter.get("/delivery-options", (_req, res) => {
   res.json(deliveryOptionsJson());
 });
 
-// The address of my last order, so the cart can fill it in for me. null = none yet.
-ordersRouter.get("/last-address", requireRole("CUSTOMER"), async (_req, res) => {
+// The address the cart fills in for me: the one saved in My account, or else the one of my
+// last order. { phone, city, address, from: "account" | "last-order" }, or null = none yet.
+ordersRouter.get("/saved-address", requireRole("CUSTOMER"), async (_req, res) => {
+  const select = { phone: true, city: true, address: true } as const;
+  const me = await prisma.user.findUniqueOrThrow({ where: { id: res.locals.user.id }, select });
+  if (me.address) return void res.json({ ...me, from: "account" });
   const last = await prisma.order.findFirst({
     where: { userId: res.locals.user.id, address: { not: null } },
-    select: { phone: true, city: true, address: true },
+    select,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
   });
-  res.json(last);
+  res.json(last && { ...last, from: "last-order" });
 });
 
 // FR-09: only my own orders, newest first, with any problems I reported.

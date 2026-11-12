@@ -15,12 +15,12 @@ vi.spyOn(ordersApi, "deliveryOptions").mockResolvedValue([
   { id: "STANDARD", label: "Standard delivery", fee: "0.00", minDays: 3, maxDays: 5 },
   { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
 ]);
-const lastAddress = vi.spyOn(ordersApi, "lastAddress");
+const savedAddress = vi.spyOn(ordersApi, "savedAddress");
 const create = vi.spyOn(ordersApi, "create").mockResolvedValue({ id: 41, deliverBy: new Date().toISOString() } as Order);
 
 beforeEach(() => {
   sessionStorage.setItem("cart", JSON.stringify([{ product: stapler, quantity: 2 }]));
-  lastAddress.mockResolvedValue(null); // a first order: nothing to fill in
+  savedAddress.mockResolvedValue(null); // a first order: nothing to fill in
   create.mockClear();
 });
 
@@ -71,7 +71,7 @@ test("the order needs a phone number, a city and an address", async () => {
 
 test("the address of the last order is filled in, so ordering again is one click", async () => {
   const saved = { phone: "+961 70 000 101", city: "Beirut", address: "Hamra Street, Cedar Building, 3rd floor" };
-  lastAddress.mockResolvedValue(saved);
+  savedAddress.mockResolvedValue({ ...saved, from: "last-order" });
   renderCart();
   expect(await screen.findByText(/Filled in from your last order/)).toBeInTheDocument();
   expect(screen.getByLabelText("Phone number")).toHaveValue(saved.phone);
@@ -79,4 +79,11 @@ test("the address of the last order is filled in, so ordering again is one click
 
   await userEvent.click(screen.getByRole("button", { name: "Place order" }));
   expect(create).toHaveBeenCalledWith([{ productId: 5, quantity: 2 }], "STANDARD", saved);
+});
+
+test("the address saved in My account comes first", async () => {
+  savedAddress.mockResolvedValue({ phone: "03 555 777", city: "Zahle", address: "Brazil Street, Nour Building", from: "account" });
+  renderCart();
+  expect(await screen.findByText(/Filled in from My account/)).toBeInTheDocument();
+  expect(screen.getByLabelText("City")).toHaveValue("Zahle");
 });

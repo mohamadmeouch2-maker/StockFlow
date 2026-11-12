@@ -8,16 +8,13 @@ import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
 import { useToast } from "../toast/useToast";
+import { nameRule, passwordRule } from "../utils/validation";
 
 // FR-01: the same rules as the API, so most mistakes are shown before sending.
 const schema = z.object({
-  name: z.string().trim().min(2, "At least 2 characters"),
+  name: nameRule,
   email: z.string().email("Enter a valid email"),
-  password: z
-    .string()
-    .min(8, "At least 8 characters")
-    .regex(/[A-Za-z]/, "Needs a letter")
-    .regex(/\d/, "Needs a number"),
+  password: passwordRule,
 });
 type FormValues = z.infer<typeof schema>;
 

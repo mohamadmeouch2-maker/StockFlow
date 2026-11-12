@@ -212,17 +212,17 @@ test("an order needs a phone number, a city and an address; without them nothing
 test("the order saves where to deliver; the admin sees it and the cart can fill it in next time", async () => {
   const gadget = await newProduct(5);
   const token = await createUser("new@test.dev");
-  const lastAddress = () => request(app).get("/api/orders/last-address").set(auth(token)).expect(200);
+  const savedAddress = () => request(app).get("/api/orders/saved-address").set(auth(token)).expect(200);
   const place = (where: object) => request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: gadget, quantity: 1 }], ...where }).expect(201);
-  expect((await lastAddress()).body).toBeNull(); // no orders yet
+  expect((await savedAddress()).body).toBeNull(); // no orders yet
 
   await place(shipTo);
   const created = await place({ phone: " 03-123456 ", city: "Saida ", address: "  Riad Al Solh Street, Building 4, 2nd floor" });
   const clean = { phone: "03-123456", city: "Saida", address: "Riad Al Solh Street, Building 4, 2nd floor" }; // extra spaces removed
   expect(created.body).toMatchObject(clean);
-  expect((await lastAddress()).body).toEqual(clean); // the newest order's address
+  expect((await savedAddress()).body).toEqual({ ...clean, from: "last-order" }); // the newest order's address
 
   const all = await request(app).get("/api/orders").set(auth(adminToken)).expect(200);
   expect(all.body.items.find((o: { id: number }) => o.id === created.body.id)).toMatchObject(clean);
-  await request(app).get("/api/orders/last-address").set(auth(adminToken)).expect(403); // customers only
+  await request(app).get("/api/orders/saved-address").set(auth(adminToken)).expect(403); // customers only
 });

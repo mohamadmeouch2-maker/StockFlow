@@ -2,6 +2,7 @@ import cors from "cors";
 import express from "express";
 import { uploadRoot } from "./lib/uploads";
 import { errorHandler } from "./middleware/error";
+import { accountRouter } from "./modules/account/account.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { categoriesRouter } from "./modules/categories/categories.routes";
 import { favoritesRouter } from "./modules/favorites/favorites.routes";
@@ -29,6 +30,7 @@ app.use(
   }),
 );
 app.use("/api/auth", authRouter);
+app.use("/api/account", accountRouter); // My account: name, saved address, password
 app.use("/api/categories", categoriesRouter);
 app.use("/api/products/:id/reviews", reviewsRouter); // ratings out of 10 and comments
 app.use("/api/products", productsRouter);

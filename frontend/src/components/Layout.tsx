@@ -96,13 +96,21 @@ export function Layout() {
             {user?.role === "ADMIN" && <NotificationBell />}
             {user ? (
               <>
-                <span className="hidden items-center gap-2 text-sm text-slate-600 sm:flex">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
+                {/* The avatar and name open My account (name, address, password) */}
+                <NavLink
+                  to="/account"
+                  title="My account"
+                  className={({ isActive }) =>
+                    `flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 text-sm transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100"}`
+                  }
+                >
+                  <span className="sr-only">My account: </span>
+                  <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
-                  {user.name}
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">{user.role.toLowerCase()}</span>
-                </span>
+                  <span className="hidden sm:inline">{user.name}</span>
+                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline">{user.role.toLowerCase()}</span>
+                </NavLink>
                 <button onClick={onLogout} className="btn btn-outline py-1.5">
                   Log out
                 </button>

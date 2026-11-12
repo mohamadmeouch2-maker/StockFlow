@@ -3,16 +3,20 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { AppError } from "../../lib/errors";
-import { clearFailures, minutesBlocked, recordFailure } from "../../lib/loginLimiter";
+import { clearFailures, recordFailure, stopIfBlocked } from "../../lib/loginLimiter";
 import { prisma } from "../../lib/prisma";
 import { requireAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 
-// FR-01: name, unique email, password with min 8 chars, 1 letter and 1 number.
+// FR-01: min 8 chars, 1 letter and 1 number. Also used to change the password in My account.
+export const passwordRule = z.string().min(8, "At least 8 characters").regex(/[A-Za-z]/, "Needs a letter").regex(/\d/, "Needs a number");
+export const nameRule = z.string().trim().min(2, "At least 2 characters").max(100, "At most 100 characters");
+
+// FR-01: name, unique email, password.
 const registerSchema = z.object({
-  name: z.string().trim().min(2).max(100),
+  name: nameRule,
   email: z.string().trim().toLowerCase().email(),
-  password: z.string().min(8).regex(/[A-Za-z]/, "Needs a letter").regex(/\d/, "Needs a number"),
+  password: passwordRule,
 });
 const loginSchema = z.object({ email: z.string().trim().toLowerCase().email(), password: z.string() });
 
@@ -38,11 +42,7 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
   const { email, password } = res.locals.body;
   // Too many wrong passwords for this email from this computer: wait first (see loginLimiter.ts)
   const key = `login|${req.ip}|${email}`;
-  const wait = minutesBlocked(key);
-  if (wait) {
-    res.setHeader("Retry-After", String(wait * 60)); // in seconds, the standard way to say "try later"
-    throw new AppError(429, "TOO_MANY_ATTEMPTS", `Too many wrong passwords. Please try again in ${wait} minute${wait === 1 ? "" : "s"}.`);
-  }
+  stopIfBlocked(key, res);
   const user = await prisma.user.findUnique({ where: { email } });
   // Same message for a wrong email and a wrong password, so nobody can find out which emails exist.
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {

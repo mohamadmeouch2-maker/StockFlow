@@ -8,6 +8,7 @@ import { HomeHero } from "./components/HomeHero";
 import { Layout } from "./components/Layout";
 import { DashboardSkeleton } from "./components/Skeleton";
 import { SplashScreen } from "./components/SplashScreen";
+import { AccountPage } from "./pages/AccountPage";
 import { CartPage } from "./pages/CartPage";
 import { LoginPage } from "./pages/LoginPage";
 import { FavoritesPage } from "./pages/FavoritesPage";
@@ -54,6 +55,9 @@ export default function App() {
                     }
                   />
                   <Route path="products/:id" element={<ProductDetailPage />} />
+                  <Route element={<ProtectedRoute />}>
+                    <Route path="account" element={<AccountPage />} />
+                  </Route>
                   <Route element={<ProtectedRoute role="CUSTOMER" />}>
                     <Route path="cart" element={<CartPage />} />
                     <Route path="orders" element={<MyOrdersPage />} />

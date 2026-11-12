@@ -1,3 +1,6 @@
+import type { Response } from "express";
+import { AppError } from "./errors";
+
 // Protection against password guessing (brute force).
 // After 5 wrong passwords for the same account from the same computer (IP address),
 // that login is blocked for 15 minutes, even with the right password.
@@ -33,3 +36,11 @@ export function recordFailure(key: string, now = Date.now()) {
 }
 
 export const clearFailures = (key: string) => fails.delete(key);
+
+// While the key is blocked: answer 429 "Too many wrong passwords. Please try again in N minutes."
+export function stopIfBlocked(key: string, res: Response) {
+  const wait = minutesBlocked(key);
+  if (!wait) return;
+  res.setHeader("Retry-After", String(wait * 60)); // in seconds, the standard way to say "try later"
+  throw new AppError(429, "TOO_MANY_ATTEMPTS", `Too many wrong passwords. Please try again in ${wait} minute${wait === 1 ? "" : "s"}.`);
+}

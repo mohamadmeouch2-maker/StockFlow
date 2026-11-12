@@ -2,14 +2,12 @@ import { OrderStatus, Prisma, type DeliveryMethod } from "@prisma/client";
 import { AppError, notFound } from "../../lib/errors";
 import { salePrice } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
+import type { ShipTo } from "../../lib/shipTo";
 import { stockAlert } from "../notifications/notifications.service";
 import { DELIVERY_OPTIONS, deliverBy } from "./delivery";
 
 // Order lines come back with the product name, which the website shows.
 export const withItems = { items: { include: { product: { select: { name: true } } } } } as const;
-
-// Where to bring the order: typed by the customer in the cart.
-export type ShipTo = { phone: string; city: string; address: string };
 
 // FR-07 / FR-08: one transaction checks and deducts the stock for every line and
 // computes the total from the current prices, plus the delivery fee the customer chose.

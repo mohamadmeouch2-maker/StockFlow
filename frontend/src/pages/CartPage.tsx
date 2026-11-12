@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import { z } from "zod";
 import { ApiError } from "../api/client";
 import { ordersApi } from "../api/orders";
 import type { DeliveryMethod, DeliveryOption, ShipTo } from "../api/types";
@@ -12,18 +11,7 @@ import { FormField } from "../components/FormField";
 import { ProductImage } from "../components/ProductImage";
 import { useToast } from "../toast/useToast";
 import { addDays, effectivePrice, shortDate } from "../utils/format";
-
-// Where to deliver: the same rules as the API, so mistakes show before sending.
-// A phone number like "+961 70 123 456", "03-123456" or "70123456" (7 to 15 digits).
-const digits = (v: string) => v.replace(/\D/g, "").length;
-const shipToSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .refine((v) => /^\+?[\d\s-]+$/.test(v) && digits(v) >= 7 && digits(v) <= 15, { message: "Enter a valid phone number, for example +961 70 123 456" }),
-  city: z.string().trim().min(2, "Enter the city").max(60, "At most 60 characters"),
-  address: z.string().trim().min(5, "Enter the street, building and floor").max(300, "At most 300 characters"),
-});
+import { shipToSchema } from "../utils/validation";
 
 // "Next day" or "3–5 days"
 const howLong = (o: DeliveryOption) => (o.maxDays === 1 ? "Next day" : o.minDays === o.maxDays ? `${o.maxDays} days` : `${o.minDays}–${o.maxDays} days`);
@@ -38,8 +26,10 @@ export function CartPage() {
   const [delivery, setDelivery] = useState<DeliveryMethod>("STANDARD");
   const options = useQuery({ queryKey: ["delivery-options"], queryFn: ordersApi.deliveryOptions, staleTime: Infinity });
 
-  // Where to deliver. The address of the last order is filled in, and the customer can change it.
-  const lastAddress = useQuery({ queryKey: ["orders", "last-address"], queryFn: ordersApi.lastAddress, staleTime: Infinity, enabled: items.length > 0 });
+  // Where to deliver. The address saved in My account (or else the last order's) is filled in,
+  // and the customer can change it for this order.
+  const saved = useQuery({ queryKey: ["orders", "saved-address"], queryFn: ordersApi.savedAddress, staleTime: Infinity, enabled: items.length > 0 });
+  const savedShipTo = saved.data ? { phone: saved.data.phone, city: saved.data.city, address: saved.data.address } : undefined;
   const {
     register,
     handleSubmit,
@@ -48,7 +38,7 @@ export function CartPage() {
   } = useForm<ShipTo>({
     resolver: zodResolver(shipToSchema),
     defaultValues: { phone: "", city: "", address: "" },
-    values: lastAddress.data ?? undefined,
+    values: savedShipTo,
     resetOptions: { keepDirtyValues: true }, // anything the customer already typed stays
   });
 
@@ -139,7 +129,9 @@ export function CartPage() {
                 <span aria-hidden="true">📍 </span>Delivery address
               </h2>
               <p className="text-sm text-slate-500">
-                {lastAddress.data ? "Filled in from your last order. Change it if this one goes somewhere else." : "Where should we bring your order?"}
+                {saved.data
+                  ? `Filled in from ${saved.data.from === "account" ? "My account" : "your last order"}. Change it if this one goes somewhere else.`
+                  : "Where should we bring your order?"}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">

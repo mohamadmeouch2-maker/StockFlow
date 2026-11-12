@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 const as = (role: "CUSTOMER" | "ADMIN") =>
-  ({ user: { id: 1, name: "Sara", email: "sara@test.dev", role }, loading: false, login: vi.fn(), logout: vi.fn() }) as AuthState;
+  ({ user: { id: 1, name: "Sara", email: "sara@test.dev", role }, loading: false, login: vi.fn(), logout: vi.fn(), updateUser: vi.fn() }) as AuthState;
 const renderHeart = (auth: AuthState | null) =>
   render(
     <QueryClientProvider client={new QueryClient()}>

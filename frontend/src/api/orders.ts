@@ -1,12 +1,12 @@
 import { api } from "./client";
-import type { DeliveryMethod, DeliveryOption, Order, OrderStatus, Paged, ShipTo } from "./types";
+import type { DeliveryMethod, DeliveryOption, Order, OrderStatus, Paged, SavedAddress, ShipTo } from "./types";
 
 // Calls to the Core API for orders (FR-07 to FR-10, FR-12).
 export const ordersApi = {
   create: (items: { productId: number; quantity: number }[], delivery: DeliveryMethod, shipTo: ShipTo) =>
     api<Order>("core", "/api/orders", { method: "POST", body: JSON.stringify({ items, delivery, ...shipTo }) }),
   deliveryOptions: () => api<DeliveryOption[]>("core", "/api/orders/delivery-options"),
-  lastAddress: () => api<ShipTo | null>("core", "/api/orders/last-address"), // null = no orders yet
+  savedAddress: () => api<SavedAddress | null>("core", "/api/orders/saved-address"), // null = nothing to fill in yet
   mine: () => api<Order[]>("core", "/api/orders/mine"),
   cancel: (id: number) => api<Order>("core", `/api/orders/${id}/cancel`, { method: "POST" }),
   // Admin only

@@ -12,7 +12,8 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing) | FR-03 |
 | Products | List with search, category filter and 12 per page; sort by price, rating or newest, and "In stock only"; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
-| Delivery address | The cart asks for a phone number, a city and an address (street, building, floor), checked on the website and on the server; the next order fills them in from the last one. Customers see them in My orders, admins in Manage orders (tap the number to call) | extra |
+| Delivery address | The cart asks for a phone number, a city and an address (street, building, floor), checked on the website and on the server; the next order fills them in from My account or else from the last order. Customers see them in My orders, admins in Manage orders (tap the number to call) | extra |
+| My account | Click your name (top right): change your name, save a delivery address for the cart (customers), and change your password (the current one first; 5 wrong tries = wait 15 minutes) | extra |
 | Delivery options | In the cart the customer chooses Standard delivery (free, 3–5 days) or Express (+$4.50, next day); the server adds the fee and saves the arrival date, shown in My orders and Manage orders | extra |
 | My orders | Own orders, newest first, each with a tracking timeline (placed → shipped → delivered, with dates); cancel a Pending order, which gives the stock back; "Buy again" puts an order's products back in the cart | FR-09, FR-10 |
 | Favourites | Customers save products with a heart and find them on a "My favourites" page, ready to add to the cart | extra |
@@ -35,7 +36,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (84 API tests), Vitest + Testing Library (49 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (89 API tests), Vitest + Testing Library (54 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -114,10 +115,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 84 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 89 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 49 passed (no backend needed)
+npm test        # ✅ Tests: 54 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -138,7 +139,10 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | POST / PUT / DELETE | `/api/categories[/:id]` | Admin | Add, rename or delete a category `{ "name": "Kitchen" }` (names are unique, ignoring capital letters) |
 | POST | `/api/orders` | Customer | Place an order: `{ "items": [{ "productId": 1, "quantity": 2 }], "delivery": "EXPRESS", "phone": "+961 70 123 456", "city": "Beirut", "address": "Hamra Street, Building 12, 3rd floor" }` (delivery is optional, default `STANDARD`; phone, city and address are required) |
 | GET | `/api/orders/delivery-options` | logged in | The delivery choices with their price and days |
-| GET | `/api/orders/last-address` | Customer | The phone, city and address of my last order (to fill in the cart), or `null` |
+| GET | `/api/orders/saved-address` | Customer | The address the cart fills in: the one saved in My account, or else my last order's, with `from: "account"` or `"last-order"`; `null` if none |
+| GET / PATCH | `/api/account` | logged in | My account (name, email, role, saved address); PATCH `{ "name": "Sara Khoury" }` changes the name |
+| PUT / DELETE | `/api/account/address` | Customer | Save `{ "phone", "city", "address" }` as my delivery address, or remove it |
+| POST | `/api/account/password` | logged in | `{ "currentPassword": "...", "newPassword": "..." }` (same rules as registering) |
 | GET | `/api/orders/mine` | logged in | My orders, newest first |
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
 | GET | `/api/orders?status=&page=&pageSize=` | Admin | All orders, newest first, one page at a time: `{ items, page, pageSize, total }` (20 per page by default, at most 100) |

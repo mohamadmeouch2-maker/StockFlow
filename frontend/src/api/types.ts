@@ -2,6 +2,9 @@ export type Role = "CUSTOMER" | "ADMIN";
 
 export type User = { id: number; name: string; email: string; role: Role };
 
+// My account: the user plus the saved delivery address (all null = none saved)
+export type Account = User & { phone: string | null; city: string | null; address: string | null; createdAt: string };
+
 export type Category = { id: number; name: string; productCount?: number }; // productCount: how many products are in it
 
 export type Product = {
@@ -33,6 +36,8 @@ export type DeliveryOption = { id: DeliveryMethod; label: string; fee: string; m
 
 // Where to bring the order, typed in the cart.
 export type ShipTo = { phone: string; city: string; address: string };
+// The address the cart fills in: saved in My account, or else from the last order
+export type SavedAddress = ShipTo & { from: "account" | "last-order" };
 
 export type Order = {
   id: number;
