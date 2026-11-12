@@ -21,7 +21,10 @@ beforeAll(async () => {
 afterAll(() => prisma.$disconnect());
 
 const order = (quantity: number, token = customerToken, id = productId) =>
-  request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: id, quantity }], ...shipTo });
+  request(app)
+    .post("/api/orders")
+    .set(auth(token))
+    .send({ items: [{ productId: id, quantity }], ...shipTo });
 const stockOf = async (id: number) => (await prisma.product.findUniqueOrThrow({ where: { id } })).stock;
 const newProduct = async (stock: number) => (await prisma.product.create({ data: { name: "Gadget", price: 2.5, stock, categoryId } })).id;
 
@@ -54,7 +57,13 @@ test("one short line fails the whole order: no stock changes anywhere (FR-07)", 
   await request(app)
     .post("/api/orders")
     .set(auth(customerToken))
-    .send({ items: [{ productId: gadget, quantity: 2 }, { productId, quantity: 1 }], ...shipTo }) // Widget has 0 left
+    .send({
+      items: [
+        { productId: gadget, quantity: 2 },
+        { productId, quantity: 1 },
+      ],
+      ...shipTo,
+    }) // Widget has 0 left
     .expect(409);
   expect(await stockOf(gadget)).toBe(5);
 });
@@ -161,7 +170,11 @@ test("standard delivery is free and arrives within 5 days; express adds $4.50 an
 
 test("the browser can't choose its own delivery fee, and unknown deliveries are refused", async () => {
   const gadget = await newProduct(10);
-  const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...shipTo, ...body });
+  const send = (body: object) =>
+    request(app)
+      .post("/api/orders")
+      .set(auth(customerToken))
+      .send({ items: [{ productId: gadget, quantity: 1 }], ...shipTo, ...body });
   const sneaky = await send({ delivery: "EXPRESS", deliveryFee: 0 }).expect(201); // the extra field is ignored
   expect(Number(sneaky.body.deliveryFee)).toBe(4.5);
   const bad = await send({ delivery: "ROCKET" }).expect(400);
@@ -195,7 +208,11 @@ test("the order remembers when it was shipped, delivered or cancelled (tracking 
 // Where to deliver: a phone number, a city and an address, typed in the cart.
 test("an order needs a phone number, a city and an address; without them nothing changes", async () => {
   const gadget = await newProduct(5);
-  const send = (body: object) => request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: gadget, quantity: 1 }], ...body });
+  const send = (body: object) =>
+    request(app)
+      .post("/api/orders")
+      .set(auth(customerToken))
+      .send({ items: [{ productId: gadget, quantity: 1 }], ...body });
   const missing = await send({}).expect(400);
   expect(missing.body.error.details.map((d: { field: string }) => d.field)).toEqual(["phone", "city", "address"]);
 
@@ -213,7 +230,12 @@ test("the order saves where to deliver; the admin sees it and the cart can fill 
   const gadget = await newProduct(5);
   const token = await createUser("new@test.dev");
   const savedAddress = () => request(app).get("/api/orders/saved-address").set(auth(token)).expect(200);
-  const place = (where: object) => request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: gadget, quantity: 1 }], ...where }).expect(201);
+  const place = (where: object) =>
+    request(app)
+      .post("/api/orders")
+      .set(auth(token))
+      .send({ items: [{ productId: gadget, quantity: 1 }], ...where })
+      .expect(201);
   expect((await savedAddress()).body).toBeNull(); // no orders yet
 
   await place(shipTo);

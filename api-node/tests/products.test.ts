@@ -49,12 +49,20 @@ test("only admins can create products: 401 without login, 403 for a customer (FR
 });
 
 test("admin create checks the input, then creates, updates and deletes (FR-11)", async () => {
-  const bad = await request(app).post("/api/products").set(auth(adminToken)).send({ ...validProduct(), price: 0, stock: -1 }).expect(400);
+  const bad = await request(app)
+    .post("/api/products")
+    .set(auth(adminToken))
+    .send({ ...validProduct(), price: 0, stock: -1 })
+    .expect(400);
   expect(bad.body.error.details.map((d: { field: string }) => d.field)).toEqual(expect.arrayContaining(["price", "stock"]));
 
   const created = await request(app).post("/api/products").set(auth(adminToken)).send(validProduct()).expect(201);
   const id = created.body.id;
-  const updated = await request(app).put(`/api/products/${id}`).set(auth(adminToken)).send({ ...validProduct(), stock: 3 }).expect(200);
+  const updated = await request(app)
+    .put(`/api/products/${id}`)
+    .set(auth(adminToken))
+    .send({ ...validProduct(), stock: 3 })
+    .expect(200);
   expect(updated.body.stock).toBe(3);
   await request(app).delete(`/api/products/${id}`).set(auth(adminToken)).expect(204);
   await request(app).get(`/api/products/${id}`).expect(404);

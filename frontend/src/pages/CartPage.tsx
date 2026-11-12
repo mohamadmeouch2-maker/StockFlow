@@ -59,8 +59,7 @@ export function CartPage() {
     },
     // A field the server didn't accept: its message goes under that field
     onError: (err) => {
-      if (err instanceof ApiError)
-        for (const d of err.details) if (d.field in shipToSchema.shape) setError(d.field as keyof ShipTo, { message: d.message });
+      if (err instanceof ApiError) for (const d of err.details) if (d.field in shipToSchema.shape) setError(d.field as keyof ShipTo, { message: d.message });
     },
   });
 
@@ -135,14 +134,39 @@ export function CartPage() {
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <FormField id="phone" label="Phone number" type="tel" autoComplete="tel" placeholder="+961 70 123 456" maxLength={25} {...register("phone")} error={errors.phone?.message} />
-              <FormField id="city" label="City" autoComplete="address-level2" placeholder="Beirut" maxLength={60} {...register("city")} error={errors.city?.message} />
+              <FormField
+                id="phone"
+                label="Phone number"
+                type="tel"
+                autoComplete="tel"
+                placeholder="+961 70 123 456"
+                maxLength={25}
+                {...register("phone")}
+                error={errors.phone?.message}
+              />
+              <FormField
+                id="city"
+                label="City"
+                autoComplete="address-level2"
+                placeholder="Beirut"
+                maxLength={60}
+                {...register("city")}
+                error={errors.city?.message}
+              />
             </div>
             <div>
               <label htmlFor="address" className="label">
                 Address
               </label>
-              <textarea id="address" rows={2} autoComplete="street-address" placeholder="Street, building, floor" maxLength={300} {...register("address")} className="input" />
+              <textarea
+                id="address"
+                rows={2}
+                autoComplete="street-address"
+                placeholder="Street, building, floor"
+                maxLength={300}
+                {...register("address")}
+                className="input"
+              />
               {errors.address && <p className="field-error">{errors.address.message}</p>}
             </div>
           </form>

@@ -9,7 +9,12 @@ export const activePromotion = (p: Priced, now = new Date()) => (p.promotion && 
 // The price after the discount, rounded to cents: $10.00 with 30% off -> $7.00. null = not on sale.
 export function salePrice(p: Priced) {
   const promo = activePromotion(p);
-  return promo ? p.price.mul(100 - promo.percent).div(100).toDecimalPlaces(2) : null;
+  return promo
+    ? p.price
+        .mul(100 - promo.percent)
+        .div(100)
+        .toDecimalPlaces(2)
+    : null;
 }
 
 // What the website gets: the product, plus salePrice ("7.00" or null) and the sale it is in.

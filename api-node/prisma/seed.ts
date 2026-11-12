@@ -121,7 +121,12 @@ async function main() {
       if ((await prisma.review.count({ where: { productId: product.id } })) === 0) {
         for (const [r, reviewer] of reviewers.slice(0, 2 + (i % 2)).entries()) {
           await prisma.review.create({
-            data: { productId: product.id, userId: reviewer.id, rating: 6 + ((i * 3 + r * 2) % 5), comment: sampleComments[(i + r * 4) % sampleComments.length] },
+            data: {
+              productId: product.id,
+              userId: reviewer.id,
+              rating: 6 + ((i * 3 + r * 2) % 5),
+              comment: sampleComments[(i + r * 4) % sampleComments.length],
+            },
           });
           reviews++;
         }

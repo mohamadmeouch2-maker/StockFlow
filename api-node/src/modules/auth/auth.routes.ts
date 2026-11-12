@@ -9,7 +9,11 @@ import { requireAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 
 // FR-01: min 8 chars, 1 letter and 1 number. Also used to change the password in My account.
-export const passwordRule = z.string().min(8, "At least 8 characters").regex(/[A-Za-z]/, "Needs a letter").regex(/\d/, "Needs a number");
+export const passwordRule = z
+  .string()
+  .min(8, "At least 8 characters")
+  .regex(/[A-Za-z]/, "Needs a letter")
+  .regex(/\d/, "Needs a number");
 export const nameRule = z.string().trim().min(2, "At least 2 characters").max(100, "At most 100 characters");
 
 // FR-01: name, unique email, password.
@@ -24,8 +28,7 @@ const loginSchema = z.object({ email: z.string().trim().toLowerCase().email(), p
 const publicUser = { id: true, name: true, email: true, role: true } as const;
 
 // FR-02: JWT valid for 1 hour. "sub" (subject) is the user id.
-const sign = (u: { id: number; role: string }) =>
-  jwt.sign({ role: u.role }, process.env.JWT_SECRET!, { subject: String(u.id), expiresIn: "1h" });
+const sign = (u: { id: number; role: string }) => jwt.sign({ role: u.role }, process.env.JWT_SECRET!, { subject: String(u.id), expiresIn: "1h" });
 
 export const authRouter = Router();
 

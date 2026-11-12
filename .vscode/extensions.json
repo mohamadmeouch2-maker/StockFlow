@@ -1,0 +1,4 @@
+{
+  // VS Code suggests these when the project is opened. Prettier formats the code the same way for everyone (npm run format).
+  "recommendations": ["esbenp.prettier-vscode", "dbaeumer.vscode-eslint"]
+}

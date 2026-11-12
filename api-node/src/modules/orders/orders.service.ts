@@ -30,10 +30,8 @@ export async function createOrder(userId: number, items: { productId: number; qu
         data: { stock: { decrement: quantity } },
       });
       const product = await tx.product.findUnique({ where: { id: productId }, include: { promotion: true } });
-      if (!product)
-        throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "items", message: `Product ${productId} does not exist` }]);
-      if (count === 0)
-        throw new AppError(409, "INSUFFICIENT_STOCK", `Not enough stock for ${product.name} (${product.stock} left)`);
+      if (!product) throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "items", message: `Product ${productId} does not exist` }]);
+      if (count === 0) throw new AppError(409, "INSUFFICIENT_STOCK", `Not enough stock for ${product.name} (${product.stock} left)`);
       // During a sale the customer pays the sale price (e.g. 30% off), worked out here on the server
       const unitPrice = salePrice(product) ?? product.price;
       total = total.add(unitPrice.mul(quantity));
@@ -64,10 +62,8 @@ const allowed: Record<OrderStatus, OrderStatus[]> = {
 export async function changeStatus(orderId: number, next: OrderStatus, actor: { id: number; role: string }) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
   if (!order) throw notFound("Order");
-  if (actor.role === "CUSTOMER" && (order.userId !== actor.id || next !== "CANCELLED"))
-    throw new AppError(403, "FORBIDDEN", "Not allowed");
-  if (!allowed[order.status].includes(next))
-    throw new AppError(409, "INVALID_STATUS", `Cannot go from ${order.status} to ${next}`);
+  if (actor.role === "CUSTOMER" && (order.userId !== actor.id || next !== "CANCELLED")) throw new AppError(403, "FORBIDDEN", "Not allowed");
+  if (!allowed[order.status].includes(next)) throw new AppError(409, "INVALID_STATUS", `Cannot go from ${order.status} to ${next}`);
 
   return prisma.$transaction(async (tx) => {
     // Change the status only if nobody changed it in the meantime. This stops a double
@@ -76,9 +72,7 @@ export async function changeStatus(orderId: number, next: OrderStatus, actor: { 
     const when = { SHIPPED: { shippedAt: new Date() }, DELIVERED: { deliveredAt: new Date() }, CANCELLED: { cancelledAt: new Date() }, PENDING: {} }[next];
     const { count } = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: { status: next, ...when } });
     if (count === 0) throw new AppError(409, "INVALID_STATUS", "The order was changed by someone else, please reload");
-    if (next === "CANCELLED")
-      for (const i of order.items)
-        await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: i.quantity } } }); // FR-10
+    if (next === "CANCELLED") for (const i of order.items) await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: i.quantity } } }); // FR-10
     return tx.order.findUniqueOrThrow({ where: { id: orderId }, include: withItems });
   });
 }

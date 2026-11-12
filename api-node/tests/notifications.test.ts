@@ -19,7 +19,10 @@ beforeAll(async () => {
 afterAll(() => prisma.$disconnect());
 
 const order = (productId: number, quantity: number) =>
-  request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId, quantity }], ...shipTo });
+  request(app)
+    .post("/api/orders")
+    .set(auth(customerToken))
+    .send({ items: [{ productId, quantity }], ...shipTo });
 const alerts = async () => (await request(app).get("/api/notifications").set(auth(adminToken)).expect(200)).body;
 
 test("an order that leaves enough stock creates no alert", async () => {

@@ -124,18 +124,45 @@ function AddressForm({ account }: { account: Account }) {
           <span aria-hidden="true">📍 </span>Delivery address
         </h2>
         <p className="text-sm text-slate-500">
-          {hasSaved ? "The cart fills this in for every order. You can still change it in the cart." : "Save it once, and the cart fills it in for every order."}
+          {hasSaved
+            ? "The cart fills this in for every order. You can still change it in the cart."
+            : "Save it once, and the cart fills it in for every order."}
         </p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <FormField id="phone" label="Phone number" type="tel" autoComplete="tel" placeholder="+961 70 123 456" maxLength={25} {...register("phone")} error={errors.phone?.message} />
-        <FormField id="city" label="City" autoComplete="address-level2" placeholder="Beirut" maxLength={60} {...register("city")} error={errors.city?.message} />
+        <FormField
+          id="phone"
+          label="Phone number"
+          type="tel"
+          autoComplete="tel"
+          placeholder="+961 70 123 456"
+          maxLength={25}
+          {...register("phone")}
+          error={errors.phone?.message}
+        />
+        <FormField
+          id="city"
+          label="City"
+          autoComplete="address-level2"
+          placeholder="Beirut"
+          maxLength={60}
+          {...register("city")}
+          error={errors.city?.message}
+        />
       </div>
       <div>
         <label htmlFor="address" className="label">
           Address
         </label>
-        <textarea id="address" rows={2} autoComplete="street-address" placeholder="Street, building, floor" maxLength={300} {...register("address")} className="input" />
+        <textarea
+          id="address"
+          rows={2}
+          autoComplete="street-address"
+          placeholder="Street, building, floor"
+          maxLength={300}
+          {...register("address")}
+          className="input"
+        />
         {errors.address && <p className="field-error">{errors.address.message}</p>}
       </div>
       {serverError && <p className="alert-danger">{serverError}</p>}
@@ -144,7 +171,12 @@ function AddressForm({ account }: { account: Account }) {
           {save.isPending ? "Saving..." : "Save address"}
         </button>
         {hasSaved && (
-          <button type="button" disabled={remove.isPending} onClick={() => confirm("Remove your saved address?") && remove.mutate()} className="btn btn-outline">
+          <button
+            type="button"
+            disabled={remove.isPending}
+            onClick={() => confirm("Remove your saved address?") && remove.mutate()}
+            className="btn btn-outline"
+          >
             Remove
           </button>
         )}
@@ -201,7 +233,14 @@ function PasswordForm() {
       />
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <FormField id="new-password" label="New password" type="password" autoComplete="new-password" {...register("newPassword")} error={errors.newPassword?.message} />
+          <FormField
+            id="new-password"
+            label="New password"
+            type="password"
+            autoComplete="new-password"
+            {...register("newPassword")}
+            error={errors.newPassword?.message}
+          />
           <p className="mt-1 text-xs text-slate-500">At least 8 characters, with a letter and a number.</p>
         </div>
         <FormField

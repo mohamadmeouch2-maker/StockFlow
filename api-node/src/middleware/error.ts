@@ -16,7 +16,7 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
 
   // Photo upload problems (FR-17), e.g. a file that is too big
   if (err instanceof MulterError) {
-    const message = err.code === "LIMIT_FILE_SIZE" ? `The image must be ${MAX_IMAGE_MB} MB or smaller` : "Send one image in the \"image\" field";
+    const message = err.code === "LIMIT_FILE_SIZE" ? `The image must be ${MAX_IMAGE_MB} MB or smaller` : 'Send one image in the "image" field';
     return send(res, 400, "VALIDATION_ERROR", "Invalid input", [{ field: "image", message }]);
   }
 

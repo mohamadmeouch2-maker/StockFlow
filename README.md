@@ -37,6 +37,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
 - **Tests:** Jest + Supertest (89 API tests), Vitest + Testing Library (54 website tests), GitHub Actions CI
+- **Code style:** Prettier (one shared style, checked in CI) and ESLint
 
 ## Project structure
 
@@ -122,6 +123,17 @@ npm test        # ✅ Tests: 54 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
+
+## Code style
+
+Prettier formats the code the same way for everyone. The settings are in [.prettierrc.json](.prettierrc.json) (lines up to 160 characters). Run it in `api-node` or `frontend`:
+
+```bash
+npm run format        # formats the code
+npm run format:check  # ✅ All matched files use Prettier code style!
+```
+
+The CI workflow runs `format:check` too. VS Code suggests the Prettier extension when you open the project.
 
 ## API overview
 

@@ -16,7 +16,11 @@ beforeAll(async () => {
   adminToken = await createUser("admin@test.dev", "ADMIN");
   const categoryId = (await prisma.category.create({ data: { name: "Test" } })).id;
   productId = (await prisma.product.create({ data: { name: "Lamp", price: 20, stock: 10, categoryId } })).id;
-  await request(app).post("/api/orders").set(auth(buyerToken)).send({ items: [{ productId, quantity: 1 }], ...shipTo }).expect(201);
+  await request(app)
+    .post("/api/orders")
+    .set(auth(buyerToken))
+    .send({ items: [{ productId, quantity: 1 }], ...shipTo })
+    .expect(201);
 });
 afterAll(() => prisma.$disconnect());
 
@@ -53,7 +57,11 @@ test("a buyer rates the product, then changes the rating", async () => {
 });
 
 test("the average shows in the product list and detail (one decimal)", async () => {
-  await request(app).post("/api/orders").set(auth(otherToken)).send({ items: [{ productId, quantity: 1 }], ...shipTo }).expect(201);
+  await request(app)
+    .post("/api/orders")
+    .set(auth(otherToken))
+    .send({ items: [{ productId, quantity: 1 }], ...shipTo })
+    .expect(201);
   await rate(otherToken, { rating: 10 }).expect(200);
   const detail = await request(app).get(`/api/products/${productId}`).expect(200);
   expect(detail.body.rating).toEqual({ average: 8.5, count: 2 });
@@ -63,7 +71,11 @@ test("the average shows in the product list and detail (one decimal)", async () 
 
 test("a cancelled order doesn't count as a purchase", async () => {
   const token = await createUser("canceller@test.dev");
-  const order = await request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId, quantity: 1 }], ...shipTo }).expect(201);
+  const order = await request(app)
+    .post("/api/orders")
+    .set(auth(token))
+    .send({ items: [{ productId, quantity: 1 }], ...shipTo })
+    .expect(201);
   await request(app).post(`/api/orders/${order.body.id}/cancel`).set(auth(token)).expect(200);
   await request(app).put(`/api/products/${productId}/reviews`).set(auth(token)).send({ rating: 1 }).expect(403);
 });

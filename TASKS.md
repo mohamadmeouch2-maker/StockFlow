@@ -82,6 +82,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
   - [x] Login attempts are limited: after 5 wrong passwords for the same email from the same computer, that login is blocked for 15 minutes (429 with a clear message, even with the right password). A successful login starts the count again. Tests: API 83
   - [x] Manage orders shows 20 orders per page (newest first) with Previous / Next, instead of loading every order at once. The status filter starts again on page 1. The API returns `{ items, page, pageSize, total }`, like the product list. Tests: API 84, website 49
   - [x] My account page (click your name, top right): change the name (the email stays, it is the login), save a delivery address that the cart fills in (customers; new `phone`, `city`, `address` columns on users, all three or none), and change the password (the current one first, the same rules as registering, wrong tries limited like logins). The form rules are shared in `frontend/src/utils/validation.ts` and `api-node/src/lib/shipTo.ts`. Tests: API 89, website 54
+  - [x] Prettier (NFR-08): one shared code style in `.prettierrc.json` (lines up to 160 characters), `npm run format` and `npm run format:check` in both `api-node` and `frontend`, a format check in the CI workflow, and VS Code suggests the Prettier extension. All the code was formatted once
 ## To do
 
 ### Friday, Nov 13: Demo

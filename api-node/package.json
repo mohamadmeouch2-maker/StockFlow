@@ -10,7 +10,9 @@
     "seed": "tsx prisma/seed.ts",
     "postinstall": "prisma generate",
     "pretest": "dotenv-cli -e .env.test -- prisma migrate deploy",
-    "test": "dotenv-cli -e .env.test -- jest --runInBand"
+    "test": "dotenv-cli -e .env.test -- jest --runInBand",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -32,6 +34,7 @@
     "@types/supertest": "^7.2.1",
     "dotenv-cli": "^11.1.0",
     "jest": "^30.5.2",
+    "prettier": "^3.10.1",
     "prisma": "^6.19.3",
     "supertest": "^7.3.1",
     "ts-jest": "^29.4.15",

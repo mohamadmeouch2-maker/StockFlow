@@ -8,7 +8,16 @@ import type { Account } from "../api/types";
 import { AuthContext, type AuthState } from "../auth/authContext";
 import { AccountPage } from "./AccountPage";
 
-const rami: Account = { id: 3, name: "Rami", email: "rami@test.dev", role: "CUSTOMER", phone: null, city: null, address: null, createdAt: "2026-11-01T10:00:00Z" };
+const rami: Account = {
+  id: 3,
+  name: "Rami",
+  email: "rami@test.dev",
+  role: "CUSTOMER",
+  phone: null,
+  city: null,
+  address: null,
+  createdAt: "2026-11-01T10:00:00Z",
+};
 const updateUser = vi.fn();
 const get = vi.spyOn(accountApi, "get");
 const rename = vi.spyOn(accountApi, "rename").mockImplementation(async (name) => ({ ...rami, name }));

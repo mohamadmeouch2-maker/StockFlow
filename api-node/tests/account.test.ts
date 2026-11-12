@@ -36,7 +36,11 @@ test("a customer saves a delivery address; the cart uses it before the last orde
   const savedAddress = () => request(app).get("/api/orders/saved-address").set(auth(token)).expect(200);
   expect((await savedAddress()).body).toBeNull(); // nothing yet
 
-  const bad = await request(app).put("/api/account/address").set(auth(token)).send({ ...shipTo, phone: "123" }).expect(400);
+  const bad = await request(app)
+    .put("/api/account/address")
+    .set(auth(token))
+    .send({ ...shipTo, phone: "123" })
+    .expect(400);
   expect(bad.body.error.details[0].field).toBe("phone");
 
   const home = { phone: "03 555 777", city: "Zahle", address: "Brazil Street, Nour Building, 2nd floor" };
@@ -47,7 +51,11 @@ test("a customer saves a delivery address; the cart uses it before the last orde
   // Forget it: the cart falls back to the last order's address
   const category = await prisma.category.create({ data: { name: "Test" } });
   const product = await prisma.product.create({ data: { name: "Pen", price: 1, stock: 5, categoryId: category.id } });
-  await request(app).post("/api/orders").set(auth(token)).send({ items: [{ productId: product.id, quantity: 1 }], ...shipTo }).expect(201);
+  await request(app)
+    .post("/api/orders")
+    .set(auth(token))
+    .send({ items: [{ productId: product.id, quantity: 1 }], ...shipTo })
+    .expect(201);
   expect((await savedAddress()).body).toEqual({ ...home, from: "account" }); // still the saved one
   await request(app).delete("/api/account/address").set(auth(token)).expect(200);
   expect((await savedAddress()).body).toEqual({ ...shipTo, from: "last-order" });

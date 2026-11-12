@@ -129,8 +129,7 @@ const loadProduct = async (req: Request, res: Response, next: NextFunction) => {
 
 // Upload or replace the photo: multipart/form-data with one file in the "image" field.
 productsRouter.post("/:id/image", ...admin, loadProduct, productImageUpload, async (req, res) => {
-  if (!req.file)
-    throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "image", message: "Choose an image file" }]);
+  if (!req.file) throw new AppError(400, "VALIDATION_ERROR", "Invalid input", [{ field: "image", message: "Choose an image file" }]);
   const imageUrl = `/uploads/products/${req.file.filename}`;
   try {
     const product = await prisma.product.update({ where: { id: res.locals.product.id }, data: { imageUrl }, include: { category: true } });

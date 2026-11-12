@@ -14,11 +14,23 @@ beforeAll(async () => {
   customerToken = await createUser("customer@test.dev");
   const userId = (await prisma.user.findUniqueOrThrow({ where: { email: "customer@test.dev" } })).id;
   const categoryId = (await prisma.category.create({ data: { name: "Office" } })).id;
-  for (const [name, stock] of [["Best seller", 10], ["Slow", 5], ["Sold out", 0], ["Never sold", 8], ["Old hit", 3]] as const)
+  for (const [name, stock] of [
+    ["Best seller", 10],
+    ["Slow", 5],
+    ["Sold out", 0],
+    ["Never sold", 8],
+    ["Old hit", 3],
+  ] as const)
     id[name] = (await prisma.product.create({ data: { name, price: 10, stock, categoryId } })).id;
   const sale = (productId: number, quantity: number, daysAgo = 2) =>
     prisma.order.create({
-      data: { userId, status: "DELIVERED", total: 10 * quantity, createdAt: new Date(Date.now() - daysAgo * 86400000), items: { create: { productId, quantity, unitPrice: 10 } } },
+      data: {
+        userId,
+        status: "DELIVERED",
+        total: 10 * quantity,
+        createdAt: new Date(Date.now() - daysAgo * 86400000),
+        items: { create: { productId, quantity, unitPrice: 10 } },
+      },
     });
   await sale(id["Best seller"], 6); // 6 sold: not a slow product
   await sale(id["Slow"], 1); // only 1 sold
@@ -53,7 +65,11 @@ test("sale products show the sale price; the others don't", async () => {
 });
 
 test("an order pays the sale price (calculated on the server)", async () => {
-  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId: id["Slow"], quantity: 2 }], ...shipTo }).expect(201);
+  const res = await request(app)
+    .post("/api/orders")
+    .set(auth(customerToken))
+    .send({ items: [{ productId: id["Slow"], quantity: 2 }], ...shipTo })
+    .expect(201);
   expect(Number(res.body.items[0].unitPrice)).toBe(7);
   expect(Number(res.body.total)).toBe(14);
 });

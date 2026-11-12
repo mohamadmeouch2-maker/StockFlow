@@ -16,7 +16,10 @@ beforeAll(async () => {
   adminToken = await createUser("admin@test.dev", "ADMIN");
   const categoryId = (await prisma.category.create({ data: { name: "Test" } })).id;
   const productId = (await prisma.product.create({ data: { name: "Widget", price: 10, stock: 5, categoryId } })).id;
-  const res = await request(app).post("/api/orders").set(auth(customerToken)).send({ items: [{ productId, quantity: 1 }], ...shipTo });
+  const res = await request(app)
+    .post("/api/orders")
+    .set(auth(customerToken))
+    .send({ items: [{ productId, quantity: 1 }], ...shipTo });
   orderId = res.body.id;
 });
 afterAll(() => prisma.$disconnect());
@@ -52,7 +55,7 @@ test("the admin sees the report with the customer and the order, and only admins
 });
 
 test("the admin replies and resolves; the customer sees the answer", async () => {
-  const { id } = (await prisma.orderIssue.findFirstOrThrow({ where: { orderId } }));
+  const { id } = await prisma.orderIssue.findFirstOrThrow({ where: { orderId } });
   await request(app).patch(`/api/issues/${id}`).set(auth(adminToken)).send({}).expect(400); // nothing to change
   await request(app).patch(`/api/issues/${id}`).set(auth(customerToken)).send({ status: "RESOLVED" }).expect(403);
 
