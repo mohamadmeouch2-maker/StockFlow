@@ -3,6 +3,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { AppError } from "../../lib/errors";
+import { clearFailures, minutesBlocked, recordFailure } from "../../lib/loginLimiter";
 import { prisma } from "../../lib/prisma";
 import { requireAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
@@ -33,12 +34,22 @@ authRouter.post("/register", validate(registerSchema), async (_req, res) => {
   res.status(201).json(user);
 });
 
-authRouter.post("/login", validate(loginSchema), async (_req, res) => {
+authRouter.post("/login", validate(loginSchema), async (req, res) => {
   const { email, password } = res.locals.body;
+  // Too many wrong passwords for this email from this computer: wait first (see loginLimiter.ts)
+  const key = `login|${req.ip}|${email}`;
+  const wait = minutesBlocked(key);
+  if (wait) {
+    res.setHeader("Retry-After", String(wait * 60)); // in seconds, the standard way to say "try later"
+    throw new AppError(429, "TOO_MANY_ATTEMPTS", `Too many wrong passwords. Please try again in ${wait} minute${wait === 1 ? "" : "s"}.`);
+  }
   const user = await prisma.user.findUnique({ where: { email } });
   // Same message for a wrong email and a wrong password, so nobody can find out which emails exist.
-  if (!user || !(await bcrypt.compare(password, user.passwordHash)))
+  if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+    recordFailure(key);
     throw new AppError(401, "INVALID_CREDENTIALS", "Email or password is wrong");
+  }
+  clearFailures(key);
   res.json({ token: sign(user), user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 });
 

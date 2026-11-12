@@ -1,6 +1,7 @@
 import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/lib/prisma";
+import { BLOCK_MINUTES, MAX_FAILS, minutesBlocked, recordFailure } from "../src/lib/loginLimiter";
 import { auth, createUser, resetDb } from "./helpers";
 
 beforeAll(resetDb);
@@ -44,4 +45,31 @@ test("/me needs a valid token (FR-03)", async () => {
   const token = await createUser("me@test.dev");
   const res = await request(app).get("/api/auth/me").set(auth(token)).expect(200);
   expect(res.body.email).toBe("me@test.dev");
+});
+
+// Brute-force protection: 5 wrong passwords -> that login waits 15 minutes.
+const login = (email: string, password: string) => request(app).post("/api/auth/login").send({ email, password });
+
+test("after 5 wrong passwords the login is blocked for 15 minutes, even with the right password", async () => {
+  await createUser("guess@test.dev");
+  for (let i = 0; i < MAX_FAILS; i++) await login("guess@test.dev", "Wrong1234").expect(401);
+  const blocked = await login("guess@test.dev", "Password1").expect(429);
+  expect(blocked.body.error).toMatchObject({ code: "TOO_MANY_ATTEMPTS", message: "Too many wrong passwords. Please try again in 15 minutes." });
+  expect(blocked.headers["retry-after"]).toBe("900");
+  await login("me@test.dev", "Password1").expect(200); // other accounts still work
+});
+
+test("a successful login starts the count again", async () => {
+  await createUser("forgetful@test.dev");
+  for (let i = 0; i < MAX_FAILS - 1; i++) await login("forgetful@test.dev", "Wrong1234").expect(401);
+  await login("forgetful@test.dev", "Password1").expect(200);
+  for (let i = 0; i < MAX_FAILS - 1; i++) await login("forgetful@test.dev", "Wrong1234").expect(401); // not blocked yet
+});
+
+test("the block ends by itself after 15 minutes", () => {
+  const start = Date.now();
+  for (let i = 0; i < MAX_FAILS; i++) recordFailure("clock-test", start);
+  expect(minutesBlocked("clock-test", start)).toBe(BLOCK_MINUTES);
+  expect(minutesBlocked("clock-test", start + 14 * 60_000)).toBe(1);
+  expect(minutesBlocked("clock-test", start + BLOCK_MINUTES * 60_000)).toBe(0);
 });

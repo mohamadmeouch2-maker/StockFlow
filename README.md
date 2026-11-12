@@ -9,7 +9,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Area | What works | Requirement |
 |---|---|---|
 | Accounts | Register, log in, log out, stay logged in after a refresh (JWT valid for 1 hour) | FR-01, FR-02 |
-| Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role | FR-03 |
+| Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing) | FR-03 |
 | Products | List with search, category filter and 12 per page; sort by price, rating or newest, and "In stock only"; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
 | Delivery address | The cart asks for a phone number, a city and an address (street, building, floor), checked on the website and on the server; the next order fills them in from the last one. Customers see them in My orders, admins in Manage orders (tap the number to call) | extra |
@@ -35,7 +35,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (80 API tests), Vitest + Testing Library (48 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (83 API tests), Vitest + Testing Library (48 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -114,7 +114,7 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 80 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 83 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
 npm test        # ✅ Tests: 48 passed (no backend needed)
@@ -129,7 +129,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | Method | Path | Who | Purpose |
 |---|---|---|---|
 | POST | `/api/auth/register` | anyone | Create a customer account |
-| POST | `/api/auth/login` | anyone | Get a token |
+| POST | `/api/auth/login` | anyone | Get a token (429 for 15 minutes after 5 wrong passwords) |
 | GET | `/api/auth/me` | logged in | Current user |
 | GET | `/api/products?page=&pageSize=&search=&categoryId=&sort=&inStock=` | anyone | Paged product list; `sort` = `name` (default), `price_asc`, `price_desc`, `rating` or `newest`; `inStock=true` hides sold-out products; `onSale=true` shows only the products in the current sale |
 | GET | `/api/products/:id` | anyone | One product |
