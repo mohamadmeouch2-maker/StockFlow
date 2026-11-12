@@ -17,7 +17,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | My orders | Own orders, newest first, each with a tracking timeline (placed → shipped → delivered, with dates); cancel a Pending order, which gives the stock back; "Buy again" puts an order's products back in the cart | FR-09, FR-10 |
 | Favourites | Customers save products with a heart and find them on a "My favourites" page, ready to add to the cart | extra |
 | Christmas sale | Admins start a sale (for example 30% off until Dec 31) on the products in stock that sold fewer than N pieces in the last days; customers see a festive pop-up with falling snow, a sale banner, red sale prices with the old price crossed out, and a "Christmas deals" filter; orders pay the sale price (calculated on the server) | extra |
-| Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders | FR-11, FR-12 |
+| Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders (20 per page, newest first, with a status filter) | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level (6 for every product, so "Low stock" = fewer than 7 left; the admin can change one product) | FR-16 |
 | Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
@@ -35,7 +35,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (83 API tests), Vitest + Testing Library (48 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (84 API tests), Vitest + Testing Library (49 website tests), GitHub Actions CI
 
 ## Project structure
 
@@ -114,10 +114,10 @@ These are for local use only. You can also register a new customer on the websit
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 83 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 84 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 48 passed (no backend needed)
+npm test        # ✅ Tests: 49 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -141,7 +141,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/orders/last-address` | Customer | The phone, city and address of my last order (to fill in the cart), or `null` |
 | GET | `/api/orders/mine` | logged in | My orders, newest first |
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
-| GET | `/api/orders?status=` | Admin | All orders |
+| GET | `/api/orders?status=&page=&pageSize=` | Admin | All orders, newest first, one page at a time: `{ items, page, pageSize, total }` (20 per page by default, at most 100) |
 | PATCH | `/api/orders/:id/status` | Admin | `{ "status": "SHIPPED" }`, then `DELIVERED`, or `CANCELLED` |
 | POST | `/api/products/:id/view` | anyone | Count one view of the product page |
 | GET | `/api/favorites` | Customer | My favourite products, the last saved first |

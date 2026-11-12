@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { DeliveryMethod, DeliveryOption, Order, OrderStatus, ShipTo } from "./types";
+import type { DeliveryMethod, DeliveryOption, Order, OrderStatus, Paged, ShipTo } from "./types";
 
 // Calls to the Core API for orders (FR-07 to FR-10, FR-12).
 export const ordersApi = {
@@ -10,7 +10,7 @@ export const ordersApi = {
   mine: () => api<Order[]>("core", "/api/orders/mine"),
   cancel: (id: number) => api<Order>("core", `/api/orders/${id}/cancel`, { method: "POST" }),
   // Admin only
-  all: (status?: OrderStatus) => api<Order[]>("core", `/api/orders${status ? `?status=${status}` : ""}`),
+  all: (status: OrderStatus | undefined, page: number) => api<Paged<Order>>("core", `/api/orders?page=${page}${status ? `&status=${status}` : ""}`),
   setStatus: (id: number, status: Exclude<OrderStatus, "PENDING">) =>
     api<Order>("core", `/api/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
 };

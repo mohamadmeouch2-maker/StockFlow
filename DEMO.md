@@ -65,7 +65,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Say:** "Admins manage the categories here. A name can't be used twice, even with other capital letters. A category that still has products can't be deleted, so no product is ever left without a category."
 
 ### 10. Admin: orders (1 minute): FR-12
-**Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter.
+**Do:** first place one order as the customer and keep it Pending. Then as admin: **Manage orders** → **Mark shipped** → **Mark delivered**. Use the status filter, and **Next →** at the bottom (20 orders per page).
 **Say:** "Only valid changes are offered: Pending → Shipped → Delivered, or Pending → Cancelled. The server blocks anything else. Under each customer's name the admin sees where to deliver and the phone number, so the driver can call."
 
 ### 11. Rate a product (1 minute): extra feature
@@ -91,7 +91,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "83 API tests run against a separate test database, so real data is never touched. 48 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "84 API tests run against a separate test database, so real data is never touched. 49 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

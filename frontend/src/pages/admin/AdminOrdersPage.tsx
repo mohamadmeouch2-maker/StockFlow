@@ -1,9 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { ordersApi } from "../../api/orders";
 import type { Order, OrderStatus } from "../../api/types";
 import { DeliveryBadge } from "../../components/DeliveryBadge";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
+import { Pagination } from "../../components/Pagination";
 import { RowsSkeleton } from "../../components/Skeleton";
 import { useToast } from "../../toast/useToast";
 
@@ -20,9 +21,18 @@ const actions: Record<OrderStatus, { label: string; status: Exclude<OrderStatus,
 
 export function AdminOrdersPage() {
   const [status, setStatus] = useState<OrderStatus>();
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
   const toast = useToast();
-  const orders = useQuery({ queryKey: ["orders", "all", status], queryFn: () => ordersApi.all(status) });
+  // 20 orders per page, newest first
+  const orders = useQuery({
+    queryKey: ["orders", "all", status, page],
+    queryFn: () => ordersApi.all(status, page),
+    placeholderData: keepPreviousData, // keep showing the old page while the next one loads
+  });
+  const d = orders.data;
+  const totalPages = d ? Math.max(1, Math.ceil(d.total / d.pageSize)) : 1;
+  const showing = d && d.total > 0 ? `Showing ${(d.page - 1) * d.pageSize + 1}–${(d.page - 1) * d.pageSize + d.items.length} of ${d.total} orders` : "";
 
   const change = useMutation({
     mutationFn: ({ id, next }: { id: number; next: Exclude<OrderStatus, "PENDING"> }) => ordersApi.setStatus(id, next),
@@ -41,12 +51,15 @@ export function AdminOrdersPage() {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="page-title">Manage orders</h1>
-          <p className="text-sm text-slate-500">{orders.data ? `${orders.data.length} orders` : ""}</p>
+          <p className="text-sm text-slate-500">{showing}</p>
         </div>
         <select
           aria-label="Filter by status"
           value={status ?? ""}
-          onChange={(e) => setStatus((e.target.value || undefined) as OrderStatus | undefined)}
+          onChange={(e) => {
+            setStatus((e.target.value || undefined) as OrderStatus | undefined);
+            setPage(1); // a new filter starts on its first page
+          }}
           className="input w-auto"
         >
           <option value="">All statuses</option>
@@ -60,9 +73,9 @@ export function AdminOrdersPage() {
       {orders.isLoading && <RowsSkeleton />}
       {orders.isError && <p className="text-danger-600">Could not load orders. {orders.error.message}</p>}
       {change.isError && <p className="alert-danger">Could not change the status. {change.error.message}</p>}
-      {orders.data?.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}
+      {d?.items.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}
 
-      {!!orders.data?.length && (
+      {!!d?.items.length && (
         <div className="data-table-wrap">
           <table className="data-table">
             <thead>
@@ -77,7 +90,7 @@ export function AdminOrdersPage() {
               </tr>
             </thead>
             <tbody>
-              {orders.data.map((o) => (
+              {d.items.map((o) => (
                 <tr key={o.id}>
                   <td>
                     <span className="font-medium text-slate-900">#{o.id}</span>
@@ -125,6 +138,16 @@ export function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
+      )}
+      {totalPages > 1 && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          onChange={(p) => {
+            setPage(p);
+            window.scrollTo({ top: 0, behavior: "smooth" }); // start reading the new page from the top
+          }}
+        />
       )}
     </div>
   );

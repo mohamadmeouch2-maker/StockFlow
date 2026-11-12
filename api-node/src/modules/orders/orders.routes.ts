@@ -22,7 +22,12 @@ const createBody = z.object({
   address: z.string({ error: "Enter the address" }).trim().min(5, "Enter the street, building and floor").max(300, "At most 300 characters"),
 });
 const statusBody = z.object({ status: z.enum(["SHIPPED", "DELIVERED", "CANCELLED"]) });
-const listQuery = z.object({ status: z.enum(["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"]).optional() });
+// Admin list: one page at a time (20 orders by default), so it stays fast with thousands of orders
+const listQuery = z.object({
+  status: z.enum(["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"]).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
+});
 
 export const ordersRouter = Router();
 ordersRouter.use(requireAuth); // every orders route needs a login
@@ -69,16 +74,22 @@ ordersRouter.post("/:id/cancel", async (req, res) => {
   res.json(await changeStatus(parseId(req.params.id, "Order"), "CANCELLED", res.locals.user));
 });
 
-// FR-12: admin sees all orders (with the customer), optionally filtered by status.
+// FR-12: admin sees all orders (with the customer), newest first, optionally filtered by status.
+// ?page=2&pageSize=20 -> { items, page, pageSize, total } (the same shape as the product list)
 ordersRouter.get("/", requireRole("ADMIN"), validate(listQuery, "query"), async (_req, res) => {
-  const { status } = res.locals.query;
-  res.json(
-    await prisma.order.findMany({
-      where: status ? { status } : {},
+  const { status, page, pageSize } = res.locals.query as z.infer<typeof listQuery>;
+  const where = status ? { status } : {};
+  const [items, total] = await prisma.$transaction([
+    prisma.order.findMany({
+      where,
       include: { ...withItems, user: { select: { name: true, email: true } }, issues: { select: { id: true, status: true } } },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
-  );
+    prisma.order.count({ where }),
+  ]);
+  res.json({ items, page, pageSize, total });
 });
 
 // FR-12: admin moves an order along: Pending -> Shipped -> Delivered, or Pending -> Cancelled.

@@ -106,12 +106,27 @@ test("admin moves orders Pending -> Shipped -> Delivered; other changes are bloc
 
 test("admin can list all orders and filter by status (FR-12)", async () => {
   const all = await request(app).get("/api/orders").set(auth(adminToken)).expect(200);
-  expect(all.body.length).toBeGreaterThanOrEqual(4);
-  expect(all.body[0].user.email).toBeDefined();
+  expect(all.body).toMatchObject({ page: 1, pageSize: 20 });
+  expect(all.body.total).toBeGreaterThanOrEqual(4);
+  expect(all.body.items[0].user.email).toBeDefined();
   const cancelled = await request(app).get("/api/orders?status=CANCELLED").set(auth(adminToken)).expect(200);
-  expect(cancelled.body.every((o: { status: string }) => o.status === "CANCELLED")).toBe(true);
+  expect(cancelled.body.items.every((o: { status: string }) => o.status === "CANCELLED")).toBe(true);
   await request(app).get("/api/orders?status=WRONG").set(auth(adminToken)).expect(400);
   await request(app).get("/api/orders").set(auth(customerToken)).expect(403);
+});
+
+test("the admin order list comes one page at a time, newest first", async () => {
+  const list = async (query: string) => (await request(app).get(`/api/orders?${query}`).set(auth(adminToken)).expect(200)).body;
+  const { total } = await list("pageSize=100");
+  const first = await list("page=1&pageSize=2");
+  const second = await list("page=2&pageSize=2");
+  expect(first).toMatchObject({ page: 1, pageSize: 2, total });
+  expect(first.items).toHaveLength(2);
+  expect(second.items).toHaveLength(2);
+  const ids = [...first.items, ...second.items].map((o: { id: number }) => o.id);
+  expect(new Set(ids).size).toBe(4); // no order on two pages
+  expect((await list(`page=${total + 1}&pageSize=1`)).items).toEqual([]); // after the last page: empty
+  await request(app).get("/api/orders?pageSize=500").set(auth(adminToken)).expect(400); // at most 100 per page
 });
 
 test("a product that appears in orders cannot be deleted", async () => {
@@ -208,6 +223,6 @@ test("the order saves where to deliver; the admin sees it and the cart can fill 
   expect((await lastAddress()).body).toEqual(clean); // the newest order's address
 
   const all = await request(app).get("/api/orders").set(auth(adminToken)).expect(200);
-  expect(all.body.find((o: { id: number }) => o.id === created.body.id)).toMatchObject(clean);
+  expect(all.body.items.find((o: { id: number }) => o.id === created.body.id)).toMatchObject(clean);
   await request(app).get("/api/orders/last-address").set(auth(adminToken)).expect(403); // customers only
 });

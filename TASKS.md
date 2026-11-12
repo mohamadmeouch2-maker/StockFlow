@@ -80,6 +80,7 @@ The full guide is a 21-day program. With one week left, the plan below covers th
 - [x] **Delivery address and phone number (Nov 11):** the cart asks where to deliver: phone number, city and address (street, building, floor). The same rules on the website and the server (a phone number has 7 to 15 digits). They are saved with the order (new `phone`, `city`, `address` columns; a database rule keeps all three or none, and older orders have none). The next order fills them in from the last one. My orders shows "Deliver to ...", and Manage orders shows the customer's phone number (tap to call) and address. The sample customers' orders got sample addresses. Tests: API 80, website 48
 - [x] **Weak points fixed (Nov 12):**
   - [x] Login attempts are limited: after 5 wrong passwords for the same email from the same computer, that login is blocked for 15 minutes (429 with a clear message, even with the right password). A successful login starts the count again. Tests: API 83
+  - [x] Manage orders shows 20 orders per page (newest first) with Previous / Next, instead of loading every order at once. The status filter starts again on page 1. The API returns `{ items, page, pageSize, total }`, like the product list. Tests: API 84, website 49
 ## To do
 
 ### Friday, Nov 13: Demo
