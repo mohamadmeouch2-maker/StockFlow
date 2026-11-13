@@ -69,6 +69,10 @@
 /* The shared look of the whole website. Pages use these class names
    (card, btn, input, ...) so every page looks the same. */
 @layer base {
+  /* Keep the scrollbar's space: the page doesn't jump sideways when the ☰ menu stops it from scrolling */
+  html {
+    scrollbar-gutter: stable;
+  }
   body {
     @apply bg-slate-50 text-slate-800 antialiased;
   }

@@ -16,6 +16,8 @@ About 11 minutes. Each step says what to **do**, what to **say**, and which requ
 3. Open **http://localhost:5173** and make sure you are **logged out**.
 4. Have a third terminal ready in the `api-node` folder for the tests.
 
+The page links (Products, Cart, My orders, the admin pages...) are in the **☰ menu** at the top left.
+
 Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer during the demo.
 
 ## The demo
@@ -89,12 +91,12 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 ### 14. Low stock (30 seconds): FR-16
 **Do:** admin → **Low stock** (or click the **Need restocking** box on the Dashboard).
 **Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
-**Then:** click the 🔔 **bell** in the admin menu.
+**Then:** click the 🔔 **bell** in the top bar.
 **Say:** "Admins don't have to check this list: when an order takes a product down to its reorder level or sells it out, the server creates an alert automatically, in the same transaction as the order. The bell shows how many are unread, and a new alert also pops up by itself."
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "105 API tests run against a separate test database, so real data is never touched. 69 website tests check the forms, the email codes, Forgot password, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "105 API tests run against a separate test database, so real data is never touched. 73 website tests check the menu, the forms, the email codes, Forgot password, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
