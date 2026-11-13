@@ -32,8 +32,9 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Say:** "Search ignores capital letters, and there are 12 products per page. The product page shows the stock status: In stock, Low stock or Out of stock."
 
 ### 4. Register and stay logged in (1 minute): FR-01, FR-02
-**Do:** click **Register** and create a customer (for example `demo@test.com` / `Password1`). Then press **F5**.
-**Say:** "The password needs 8 characters with a letter and a number, and it is stored hashed with bcrypt, never as plain text. After a refresh I'm still logged in: the browser keeps a token that is valid for 1 hour."
+**Do:** click **Register** and create a customer with an email you can open (password `Password1`). The **Check your email** page opens: type the 6-digit code from the email (look in Spam too). Then press **F5**.
+**Say:** "The password needs 8 characters with a letter and a number, and it is stored hashed with bcrypt, never as plain text. The account can't log in until the code from the email is typed, so nobody can register with someone else's email. A code works for 15 minutes and 5 tries. After a refresh I'm still logged in: the browser keeps a token that is valid for 1 hour."
+**If Gmail is not set up:** the code is printed in the API terminal (`📧 Email to ...`).
 **Then:** click your name (top right) to open **My account**.
 **Say:** "Here customers change their name, save a delivery address that the cart fills in, and change their password. After 5 wrong passwords, logging in or changing the password waits 15 minutes, so nobody can keep guessing."
 
@@ -93,7 +94,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "89 API tests run against a separate test database, so real data is never touched. 54 website tests check the forms, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "96 API tests run against a separate test database, so real data is never touched. 60 website tests check the forms, the email code, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

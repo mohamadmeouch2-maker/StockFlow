@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, setOnUnauthorized, setToken } from "../api/client";
-import type { User } from "../api/types";
+import type { Session, User } from "../api/types";
 import { AuthContext } from "./authContext";
 
 // Guide 4.5: keeps the logged-in user for the whole app.
@@ -27,15 +27,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, [logout]);
 
+  const startSession = useCallback(({ token, user }: Session) => {
+    setToken(token);
+    setUser(user);
+  }, []);
+
   const login = async (email: string, password: string) => {
-    const res = await api<{ token: string; user: User }>("core", "/api/auth/login", {
+    const session = await api<Session>("core", "/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setToken(res.token);
-    setUser(res.user);
-    return res.user;
+    startSession(session);
+    return session.user;
   };
 
-  return <AuthContext.Provider value={{ user, loading, login, logout, updateUser: setUser }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading, login, startSession, logout, updateUser: setUser }}>{children}</AuthContext.Provider>;
 }

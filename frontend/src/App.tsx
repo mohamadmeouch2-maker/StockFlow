@@ -16,6 +16,7 @@ import { MyOrdersPage } from "./pages/MyOrdersPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import { VerifyEmailPage } from "./pages/VerifyEmailPage";
 import { ToastProvider } from "./toast/ToastProvider";
 
 // The admin pages (and the dashboard's chart library) are downloaded only when an admin
@@ -45,6 +46,7 @@ export default function App() {
                   <Route index element={<Navigate to="/products" replace />} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
+                  <Route path="verify-email" element={<VerifyEmailPage />} />
                   <Route
                     path="products"
                     element={

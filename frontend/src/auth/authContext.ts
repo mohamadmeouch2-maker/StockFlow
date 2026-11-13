@@ -1,10 +1,11 @@
 import { createContext } from "react";
-import type { User } from "../api/types";
+import type { Session, User } from "../api/types";
 
 export type AuthState = {
   user: User | null; // null = not logged in
   loading: boolean; // true while we check a saved token after a page refresh
   login: (email: string, password: string) => Promise<User>;
+  startSession: (session: Session) => void; // log in with a token the API already gave (after the email code)
   logout: () => void;
   updateUser: (user: User) => void; // after a change in My account (e.g. a new name)
 };

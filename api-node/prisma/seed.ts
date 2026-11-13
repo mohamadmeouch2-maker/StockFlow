@@ -83,18 +83,18 @@ async function main() {
   await prisma.user.upsert({
     where: { email: "admin@stockflow.test" },
     update: {},
-    create: { name: "Admin", email: "admin@stockflow.test", passwordHash: hash, role: "ADMIN" },
+    create: { name: "Admin", email: "admin@stockflow.test", passwordHash: hash, role: "ADMIN", emailVerifiedAt: new Date() },
   });
   await prisma.user.upsert({
     where: { email: "customer@stockflow.test" },
     update: {},
-    create: { name: "Customer", email: "customer@stockflow.test", passwordHash: hash },
+    create: { name: "Customer", email: "customer@stockflow.test", passwordHash: hash, emailVerifiedAt: new Date() },
   });
 
   // Three sample customers who wrote the sample reviews
   const reviewers = [];
   for (const [name, email, shipTo] of sampleReviewers) {
-    const user = await prisma.user.upsert({ where: { email }, update: {}, create: { name, email, passwordHash: hash } });
+    const user = await prisma.user.upsert({ where: { email }, update: {}, create: { name, email, passwordHash: hash, emailVerifiedAt: new Date() } });
     // Their orders from before addresses existed (Nov 11) get the sample address
     await prisma.order.updateMany({ where: { userId: user.id, address: null }, data: shipTo });
     reviewers.push({ ...user, shipTo });

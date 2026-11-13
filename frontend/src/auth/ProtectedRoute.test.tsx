@@ -8,7 +8,7 @@ import { ProtectedRoute } from "./ProtectedRoute";
 // Opens `path` as the given user and returns what's on the screen.
 const visit = (path: string, user: User | null) =>
   render(
-    <AuthContext.Provider value={{ user, loading: false, login: async () => user!, logout: () => {}, updateUser: () => {} }}>
+    <AuthContext.Provider value={{ user, loading: false, login: async () => user!, startSession: () => {}, logout: () => {}, updateUser: () => {} }}>
       <MemoryRouter initialEntries={[path]}>
         <Routes>
           <Route path="/" element={<p>Home page</p>} />

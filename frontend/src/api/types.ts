@@ -1,6 +1,8 @@
 export type Role = "CUSTOMER" | "ADMIN";
 
 export type User = { id: number; name: string; email: string; role: Role };
+// What the API sends after a login (or after the email code): the token and who it belongs to.
+export type Session = { token: string; user: User };
 
 // My account: the user plus the saved delivery address (all null = none saved)
 export type Account = User & { phone: string | null; city: string | null; address: string | null; createdAt: string };

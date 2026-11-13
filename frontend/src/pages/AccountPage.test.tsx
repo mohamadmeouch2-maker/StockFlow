@@ -28,7 +28,7 @@ beforeEach(() => get.mockResolvedValue(rami));
 const renderPage = () =>
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider value={{ user: rami, loading: false, login: vi.fn(), logout: vi.fn(), updateUser } as AuthState}>
+      <AuthContext.Provider value={{ user: rami, loading: false, login: vi.fn(), startSession: vi.fn(), logout: vi.fn(), updateUser } as AuthState}>
         <AccountPage />
       </AuthContext.Provider>
     </QueryClientProvider>,

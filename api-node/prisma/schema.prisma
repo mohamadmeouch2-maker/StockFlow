@@ -47,22 +47,38 @@ enum NotificationType {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
-  name         String
-  email        String       @unique
-  passwordHash String       @map("password_hash")
-  role         Role         @default(CUSTOMER)
+  id              Int          @id @default(autoincrement())
+  name            String
+  email           String       @unique
+  passwordHash    String       @map("password_hash")
+  role            Role         @default(CUSTOMER)
   // The delivery address saved in My account (customers); the cart fills it in. null = none saved.
-  phone        String?
-  city         String?
-  address      String?
-  createdAt    DateTime     @default(now()) @map("created_at")
-  orders       Order[]
-  issues       OrderIssue[]
-  reviews      Review[]
-  favorites    Favorite[]
+  phone           String?
+  city            String?
+  address         String?
+  // When the user typed the 6-digit code from the Register email. null = not verified: can't log in yet.
+  emailVerifiedAt DateTime?    @map("email_verified_at")
+  createdAt       DateTime     @default(now()) @map("created_at")
+  emailCode       EmailCode?
+  orders          Order[]
+  issues          OrderIssue[]
+  reviews         Review[]
+  favorites       Favorite[]
 
   @@map("users")
+}
+
+// The 6-digit code emailed after Register. One per user: "Send a new code" replaces it,
+// and it is deleted once the email is verified.
+model EmailCode {
+  userId    Int      @id @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash  String   @map("code_hash") // stored hashed, like passwords
+  expiresAt DateTime @map("expires_at") // 15 minutes after it was sent
+  attempts  Int      @default(0) // wrong tries; after 5 the user needs a new code
+  sentAt    DateTime @default(now()) @map("sent_at") // a new code can be asked for 1 minute later
+
+  @@map("email_codes")
 }
 
 model Category {

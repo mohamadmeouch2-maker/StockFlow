@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
@@ -35,6 +36,9 @@ export function LoginPage() {
       toast(`Welcome back, ${user.name}!`);
       navigate(from ?? (user.role === "ADMIN" ? "/admin" : "/products"), { replace: true });
     } catch (err) {
+      // Right password, but the email was never verified: ask for the code from the email.
+      if (err instanceof ApiError && err.code === "EMAIL_NOT_VERIFIED")
+        return navigate(`/verify-email?email=${encodeURIComponent(v.email.trim().toLowerCase())}`);
       setServerError(err instanceof Error ? err.message : "Login failed");
     }
   };
