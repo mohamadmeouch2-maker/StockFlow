@@ -7,7 +7,7 @@ import { clearFailures, recordFailure, stopIfBlocked } from "../../lib/loginLimi
 import { prisma } from "../../lib/prisma";
 import { requireAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
-import { MAX_CODE_TRIES, sendCode, waitBeforeNewCode } from "./emailCode";
+import { checkCode, codeExpired, secondsBeforeNewCode, sendCode, waitBeforeNewCode } from "./emailCode";
 
 // FR-01: min 8 chars, 1 letter and 1 number. Also used to change the password in My account.
 export const passwordRule = z
@@ -22,19 +22,24 @@ const emailRule = z.string().trim().toLowerCase().email();
 // FR-01: name, unique email, password.
 const registerSchema = z.object({ name: nameRule, email: emailRule, password: passwordRule });
 const loginSchema = z.object({ email: emailRule, password: z.string() });
-const verifySchema = z.object({
-  email: emailRule,
-  code: z
-    .string()
-    .trim()
-    .regex(/^\d{6}$/, "Enter the 6 digits from the email"),
-});
+const codeRule = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, "Enter the 6 digits from the email");
+const verifySchema = z.object({ email: emailRule, code: codeRule });
+const resetSchema = z.object({ email: emailRule, code: codeRule, password: passwordRule });
 
 // The fields we send back. Never the password hash.
 const publicUser = { id: true, name: true, email: true, role: true } as const;
 
 // FR-02: JWT valid for 1 hour. "sub" (subject) is the user id.
 const sign = (u: { id: number; role: string }) => jwt.sign({ role: u.role }, process.env.JWT_SECRET!, { subject: String(u.id), expiresIn: "1h" });
+// What login (and a right code) sends back: a token and the user.
+const session = (u: { id: number; name: string; email: string; role: string }) => ({
+  token: sign(u),
+  user: { id: u.id, name: u.name, email: u.email, role: u.role },
+});
+const loginKey = (ip: string | undefined, email: string) => `login|${ip}|${email}`;
 
 export const authRouter = Router();
 
@@ -61,26 +66,12 @@ authRouter.post("/verify-email", validate(verifySchema), async (_req, res) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw noAccount();
   if (user.emailVerifiedAt) throw alreadyVerified();
-  // Use up one try first, in one SQL statement, so many guesses sent at the same time don't get extra tries.
-  const spent = await prisma.emailCode.updateMany({
-    where: { userId: user.id, attempts: { lt: MAX_CODE_TRIES }, expiresAt: { gt: new Date() } },
-    data: { attempts: { increment: 1 } },
-  });
-  const saved = spent.count ? await prisma.emailCode.findUnique({ where: { userId: user.id } }) : null;
-  if (!saved) {
-    const message = "This code does not work any more. Please ask for a new one.";
-    throw new AppError(400, "CODE_EXPIRED", message, [{ field: "code", message }]);
-  }
-  if (!(await bcrypt.compare(code, saved.codeHash))) {
-    const left = MAX_CODE_TRIES - saved.attempts;
-    const message = left > 0 ? `The code is not correct. ${left} ${left === 1 ? "try" : "tries"} left.` : "The code is not correct. Please ask for a new one.";
-    throw new AppError(400, "WRONG_CODE", message, [{ field: "code", message }]);
-  }
+  await checkCode(user.id, code, "VERIFY_EMAIL"); // a wrong or old code stops here (400)
   await prisma.$transaction([
     prisma.user.update({ where: { id: user.id }, data: { emailVerifiedAt: new Date() } }),
     prisma.emailCode.delete({ where: { userId: user.id } }),
   ]);
-  res.json({ token: sign(user), user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  res.json(session(user));
 });
 
 // "Send a new code" (at most once a minute). The old code stops working.
@@ -99,7 +90,7 @@ authRouter.post("/resend-code", validate(z.object({ email: emailRule })), async 
 authRouter.post("/login", validate(loginSchema), async (req, res) => {
   const { email, password } = res.locals.body;
   // Too many wrong passwords for this email from this computer: wait first (see loginLimiter.ts)
-  const key = `login|${req.ip}|${email}`;
+  const key = loginKey(req.ip, email);
   stopIfBlocked(key, res);
   const user = await prisma.user.findUnique({ where: { email } });
   // Same message for a wrong email and a wrong password, so nobody can find out which emails exist.
@@ -110,7 +101,34 @@ authRouter.post("/login", validate(loginSchema), async (req, res) => {
   clearFailures(key);
   // Right password, but the email was never verified: the website opens the "Check your email" page.
   if (!user.emailVerifiedAt) throw new AppError(403, "EMAIL_NOT_VERIFIED", "Please verify your email first. Type the 6-digit code we sent you.");
-  res.json({ token: sign(user), user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+  res.json(session(user));
+});
+
+// "Forgot password?": email a 6-digit code to choose a new password.
+// The answer is always 204, also for an email nobody uses, so nobody can find out which emails have an account.
+// For the same reason, asking again within a minute is not an error: no new email is sent.
+authRouter.post("/forgot-password", validate(z.object({ email: emailRule })), async (_req, res) => {
+  const user = await prisma.user.findUnique({ where: { email: res.locals.body.email }, select: { ...publicUser, emailCode: { select: { sentAt: true } } } });
+  if (user && !secondsBeforeNewCode(user.emailCode?.sentAt)) await sendCode(user, "RESET_PASSWORD");
+  res.status(204).end();
+});
+
+// The code from the "Forgot password?" email, and a new password. Right code: the password is changed and the user is logged in.
+authRouter.post("/reset-password", validate(resetSchema), async (req, res) => {
+  const { email, code, password } = res.locals.body;
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) throw codeExpired(); // the same answer as for a code that is gone: don't say whether the email has an account
+  await checkCode(user.id, code, "RESET_PASSWORD");
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      // Typing the code proves the email is theirs, so an account that was never verified is verified now.
+      data: { passwordHash: await bcrypt.hash(password, 10), emailVerifiedAt: user.emailVerifiedAt ?? new Date() },
+    }),
+    prisma.emailCode.delete({ where: { userId: user.id } }),
+  ]);
+  clearFailures(loginKey(req.ip, email)); // blocked after 5 wrong passwords? The new password works at once.
+  res.json(session(user));
 });
 
 authRouter.get("/me", requireAuth, async (_req, res) => {

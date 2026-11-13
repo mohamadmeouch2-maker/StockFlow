@@ -68,15 +68,22 @@ model User {
   @@map("users")
 }
 
-// The 6-digit code emailed after Register. One per user: "Send a new code" replaces it,
-// and it is deleted once the email is verified.
+// What an emailed code may be used for. A code only works for its own purpose.
+enum CodePurpose {
+  VERIFY_EMAIL // sent after Register: "Check your email"
+  RESET_PASSWORD // sent from "Forgot password?"
+}
+
+// A 6-digit code we emailed. One per user: a new code replaces the old one,
+// and it is deleted once it has been used.
 model EmailCode {
-  userId    Int      @id @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  codeHash  String   @map("code_hash") // stored hashed, like passwords
-  expiresAt DateTime @map("expires_at") // 15 minutes after it was sent
-  attempts  Int      @default(0) // wrong tries; after 5 the user needs a new code
-  sentAt    DateTime @default(now()) @map("sent_at") // a new code can be asked for 1 minute later
+  userId    Int         @id @map("user_id")
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   CodePurpose @default(VERIFY_EMAIL)
+  codeHash  String      @map("code_hash") // stored hashed, like passwords
+  expiresAt DateTime    @map("expires_at") // 15 minutes after it was sent
+  attempts  Int         @default(0) // wrong tries; after 5 the user needs a new code
+  sentAt    DateTime    @default(now()) @map("sent_at") // a new code can be asked for 1 minute later
 
   @@map("email_codes")
 }

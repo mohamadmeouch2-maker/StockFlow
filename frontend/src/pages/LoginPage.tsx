@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { ApiError } from "../api/client";
@@ -26,8 +26,10 @@ export function LoginPage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({ resolver: zodResolver(schema) });
+  const email = useWatch({ control, name: "email" })?.trim(); // "Forgot password?" fills it in on the next page
 
   const onSubmit = async (v: FormValues) => {
     setServerError("");
@@ -51,7 +53,14 @@ export function LoginPage() {
         <p className="text-sm text-slate-500">Log in to order products and follow your orders.</p>
       </div>
       <FormField id="email" label="Email" type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
-      <FormField id="password" label="Password" type="password" autoComplete="current-password" {...register("password")} error={errors.password?.message} />
+      <div>
+        <FormField id="password" label="Password" type="password" autoComplete="current-password" {...register("password")} error={errors.password?.message} />
+        <p className="mt-1 text-right text-sm">
+          <Link to={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"} className="link">
+            Forgot password?
+          </Link>
+        </p>
+      </div>
       {serverError && <p className="alert-danger">{serverError}</p>}
       <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
         {isSubmitting ? "Logging in..." : "Log in"}

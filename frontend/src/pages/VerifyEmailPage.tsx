@@ -1,10 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { authApi } from "../api/auth";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
+import { CodeField } from "../components/CodeField";
 import { LogoMark } from "../components/Logo";
+import { useCountdown } from "../hooks/useCountdown";
 import { useToast } from "../toast/useToast";
 
 const WAIT_SECONDS = 60; // the API sends a new code at most once a minute
@@ -20,14 +22,7 @@ export function VerifyEmailPage() {
   const toast = useToast();
   const [code, setCode] = useState("");
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
-  const [wait, setWait] = useState(justSent ? WAIT_SECONDS : 0); // seconds until "Send a new code" works
-
-  // Count down one second at a time.
-  useEffect(() => {
-    if (wait <= 0) return;
-    const timer = setTimeout(() => setWait((w) => w - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [wait]);
+  const [wait, setWait] = useCountdown(justSent ? WAIT_SECONDS : 0); // seconds until "Send a new code" works
 
   const showError = (err: Error) => setError({ code: err instanceof ApiError ? err.code : "", message: err.message });
 
@@ -72,34 +67,22 @@ export function VerifyEmailPage() {
         </p>
         <p className="text-xs text-slate-500">Can't find it? Look in Spam or Junk. A code works for 15 minutes.</p>
       </div>
-      <div>
-        <label htmlFor="code" className="label">
-          Code
-        </label>
-        <input
-          id="code"
-          value={code}
-          // Digits only: "482 913" pasted from the email becomes "482913"
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          placeholder="000000"
-          autoFocus
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? "code-error" : undefined}
-          className="input text-center text-2xl font-semibold tracking-[0.5em] placeholder:text-slate-300"
-        />
-        {error && (
-          <p id="code-error" className="field-error">
-            {error.message}{" "}
-            {error.code === "ALREADY_VERIFIED" && (
-              <Link to="/login" className="link">
-                Log in
-              </Link>
-            )}
-          </p>
-        )}
-      </div>
+      <CodeField
+        value={code}
+        onChange={setCode}
+        error={
+          error && (
+            <>
+              {error.message}{" "}
+              {error.code === "ALREADY_VERIFIED" && (
+                <Link to="/login" className="link">
+                  Log in
+                </Link>
+              )}
+            </>
+          )
+        }
+      />
       <button disabled={verify.isPending} className="btn btn-primary w-full py-2.5">
         {verify.isPending ? "Checking..." : "Verify email"}
       </button>

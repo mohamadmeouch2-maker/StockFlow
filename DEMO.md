@@ -94,7 +94,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "96 API tests run against a separate test database, so real data is never touched. 60 website tests check the forms, the email code, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "105 API tests run against a separate test database, so real data is never touched. 69 website tests check the forms, the email codes, Forgot password, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."
@@ -106,6 +106,7 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 |---|---|
 | How do you stop two people buying the last item? | The stock is reduced with one conditional update (`stock >= quantity`) inside a transaction. The database runs the two updates one after the other, so the second one finds no stock and the order fails with 409. |
 | How are passwords stored? | Hashed with bcrypt. The database never contains the real password. |
+| What if someone forgets their password? | "Forgot password?" on the login page emails a 6-digit code. With the code they choose a new password. The answer is the same for every email, so nobody can find out who has an account, and a code works for 15 minutes and 5 tries. |
 | What's the difference between 401 and 403? | 401: not logged in (no token or a bad one). 403: logged in, but not allowed, such as a customer calling an admin endpoint. |
 | Why is the total calculated on the server? | Anything sent from the browser can be changed by the user, so the server uses the prices in the database. |
 | Why a separate test database? | The tests delete and create data. A separate database keeps the real data safe. |

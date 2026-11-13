@@ -29,6 +29,10 @@ const LowStockPage = lazy(() => import("./pages/admin/LowStockPage").then((m) =>
 const SupportPage = lazy(() => import("./pages/admin/SupportPage").then((m) => ({ default: m.SupportPage })));
 const CategoriesPage = lazy(() => import("./pages/admin/CategoriesPage").then((m) => ({ default: m.CategoriesPage })));
 
+// "Forgot password?" is rarely used, so it is downloaded only when opened too.
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage").then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage").then((m) => ({ default: m.ResetPasswordPage })));
+
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 30_000 } } });
 
 // The guide's routes (4.6). The admin dashboard reads its numbers from the Core API
@@ -47,6 +51,8 @@ export default function App() {
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
                   <Route path="verify-email" element={<VerifyEmailPage />} />
+                  <Route path="forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="reset-password" element={<ResetPasswordPage />} />
                   <Route
                     path="products"
                     element={
