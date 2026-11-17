@@ -58,6 +58,9 @@ model User {
   address         String?
   // When the user typed the 6-digit code from the Register email. null = not verified: can't log in yet.
   emailVerifiedAt DateTime?    @map("email_verified_at")
+  // Goes up by 1 when the password changes. A login token remembers the number it was made with,
+  // so after a password change every older login (on any device) stops working.
+  tokenVersion    Int          @default(0) @map("token_version")
   createdAt       DateTime     @default(now()) @map("created_at")
   emailCode       EmailCode?
   orders          Order[]

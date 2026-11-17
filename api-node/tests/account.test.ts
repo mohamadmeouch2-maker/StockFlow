@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import request from "supertest";
 import { app } from "../src/app";
 import { prisma } from "../src/lib/prisma";
@@ -71,9 +72,31 @@ test("changing the password needs the current one and follows the register rules
   const same = await changePassword({ currentPassword: "Password1", newPassword: "Password1" }).expect(400);
   expect(same.body.error.details[0].message).toBe("Choose a password different from the current one");
 
-  await changePassword({ currentPassword: "Password1", newPassword: "NewPass123" }).expect(204);
+  const ok = await changePassword({ currentPassword: "Password1", newPassword: "NewPass123" }).expect(200);
+  token = ok.body.token; // this device stays logged in with the new token
+  expect(ok.body.user).toEqual({ id: expect.any(Number), name: "Rami Haddad", email: "rami@test.dev", role: "CUSTOMER" });
   await login("Password1").expect(401); // the old one no longer works
   await login("NewPass123").expect(200);
+});
+
+test("changing the password logs out every other device at once (a thief who was logged in, too)", async () => {
+  const laptop = (await login("NewPass123").expect(200)).body.token;
+  const thief = (await login("NewPass123").expect(200)).body.token;
+  const changed = await changePassword({ currentPassword: "NewPass123", newPassword: "Safer2026" }, laptop).expect(200);
+
+  const ended = await account(thief).expect(401);
+  expect(ended.body.error).toMatchObject({ code: "SESSION_ENDED", message: "Your password was changed. Please log in again." });
+  await account(laptop).expect(401); // the old token of this device too...
+  await account(changed.body.token).expect(200); // ...but the new one from the answer works
+  await account(adminToken).expect(200); // other accounts are not affected
+  token = changed.body.token;
+});
+
+test("a token from before this check (no version in it) still works until the password changes", async () => {
+  const user = await prisma.user.findUniqueOrThrow({ where: { email: "boss@test.dev" } });
+  expect(user.tokenVersion).toBe(0);
+  const old = jwt.sign({ role: user.role }, process.env.JWT_SECRET!, { subject: String(user.id), expiresIn: "1h" });
+  await account(old).expect(200);
 });
 
 test("after 5 wrong current passwords, changing the password waits 15 minutes", async () => {

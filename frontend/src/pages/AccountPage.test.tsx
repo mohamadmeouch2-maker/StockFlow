@@ -19,6 +19,7 @@ const rami: Account = {
   createdAt: "2026-11-01T10:00:00Z",
 };
 const updateUser = vi.fn();
+const startSession = vi.fn();
 const get = vi.spyOn(accountApi, "get");
 const rename = vi.spyOn(accountApi, "rename").mockImplementation(async (name) => ({ ...rami, name }));
 const saveAddress = vi.spyOn(accountApi, "saveAddress").mockImplementation(async (shipTo) => ({ ...rami, ...shipTo }));
@@ -28,7 +29,7 @@ beforeEach(() => get.mockResolvedValue(rami));
 const renderPage = () =>
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider value={{ user: rami, loading: false, login: vi.fn(), startSession: vi.fn(), logout: vi.fn(), updateUser } as AuthState}>
+      <AuthContext.Provider value={{ user: rami, loading: false, login: vi.fn(), startSession, logout: vi.fn(), updateUser } as AuthState}>
         <AccountPage />
       </AuthContext.Provider>
     </QueryClientProvider>,
@@ -73,6 +74,18 @@ test("changing the password: the two new ones must match, and the server's answe
   await userEvent.click(screen.getByRole("button", { name: "Change password" }));
   expect(changePassword).toHaveBeenCalledWith("Wrong1234", "NewPass123");
   expect(await screen.findByText("The current password is not correct")).toBeInTheDocument();
+});
+
+test("after a password change this device keeps working with the new token from the answer", async () => {
+  const session = { token: "new-t0k3n", user: { id: 3, name: "Rami", email: "rami@test.dev", role: "CUSTOMER" as const } };
+  changePassword.mockResolvedValue(session);
+  renderPage();
+  await userEvent.type(await screen.findByLabelText("Current password"), "Password1");
+  await userEvent.type(screen.getByLabelText("New password"), "NewPass123");
+  await userEvent.type(screen.getByLabelText("New password again"), "NewPass123");
+  await userEvent.click(screen.getByRole("button", { name: "Change password" }));
+  await vi.waitFor(() => expect(startSession).toHaveBeenCalledWith(session));
+  expect(screen.getByLabelText("New password")).toHaveValue(""); // the form is emptied
 });
 
 test("admins have no delivery address, only their details and password", async () => {

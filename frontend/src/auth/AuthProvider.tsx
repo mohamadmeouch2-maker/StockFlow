@@ -2,11 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, setOnUnauthorized, setToken } from "../api/client";
 import type { Session, User } from "../api/types";
+import { useToast } from "../toast/useToast";
 import { AuthContext } from "./authContext";
 
 // Guide 4.5: keeps the logged-in user for the whole app.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   // Only "loading" if there is a saved token to check.
   const [loading, setLoading] = useState(() => sessionStorage.getItem("token") !== null);
@@ -18,14 +20,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [queryClient]);
 
   useEffect(() => {
-    setOnUnauthorized(logout); // any 401 from the API (e.g. token expired) logs out
+    // Any 401 from the API (e.g. the token expired) logs out. SESSION_ENDED: the password was changed
+    // on another device (or with "Forgot password?"), so this older login stopped working.
+    setOnUnauthorized((code) => {
+      logout();
+      if (code === "SESSION_ENDED") toast("Your password was changed, so you were logged out here. Please log in with the new password.", "info");
+    });
     if (!sessionStorage.getItem("token")) return;
     // After a page refresh: ask the API who the saved token belongs to (FR-02).
     api<User>("core", "/api/auth/me")
       .then(setUser)
       .catch(logout)
       .finally(() => setLoading(false));
-  }, [logout]);
+  }, [logout, toast]);
 
   const startSession = useCallback(({ token, user }: Session) => {
     setToken(token);

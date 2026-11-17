@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
 import { Router } from "express";
-import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { AppError } from "../../lib/errors";
 import { clearFailures, recordFailure, stopIfBlocked } from "../../lib/loginLimiter";
 import { prisma } from "../../lib/prisma";
+import { session } from "../../lib/session";
 import { requireAuth } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { checkCode, codeExpired, secondsBeforeNewCode, sendCode, waitBeforeNewCode } from "./emailCode";
@@ -32,13 +32,6 @@ const resetSchema = z.object({ email: emailRule, code: codeRule, password: passw
 // The fields we send back. Never the password hash.
 const publicUser = { id: true, name: true, email: true, role: true } as const;
 
-// FR-02: JWT valid for 1 hour. "sub" (subject) is the user id.
-const sign = (u: { id: number; role: string }) => jwt.sign({ role: u.role }, process.env.JWT_SECRET!, { subject: String(u.id), expiresIn: "1h" });
-// What login (and a right code) sends back: a token and the user.
-const session = (u: { id: number; name: string; email: string; role: string }) => ({
-  token: sign(u),
-  user: { id: u.id, name: u.name, email: u.email, role: u.role },
-});
 const loginKey = (ip: string | undefined, email: string) => `login|${ip}|${email}`;
 
 export const authRouter = Router();
@@ -114,21 +107,22 @@ authRouter.post("/forgot-password", validate(z.object({ email: emailRule })), as
 });
 
 // The code from the "Forgot password?" email, and a new password. Right code: the password is changed and the user is logged in.
+// Every other login of this account (e.g. a thief's) ends at once: the token version goes up.
 authRouter.post("/reset-password", validate(resetSchema), async (req, res) => {
   const { email, code, password } = res.locals.body;
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw codeExpired(); // the same answer as for a code that is gone: don't say whether the email has an account
   await checkCode(user.id, code, "RESET_PASSWORD");
-  await prisma.$transaction([
+  const [updated] = await prisma.$transaction([
     prisma.user.update({
       where: { id: user.id },
       // Typing the code proves the email is theirs, so an account that was never verified is verified now.
-      data: { passwordHash: await bcrypt.hash(password, 10), emailVerifiedAt: user.emailVerifiedAt ?? new Date() },
+      data: { passwordHash: await bcrypt.hash(password, 10), emailVerifiedAt: user.emailVerifiedAt ?? new Date(), tokenVersion: { increment: 1 } },
     }),
     prisma.emailCode.delete({ where: { userId: user.id } }),
   ]);
   clearFailures(loginKey(req.ip, email)); // blocked after 5 wrong passwords? The new password works at once.
-  res.json(session(user));
+  res.json(session(updated));
 });
 
 authRouter.get("/me", requireAuth, async (_req, res) => {

@@ -109,3 +109,12 @@ test("after 5 wrong passwords, a new password works at once", async () => {
   await reset("lina@test.dev", lastCode("lina@test.dev"), "Lina2026pass").expect(200);
   await login("lina@test.dev", "Lina2026pass").expect(200);
 });
+
+test("a new password logs out every other device of that account", async () => {
+  const thief = (await login("lina@test.dev", "Lina2026pass").expect(200)).body.token;
+  await minuteLater("lina@test.dev");
+  await forgot("lina@test.dev").expect(204);
+  const ok = await reset("lina@test.dev", lastCode("lina@test.dev"), "Lina2027pass").expect(200);
+  expect((await request(app).get("/api/auth/me").set(auth(thief)).expect(401)).body.error.code).toBe("SESSION_ENDED");
+  await request(app).get("/api/auth/me").set(auth(ok.body.token)).expect(200);
+});

@@ -12,7 +12,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows the number of items in the cart (customers) or open problem reports (admins). It closes with ✕, Escape or a click outside | extra |
 | Email check | After Register, a 6-digit code is emailed (Gmail). The account can log in only after the code is typed on the "Check your email" page. A code works for 15 minutes and 5 tries; "Send a new code" once a minute | extra |
 | Forgot password | "Forgot password?" on the login page emails a 6-digit code. Type it with a new password on the "Reset your password" page: the password changes and you are logged in. The answer is the same for every email, so nobody can find out who has an account | extra |
-| Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing) | FR-03 |
+| Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing). Changing the password (or resetting it) logs out every other device at once, e.g. a thief who was logged in | FR-03 |
 | Products | List with search, category filter and 12 per page; sort by price, rating or newest, and "In stock only"; detail page with stock status | FR-04, FR-05 |
 | Cart and orders | Cart capped by stock; ordering checks and deducts stock in one transaction | FR-06, FR-07, FR-08 |
 | Delivery address | The cart asks for a phone number, a city and an address (street, building, floor), checked on the website and on the server; the next order fills them in from My account or else from the last order. Customers see them in My orders, admins in Manage orders (tap the number to call) | extra |
@@ -39,7 +39,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (105 API tests), Vitest + Testing Library (73 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (108 API tests), Vitest + Testing Library (76 website tests), GitHub Actions CI
 - **Code style:** Prettier (one shared style, checked in CI) and ESLint
 
 ## Project structure
@@ -140,10 +140,10 @@ Without these two lines nothing is sent: the code is printed in the API terminal
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 105 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 108 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 73 passed (no backend needed)
+npm test        # ✅ Tests: 76 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -182,7 +182,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/orders/saved-address` | Customer | The address the cart fills in: the one saved in My account, or else my last order's, with `from: "account"` or `"last-order"`; `null` if none |
 | GET / PATCH | `/api/account` | logged in | My account (name, email, role, saved address); PATCH `{ "name": "Sara Khoury" }` changes the name |
 | PUT / DELETE | `/api/account/address` | Customer | Save `{ "phone", "city", "address" }` as my delivery address, or remove it |
-| POST | `/api/account/password` | logged in | `{ "currentPassword": "...", "newPassword": "..." }` (same rules as registering) |
+| POST | `/api/account/password` | logged in | `{ "currentPassword": "...", "newPassword": "..." }` (same rules as registering). Answers with a new token, like login: every other login of the account ends (401 `SESSION_ENDED`) |
 | GET | `/api/orders/mine` | logged in | My orders, newest first |
 | POST | `/api/orders/:id/cancel` | owner or Admin | Cancel a Pending order |
 | GET | `/api/orders?status=&page=&pageSize=` | Admin | All orders, newest first, one page at a time: `{ items, page, pageSize, total }` (20 per page by default, at most 100) |

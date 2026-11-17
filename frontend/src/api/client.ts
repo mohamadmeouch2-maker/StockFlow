@@ -20,7 +20,7 @@ export class ApiError extends Error {
 }
 
 let token: string | null = sessionStorage.getItem("token");
-let onUnauthorized = () => {};
+let onUnauthorized: (code: string) => void = () => {};
 
 export const setToken = (t: string | null) => {
   token = t;
@@ -28,7 +28,7 @@ export const setToken = (t: string | null) => {
   else sessionStorage.removeItem("token");
 };
 
-export const setOnUnauthorized = (fn: () => void) => {
+export const setOnUnauthorized = (fn: (code: string) => void) => {
   onUnauthorized = fn;
 };
 
@@ -39,15 +39,18 @@ export async function api<T>(base: "core" | "reports", path: string, init: Reque
   const url = (base === "core" ? CORE_API : import.meta.env.VITE_REPORTS_API) + path;
   // A file upload (FormData) must not be sent as JSON: the browser sets its own Content-Type.
   const isForm = init.body instanceof FormData;
+  const sentWith = token;
   const res = await fetch(url, {
     ...init,
-    headers: { ...(!isForm && { "Content-Type": "application/json" }), ...(token && { Authorization: `Bearer ${token}` }), ...init.headers },
+    headers: { ...(!isForm && { "Content-Type": "application/json" }), ...(sentWith && { Authorization: `Bearer ${sentWith}` }), ...init.headers },
   });
   if (res.status === 204) return undefined as T;
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    if (res.status === 401) onUnauthorized();
     const e = (body as ApiErrorBody | null)?.error;
+    // Logged out only if the token is still the one this request used. (After a password change this device
+    // already has a new token, so an answer to a request sent just before, with the old one, must not log it out.)
+    if (res.status === 401 && sentWith === token) onUnauthorized(e?.code ?? "UNAUTHORIZED");
     throw new ApiError(res.status, e?.code ?? "UNKNOWN", e?.message ?? res.statusText, e?.details);
   }
   return body as T;

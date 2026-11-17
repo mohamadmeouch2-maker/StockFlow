@@ -4,6 +4,7 @@ import { z } from "zod";
 import { AppError } from "../../lib/errors";
 import { clearFailures, recordFailure, stopIfBlocked } from "../../lib/loginLimiter";
 import { prisma } from "../../lib/prisma";
+import { session } from "../../lib/session";
 import { shipToFields } from "../../lib/shipTo";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
@@ -46,6 +47,8 @@ accountRouter.delete("/address", requireRole("CUSTOMER"), async (_req, res) => {
 
 // Change my password: first the current one, then a new one with the same rules as when registering.
 // Wrong current passwords are limited like logins: after 5, wait 15 minutes.
+// Every other login of this account (another device, or a thief) ends at once: the token version goes up.
+// This device gets a new token in the answer, so it stays logged in.
 accountRouter.post("/password", validate(passwordBody), async (_req, res) => {
   const { currentPassword, newPassword } = res.locals.body;
   const key = `password|${res.locals.user.id}`;
@@ -58,6 +61,9 @@ accountRouter.post("/password", validate(passwordBody), async (_req, res) => {
     ]);
   }
   clearFailures(key);
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(newPassword, 10) } }); // stored hashed (FR-01)
-  res.status(204).end();
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await bcrypt.hash(newPassword, 10), tokenVersion: { increment: 1 } }, // stored hashed (FR-01)
+  });
+  res.json(session(updated));
 });

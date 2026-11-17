@@ -198,6 +198,7 @@ type PasswordValues = z.infer<typeof passwordSchema>;
 
 function PasswordForm() {
   const toast = useToast();
+  const { startSession } = useAuth();
   const [serverError, setServerError] = useState("");
   const {
     register,
@@ -210,9 +211,10 @@ function PasswordForm() {
   const change = useMutation({
     mutationFn: (v: PasswordValues) => accountApi.changePassword(v.currentPassword, v.newPassword),
     onMutate: () => setServerError(""),
-    onSuccess: () => {
+    onSuccess: (session) => {
+      startSession(session); // the new token: this device stays logged in, every other device is logged out
       reset();
-      toast("Your password is changed. Use the new one next time you log in.");
+      toast("Your password is changed. Any other device that was logged in is now logged out.");
     },
     // e.g. "The current password is not correct" under that field, or "Too many wrong passwords..."
     onError: (err) => setServerError(showServerError(err, setError, ["currentPassword", "newPassword"])),
