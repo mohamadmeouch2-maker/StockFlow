@@ -2,34 +2,61 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { notificationsApi } from "../api/notifications";
+import type { Notification, Role } from "../api/types";
 import { useToast } from "../toast/useToast";
 import { timeAgo } from "../utils/format";
 import { ProductImage } from "./ProductImage";
 
-// Admins: a bell with the number of unread stock alerts; the list opens on click.
-// It asks the API for new alerts every 20 seconds, and new ones also pop up as messages.
-export function NotificationBell() {
+// What each kind of notification shows: an icon (or the product photo), and where its link goes.
+function show(n: Notification): { icon: string; to: string; action: string } {
+  switch (n.type) {
+    case "LOW_STOCK":
+      return { icon: "📦", to: `/admin/products/${n.productId}/edit`, action: "Restock" };
+    case "OUT_OF_STOCK":
+      return { icon: "⛔", to: `/admin/products/${n.productId}/edit`, action: "Restock" };
+    case "SUPPORT_MESSAGE":
+      return { icon: "💬", to: "/admin/support", action: "Answer" };
+    case "SUPPORT_ANSWER":
+      return { icon: "💬", to: "/help", action: "Read the answer" };
+    case "ORDER_SHIPPED":
+      return { icon: "🚚", to: "/orders", action: "See the order" };
+    case "ORDER_DELIVERED":
+      return { icon: "✅", to: "/orders", action: "See the order" };
+    case "ORDER_CANCELLED":
+      return { icon: "❌", to: "/orders", action: "See the order" };
+  }
+}
+
+// The bell in the top bar, with the number of unread notifications; the list opens on click.
+//   Admins: stock alerts (Restock) and customer service messages (Answer), shared by all admins.
+//   Customers: their order news (shipped, delivered, cancelled by the store) and customer service answers.
+// It asks the API for new ones every 20 seconds, and new ones also pop up as messages.
+export function NotificationBell({ role }: { role: Role }) {
   const qc = useQueryClient();
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   const alerts = useQuery({ queryKey: ["notifications"], queryFn: notificationsApi.list, refetchInterval: 20_000 });
   const unread = alerts.data?.unread ?? 0;
+  const admin = role === "ADMIN";
 
-  // Pop up the alerts that arrived since the last check. On the first load, only say how many are unread.
+  // Pop up the notifications that arrived since the last check. On the first load, only say how many are unread.
   const newestSeen = useRef<number | null>(null);
   useEffect(() => {
     const data = alerts.data;
     if (!data) return;
     if (newestSeen.current === null) {
-      if (data.unread > 0) toast(`You have ${data.unread} unread stock alert${data.unread === 1 ? "" : "s"}`, "info");
+      if (data.unread > 0) toast(`You have ${data.unread} unread notification${data.unread === 1 ? "" : "s"}`, "info");
     } else {
       const seen = newestSeen.current;
       const fresh = data.items.filter((n) => n.id > seen && !n.readAt).reverse(); // oldest first
       for (const n of fresh) toast(n.message, n.type === "OUT_OF_STOCK" ? "error" : "info");
+      // Update the pages they are about at once: Customer service (and the number in the menu), My orders
+      if (fresh.some((n) => n.type === "SUPPORT_MESSAGE" || n.type === "SUPPORT_ANSWER")) qc.invalidateQueries({ queryKey: ["support"] });
+      if (fresh.some((n) => n.type.startsWith("ORDER_"))) qc.invalidateQueries({ queryKey: ["orders"] });
     }
     newestSeen.current = Math.max(newestSeen.current ?? 0, data.items[0]?.id ?? 0);
-  }, [alerts.data, toast]);
+  }, [alerts.data, toast, qc]);
 
   // Close the list when clicking outside it or pressing Escape.
   useEffect(() => {
@@ -52,12 +79,23 @@ export function NotificationBell() {
   const readOne = useMutation({ mutationFn: notificationsApi.read, onSuccess: refresh });
   const readAll = useMutation({ mutationFn: notificationsApi.readAll, onSuccess: refresh });
 
+  // The two links at the bottom of the list
+  const footer = admin
+    ? [
+        { to: "/admin/low-stock", label: "Low stock →" },
+        { to: "/admin/support", label: "Customer service →" },
+      ]
+    : [
+        { to: "/orders", label: "My orders →" },
+        { to: "/help", label: "Customer service →" },
+      ];
+
   return (
     <div ref={box} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        aria-label={`Stock alerts, ${unread} unread`}
+        aria-label={`Notifications, ${unread} unread`}
         className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
       >
         <svg
@@ -83,7 +121,7 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <span className="font-semibold text-slate-900">Stock alerts</span>
+            <span className="font-semibold text-slate-900">Notifications</span>
             {unread > 0 && (
               <button onClick={() => readAll.mutate()} disabled={readAll.isPending} className="text-sm font-medium text-brand-600 hover:underline">
                 Mark all as read
@@ -91,45 +129,60 @@ export function NotificationBell() {
             )}
           </div>
 
-          {alerts.data?.items.length === 0 && <p className="px-4 py-6 text-center text-sm text-slate-500">No alerts. Every product has enough stock.</p>}
+          {alerts.data?.items.length === 0 && (
+            <p className="px-4 py-6 text-center text-sm text-slate-500">
+              {admin
+                ? "No notifications. Stock is fine and nobody is waiting for an answer."
+                : "No notifications yet. We will tell you here when your order is on its way or customer service answers you."}
+            </p>
+          )}
           <ul className="max-h-96 divide-y divide-slate-100 overflow-y-auto">
-            {alerts.data?.items.map((n) => (
-              <li key={n.id} className={`flex gap-3 px-4 py-3 ${n.readAt ? "" : "bg-brand-50/60"}`}>
-                <ProductImage src={n.product.imageUrl} alt={n.product.name} className="h-10 w-10 shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-slate-800">
-                    <span aria-hidden="true">{n.type === "OUT_OF_STOCK" ? "⛔ " : "📦 "}</span>
-                    {n.message}
-                  </p>
-                  <div className="mt-1 flex items-center gap-3 text-xs">
-                    <span className="text-slate-400">{timeAgo(n.createdAt)}</span>
-                    <Link
-                      to={`/admin/products/${n.productId}/edit`}
-                      onClick={() => {
-                        if (!n.readAt) readOne.mutate(n.id);
-                        setOpen(false);
-                      }}
-                      className="font-medium text-brand-600 hover:underline"
-                    >
-                      Restock
-                    </Link>
+            {alerts.data?.items.map((n) => {
+              const { icon, to, action } = show(n);
+              return (
+                <li key={n.id} className={`flex gap-3 px-4 py-3 ${n.readAt ? "" : "bg-brand-50/60"}`}>
+                  {n.product ? (
+                    <ProductImage src={n.product.imageUrl} alt={n.product.name} className="h-10 w-10 shrink-0" />
+                  ) : (
+                    <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-lg">
+                      {icon}
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm text-slate-800">
+                      {n.product && <span aria-hidden="true">{icon} </span>}
+                      {n.message}
+                    </p>
+                    <div className="mt-1 flex items-center gap-3 text-xs">
+                      <span className="text-slate-400">{timeAgo(n.createdAt)}</span>
+                      <Link
+                        to={to}
+                        onClick={() => {
+                          if (!n.readAt) readOne.mutate(n.id);
+                          setOpen(false);
+                        }}
+                        className="font-medium text-brand-600 hover:underline"
+                      >
+                        {action}
+                      </Link>
+                    </div>
                   </div>
-                </div>
-                {!n.readAt && (
-                  <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600">
-                    <span className="sr-only">Unread</span>
-                  </span>
-                )}
-              </li>
-            ))}
+                  {!n.readAt && (
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-600">
+                      <span className="sr-only">Unread</span>
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
-          <Link
-            to="/admin/low-stock"
-            onClick={() => setOpen(false)}
-            className="block border-t border-slate-100 px-4 py-2.5 text-center text-sm font-medium text-brand-600 hover:bg-slate-50"
-          >
-            See the low-stock list →
-          </Link>
+          <div className="grid grid-cols-2 divide-x divide-slate-100 border-t border-slate-100 text-center text-sm font-medium text-brand-600">
+            {footer.map((f) => (
+              <Link key={f.to} to={f.to} onClick={() => setOpen(false)} className="px-4 py-2.5 hover:bg-slate-50">
+                {f.label}
+              </Link>
+            ))}
+          </div>
         </div>
       )}
     </div>

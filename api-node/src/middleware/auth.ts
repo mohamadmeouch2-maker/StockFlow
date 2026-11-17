@@ -26,6 +26,13 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   next();
 }
 
+// For things visitors may do too (e.g. writing to Customer service): with a token the user is
+// recognised (res.locals.user), without one the request goes on as a visitor.
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
+  if (!req.headers.authorization) return next();
+  return requireAuth(req, res, next);
+}
+
 // FR-03: logged in but with the wrong role -> 403. Use after requireAuth.
 export const requireRole = (role: AuthUser["role"]) => (_req: Request, res: Response, next: NextFunction) => {
   if (res.locals.user?.role !== role) throw new AppError(403, "FORBIDDEN", "Not allowed");

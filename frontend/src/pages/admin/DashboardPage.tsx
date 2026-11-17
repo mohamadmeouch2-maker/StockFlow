@@ -93,7 +93,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
           }
         />
         <StatTile
-          label="Open problems"
+          label="Customer messages"
           icon="💬"
           value={String(s.openIssues)}
           to="/admin/support"
@@ -215,7 +215,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
               Restock low items ({s.products.lowStock})
             </Link>
             <Link to="/admin/support" className="btn btn-outline">
-              Answer problems ({s.openIssues})
+              Answer customers ({s.openIssues})
             </Link>
             <Link to="/products" className="btn btn-outline">
               See the shop as customers do

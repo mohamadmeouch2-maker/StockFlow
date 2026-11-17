@@ -4,10 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, expect, test, vi } from "vitest";
 import { favoritesApi } from "../api/favorites";
-import { issuesApi } from "../api/issues";
 import { notificationsApi } from "../api/notifications";
 import { promotionsApi } from "../api/promotions";
-import type { OrderIssue, User } from "../api/types";
+import { supportApi } from "../api/support";
+import type { SupportTicket, User } from "../api/types";
 import { AuthContext, type AuthState } from "../auth/authContext";
 import { CartContext, type CartState } from "../cart/cartContext";
 import { Layout } from "./Layout";
@@ -19,7 +19,8 @@ beforeEach(() => {
   vi.spyOn(promotionsApi, "current").mockResolvedValue(null);
   vi.spyOn(favoritesApi, "list").mockResolvedValue([]);
   vi.spyOn(notificationsApi, "list").mockResolvedValue({ unread: 0, items: [] });
-  vi.spyOn(issuesApi, "all").mockResolvedValue([{ id: 1 }, { id: 2 }] as OrderIssue[]);
+  vi.spyOn(supportApi, "all").mockResolvedValue([{ id: 1 }, { id: 2 }] as SupportTicket[]); // waiting for an answer
+  vi.spyOn(supportApi, "mine").mockResolvedValue([]);
 });
 
 const visit = (user: User | null, cartCount = 0) =>
@@ -50,7 +51,7 @@ test("the page links are in the ☰ menu; a link opens its page and closes the m
 
   await userEvent.click(menuButton());
   expect(menuButton()).toHaveAttribute("aria-expanded", "true");
-  for (const name of ["Products", /^Cart\s*2$/, "Favourites", "My orders", "My account"]) {
+  for (const name of ["Products", /^Cart\s*2$/, "Favourites", "My orders", "Customer service", "My account"]) {
     expect(within(menu()).getByRole("link", { name })).toBeInTheDocument();
   }
   expect(document.body.style.overflow).toBe("hidden"); // the page behind can't scroll
@@ -74,11 +75,11 @@ test("Escape and ✕ close the menu, and the focus goes back to ☰", async () =
   expect(menuButton()).toHaveAttribute("aria-expanded", "false");
 });
 
-test("admins get the admin pages in the menu, and ☰ shows the open problem reports", async () => {
+test("admins get the admin pages in the menu, and ☰ shows the messages waiting for an answer", async () => {
   visit(admin);
-  expect(await screen.findByRole("button", { name: "Menu, 2 open problem reports" })).toBeInTheDocument();
+  expect(await screen.findByRole("button", { name: "Menu, 2 messages waiting for an answer" })).toBeInTheDocument();
   await userEvent.click(menuButton());
-  for (const name of ["Dashboard", "Manage products", "Categories", "Manage orders", "Low stock", /^Support\s*2$/]) {
+  for (const name of ["Dashboard", "Manage products", "Categories", "Manage orders", "Low stock", /^Customer service\s*2$/]) {
     expect(within(menu()).getByRole("link", { name })).toBeInTheDocument();
   }
   expect(within(menu()).queryByRole("link", { name: /Cart/ })).not.toBeInTheDocument();
@@ -89,4 +90,15 @@ test("visitors who are not logged in find Log in and Register in the menu too", 
   await userEvent.click(menuButton());
   expect(within(menu()).getByRole("link", { name: "Log in" })).toBeInTheDocument();
   expect(within(menu()).getByRole("link", { name: "Register" })).toBeInTheDocument();
+});
+
+test("a new answer from customer service shows on ☰ (before the cart) and next to Customer service", async () => {
+  vi.spyOn(supportApi, "mine").mockResolvedValue([
+    { id: 7, customerUnread: true },
+    { id: 8, customerUnread: false },
+  ] as SupportTicket[]);
+  visit(sara, 3);
+  expect(await screen.findByRole("button", { name: "Menu, 1 new reply from customer service" })).toBeInTheDocument();
+  await userEvent.click(menuButton());
+  expect(within(menu()).getByRole("link", { name: /^Customer service\s*1$/ })).toHaveAttribute("href", "/help");
 });

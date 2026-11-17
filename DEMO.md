@@ -77,13 +77,13 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Do:** in the customer tab, open a product you ordered (for example the one shipped in step 10) → under **Ratings & reviews** click a score from **1 to 10**, write a short comment → **Submit review**. Show the new average on the page and in the product list, and the **👁 views** count.
 **Say:** "Only customers who bought a product can rate it, once each, and they can change their review later. Every product shows its average out of 10 and how many times it was viewed."
 
-### 12. Report a problem with an order (1 minute): extra feature
-**Do:** in the customer tab, open **My orders** → under an order click **Report a problem** → choose **Damaged item**, type a message → **Send report**. In the admin tab, open **Support** (the menu shows how many are open) → type a reply → **Send reply & resolve**. Back in the customer tab, refresh **My orders**.
-**Say:** "If something is wrong with an order, the customer can tell us right from the order. The admin answers on the Support page, and the customer sees the reply under the order. Only the owner of an order can report on it, and only one open report per order at a time."
+### 12. Customer service (1 minute): extra feature
+**Do:** in the customer tab, open **My orders** → under an order click **Contact customer service**: the topic and the order are already chosen. Type a message → **Send message**. In the admin tab, open **☰ → Customer service** (the red number shows how many are waiting) → type an answer → **Send answer**. Back in the customer tab, the ☰ button shows a red **1**: open **Customer service** to see the answer marked **New reply**, and write back.
+**Say:** "Customers get help with signing in, orders, delivery, returns, payments and cards, or changes. Even someone who can't log in can write, with a name and an email. It is a real conversation: both sides can keep writing until it is solved, and the customer also gets our answer by email. Customers only see their own conversations."
 
 ### 13. Dashboard (1 minute): FR-14, FR-15
 **Do:** admin → **Dashboard**. Point at the tallest column in the chart. Click **Last 7 days**, then **Last 30 days**. Open **Show as a table**.
-**Say:** "This is the admin's home page. The top boxes compare this week with the week before and show what needs attention: products to restock and open problems. Below, for the chosen period: sales per day, orders by status and the 5 best sellers. Cancelled orders are not counted as sales. It all comes from one API call, which asks the database 7 questions at the same time. The chart is drawn with Recharts, and the same numbers are available as a table."
+**Say:** "This is the admin's home page. The top boxes compare this week with the week before and show what needs attention: products to restock and customer messages waiting for an answer. Below, for the chosen period: sales per day, orders by status and the 5 best sellers. Cancelled orders are not counted as sales. It all comes from one API call, which asks the database 7 questions at the same time. The chart is drawn with Recharts, and the same numbers are available as a table."
 
 **Then:** in the **🎄 Sale** card, click **Start Christmas Sale** (30% off the products that sold fewer than 5 pieces in 30 days, until Dec 31). Open the shop in a new tab without logging in.
 **Say:** "The products that didn't sell well get 30% off. Visitors see a Christmas window once per visit, red sale prices and a deals filter, and the order is charged the sale price by the server. After Dec 31 the prices go back by themselves."
@@ -92,11 +92,11 @@ Accounts: admin `admin@stockflow.test` / `Password1`. You create the customer du
 **Do:** admin → **Low stock** (or click the **Need restocking** box on the Dashboard).
 **Say:** "These products are at or below their reorder level, the most urgent first. **Restock** opens the edit form."
 **Then:** click the 🔔 **bell** in the top bar.
-**Say:** "Admins don't have to check this list: when an order takes a product down to its reorder level or sells it out, the server creates an alert automatically, in the same transaction as the order. The bell shows how many are unread, and a new alert also pops up by itself."
+**Say:** "Admins don't have to check this list: when an order takes a product down to its reorder level or sells it out, the server creates an alert automatically, in the same transaction as the order. The bell shows how many are unread, and a new alert also pops up by itself. The same bell rings when a customer writes to customer service, with an Answer link. Customers have a bell too: it tells them when the store ships, delivers or cancels their order, and when customer service answers."
 
 ### 15. Automatic tests (1 minute): NFR-07
 **Do:** in the third terminal, run `npm test` in `api-node`, then `npm test` in `frontend`.
-**Say:** "108 API tests run against a separate test database, so real data is never touched. 76 website tests check the menu, the forms, the email codes, Forgot password, the product list, page protection, the cart limit, photos, the welcome screen, problem reports, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
+**Say:** "116 API tests run against a separate test database, so real data is never touched. 85 website tests check the menu, the forms, the email codes, Forgot password, the product list, page protection, the cart limit, photos, the welcome screen, customer service, reviews, the dashboard, the pop-up messages, the stock alerts, the delivery choice, the delivery address, My account, the categories page, sorting, favourites, Buy again, order tracking and the Christmas sale. The guide asks for at least 10 and 5."
 
 ### 16. Wrap-up (30 seconds)
 **Say:** "Not built yet, because of the one-week deadline: the separate .NET reporting API with MySQL, and Docker. The reports and the dashboard are served by the Node API for now. A GitHub Actions workflow is ready; it needs Actions to be enabled in the repository settings."

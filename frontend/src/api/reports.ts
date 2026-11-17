@@ -14,7 +14,7 @@ export type LowStockRow = {
 export type Summary = {
   days: number; // the chosen period
   products: { total: number; lowStock: number; soldOut: number };
-  openIssues: number;
+  openIssues: number; // customer service messages waiting for an answer
   thisWeek: { orders: number; revenue: string }; // the last 7 days
   lastWeek: { orders: number; revenue: string }; // the 7 days before
   // For the chosen period:

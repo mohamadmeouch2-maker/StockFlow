@@ -1,5 +1,5 @@
 // Sample data (guide 2.4): one admin, one customer, 4 categories and 25 products with photos,
-// plus sample reviews, 30 days of sample orders for the admin dashboard and stock alerts.
+// plus sample reviews, 30 days of sample orders for the admin dashboard, customer service conversations and stock alerts.
 // Safe to run more than once: nothing is added twice.
 // The demo password is for local use only.
 import fs from "node:fs";
@@ -187,10 +187,83 @@ async function main() {
     }
   }
 
+  // Sample customer service conversations, so the admin's Customer service page starts with examples.
+  // Added only while no sample customer and no sample visitor has written yet.
+  let conversations = 0;
+  const sampleEmails = [...reviewers.map((r) => r.email), "nadia@visitor.test"];
+  if ((await prisma.supportTicket.count({ where: { email: { in: sampleEmails } } })) === 0) {
+    const [sara, omar, lina] = reviewers;
+    const hoursAgo = (h: number) => new Date(Date.now() - h * 60 * 60 * 1000);
+    const lastOrder = (userId: number) => prisma.order.findFirst({ where: { userId }, orderBy: { createdAt: "desc" } });
+    const samples: Prisma.SupportTicketCreateInput[] = [
+      {
+        user: { connect: { id: sara.id } },
+        name: sara.name,
+        email: sara.email,
+        topic: "DELIVERY",
+        order: { connect: { id: (await lastOrder(sara.id))!.id } },
+        status: "ANSWERED",
+        customerUnread: true,
+        // The answer in Sara's bell
+        notifications: {
+          create: {
+            type: "SUPPORT_ANSWER",
+            user: { connect: { id: sara.id } },
+            message: "Customer service answered your message about Delivery",
+            createdAt: hoursAgo(2),
+          },
+        },
+        createdAt: hoursAgo(5),
+        messages: {
+          create: [
+            { author: "CUSTOMER", body: "Hello! When will my last order arrive? I need it for a meeting on Friday.", createdAt: hoursAgo(5) },
+            { author: "STAFF", body: "Hi Sara! It leaves our store tomorrow morning, so it will be with you before Friday.", createdAt: hoursAgo(2) },
+          ],
+        },
+      },
+      {
+        user: { connect: { id: omar.id } },
+        name: omar.name,
+        email: omar.email,
+        topic: "PAYMENT",
+        createdAt: hoursAgo(3),
+        messages: { create: [{ author: "CUSTOMER", body: "Can I pay by card when the order arrives, or only in cash?", createdAt: hoursAgo(3) }] },
+        notifications: { create: { type: "SUPPORT_MESSAGE", message: "New message from Omar: Payments and cards", createdAt: hoursAgo(3) } },
+      },
+      {
+        name: "Nadia",
+        email: "nadia@visitor.test",
+        topic: "SIGN_IN",
+        createdAt: hoursAgo(1),
+        messages: {
+          create: [{ author: "CUSTOMER", body: "I registered yesterday but the email code never arrived, so I can't log in.", createdAt: hoursAgo(1) }],
+        },
+        notifications: { create: { type: "SUPPORT_MESSAGE", message: "New message from Nadia: Signing in and my account", createdAt: hoursAgo(1) } },
+      },
+      {
+        user: { connect: { id: lina.id } },
+        name: lina.name,
+        email: lina.email,
+        topic: "RETURN",
+        status: "RESOLVED",
+        createdAt: hoursAgo(50),
+        messages: {
+          create: [
+            { author: "CUSTOMER", body: "One of the notebooks I got has torn pages. Can I send it back?", createdAt: hoursAgo(50) },
+            { author: "STAFF", body: "Sorry about that, Lina! Keep it: we are sending you a new one today.", createdAt: hoursAgo(47) },
+            { author: "CUSTOMER", body: "It arrived. Thank you very much!", createdAt: hoursAgo(20) },
+          ],
+        },
+      },
+    ];
+    for (const data of samples) await prisma.supportTicket.create({ data });
+    conversations = samples.length;
+  }
+
   // Stock alerts for the products that are already low, so the admin's bell starts with some.
-  // Added only while there are no alerts at all. Later alerts come from real orders.
+  // Added only while there are no stock alerts at all. Later alerts come from real orders.
   let alerts = 0;
-  if ((await prisma.notification.count()) === 0) {
+  if ((await prisma.notification.count({ where: { productId: { not: null } } })) === 0) {
     const lowProducts = await prisma.product.findMany({ where: { stock: { lte: prisma.product.fields.reorderLevel } }, orderBy: { id: "asc" } });
     for (const product of lowProducts) {
       // As if the last sale took it from above the reorder level down to today's stock.
@@ -204,7 +277,7 @@ async function main() {
 
   console.log(
     `Seeded: ${await prisma.user.count()} users, ${await prisma.category.count()} categories, ${await prisma.product.count()} products, ` +
-      `${photos} photos, ${reviews} reviews, ${orders} orders and ${alerts} stock alerts added`,
+      `${photos} photos, ${reviews} reviews, ${orders} orders, ${conversations} customer service conversations and ${alerts} stock alerts added`,
   );
 }
 

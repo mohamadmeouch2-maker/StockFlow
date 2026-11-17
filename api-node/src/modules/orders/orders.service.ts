@@ -1,4 +1,4 @@
-import { OrderStatus, Prisma, type DeliveryMethod } from "@prisma/client";
+import { OrderStatus, Prisma, type DeliveryMethod, type NotificationType } from "@prisma/client";
 import { AppError, notFound } from "../../lib/errors";
 import { salePrice } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
@@ -58,6 +58,14 @@ const allowed: Record<OrderStatus, OrderStatus[]> = {
   CANCELLED: [],
 };
 
+// What the customer's bell says when the store moves their order on.
+function orderNews(orderId: number, next: OrderStatus): { type: NotificationType; message: string } | null {
+  if (next === "SHIPPED") return { type: "ORDER_SHIPPED", message: `Your order #${orderId} is on its way` };
+  if (next === "DELIVERED") return { type: "ORDER_DELIVERED", message: `Your order #${orderId} was delivered` };
+  if (next === "CANCELLED") return { type: "ORDER_CANCELLED", message: `The store cancelled your order #${orderId}. Questions? Write to customer service.` };
+  return null;
+}
+
 // FR-10 / FR-12. Customers may only cancel their own orders; admins follow the rules above.
 export async function changeStatus(orderId: number, next: OrderStatus, actor: { id: number; role: string }) {
   const order = await prisma.order.findUnique({ where: { id: orderId }, include: { items: true } });
@@ -73,6 +81,9 @@ export async function changeStatus(orderId: number, next: OrderStatus, actor: { 
     const { count } = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: { status: next, ...when } });
     if (count === 0) throw new AppError(409, "INVALID_STATUS", "The order was changed by someone else, please reload");
     if (next === "CANCELLED") for (const i of order.items) await tx.product.update({ where: { id: i.productId }, data: { stock: { increment: i.quantity } } }); // FR-10
+    // The customer's bell: the store shipped, delivered or cancelled their order (not when they cancel it themselves)
+    const news = actor.role === "ADMIN" ? orderNews(orderId, next) : null;
+    if (news) await tx.notification.create({ data: { ...news, userId: order.userId, orderId } });
     return tx.order.findUniqueOrThrow({ where: { id: orderId }, include: withItems });
   });
 }

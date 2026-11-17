@@ -9,7 +9,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Area | What works | Requirement |
 |---|---|---|
 | Accounts | Register, log in, log out, stay logged in after a refresh (JWT valid for 1 hour) | FR-01, FR-02 |
-| Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows the number of items in the cart (customers) or open problem reports (admins). It closes with ✕, Escape or a click outside | extra |
+| Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows new answers from customer service in red, otherwise the items in the cart (customers), or the customer messages waiting for an answer (admins). It closes with ✕, Escape or a click outside | extra |
 | Email check | After Register, a 6-digit code is emailed (Gmail). The account can log in only after the code is typed on the "Check your email" page. A code works for 15 minutes and 5 tries; "Send a new code" once a minute | extra |
 | Forgot password | "Forgot password?" on the login page emails a 6-digit code. Type it with a new password on the "Reset your password" page: the password changes and you are logged in. The answer is the same for every email, so nobody can find out who has an account | extra |
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing). Changing the password (or resetting it) logs out every other device at once, e.g. a thief who was logged in | FR-03 |
@@ -23,11 +23,11 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Christmas sale | Admins start a sale (for example 30% off until Dec 31) on the products in stock that sold fewer than N pieces in the last days; customers see a festive pop-up with falling snow, a sale banner, red sale prices with the old price crossed out, and a "Christmas deals" filter; orders pay the sale price (calculated on the server) | extra |
 | Admin | Create, edit and delete products; a Categories page to add, rename and delete categories (not while they still have products); ship and deliver orders (20 per page, newest first, with a status filter) | FR-11, FR-12 |
 | Low stock | Admin list of products at or below their reorder level (6 for every product, so "Low stock" = fewer than 7 left; the admin can change one product) | FR-16 |
-| Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock and open-problem counts, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
+| Dashboard | The admin's home page: sales and orders of the last 7 days against the week before, restock counts and customer messages waiting for an answer, and for the last 7, 14 or 30 days a sales-per-day chart, orders by status and the top 5 products | FR-14, FR-15 |
 | Product photos | Admins upload a photo (JPG, PNG, WebP or GIF, up to 2 MB); it shows next to the product everywhere | FR-17 |
 | Ratings, reviews and views | Customers who bought a product rate it from 1 to 10 with an optional comment; every product shows its average rating and how many times it was viewed | extra |
-| Problem reports | Customers report a problem with an order (wrong item, damaged, missing, late); admins reply and resolve it on the Support page | extra |
-| Stock alerts | When an order takes a product down to its reorder level or sells it out, admins get an automatic alert: a bell with the unread count, a pop-up message, and a Restock link | extra |
+| Customer service | A Customer service page (☰ menu and footer) for help with signing in, an order, delivery, returns, payments and cards, or changes. Everyone can write, also visitors who can't log in (with a name and an email). Customers can pick one of their orders and see their conversations; the admins answer on their own Customer service page, the customer gets the answer by email too, and both sides can keep writing until it is solved. A new answer shows as a red number on ☰ | extra |
+| Notifications | A 🔔 bell for everyone logged in, with the unread count and a pop-up message for each new one. Admins (shared): stock alerts when an order takes a product down to its reorder level or sells it out (Restock link), and customer service messages (Answer link; answering or marking solved marks it as read). Customers (their own): their order was shipped, delivered or cancelled by the store, and customer service answered them | extra |
 | Look and feel | Grey placeholders while pages load, short pop-up messages after each action (added to cart, order placed, product saved, ...), pages fade in | extra |
 
 Uploaded photos are saved in `api-node/uploads/`. Like the database data, they are not stored in git. The 25 sample products get free photos from Wikimedia Commons, some views, sample reviews and 30 days of sample orders (from three sample customers) when you run `npm run seed` (see the [photo credits](api-node/prisma/seed-images/CREDITS.md)).
@@ -39,7 +39,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (108 API tests), Vitest + Testing Library (76 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (116 API tests), Vitest + Testing Library (85 website tests), GitHub Actions CI
 - **Code style:** Prettier (one shared style, checked in CI) and ESLint
 
 ## Project structure
@@ -140,10 +140,10 @@ Without these two lines nothing is sent: the code is printed in the API terminal
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 108 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 116 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 76 passed (no backend needed)
+npm test        # ✅ Tests: 85 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -198,12 +198,14 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | PUT / DELETE | `/api/products/:id/reviews` | Customer (buyer) | Add or change my review `{ "rating": 9, "comment": "..." }`, or delete it |
 | GET | `/api/reports/low-stock` | Admin | Products at or below their reorder level |
 | GET | `/api/reports/summary?days=30` | Admin | Dashboard numbers: sales and orders per day, orders by status, top 5 products (7 to 90 days, default 30) |
-| POST | `/api/orders/:id/issues` | Customer (owner) | Report a problem: `{ "type": "DAMAGED", "message": "..." }` |
-| GET | `/api/issues/mine` | logged in | My problem reports and the replies |
-| GET | `/api/issues?status=` | Admin | All problem reports, open ones first |
-| PATCH | `/api/issues/:id` | Admin | `{ "reply": "...", "status": "RESOLVED" }` |
-| GET | `/api/notifications` | Admin | The 20 newest stock alerts and the unread count |
-| POST | `/api/notifications/:id/read`, `/api/notifications/read-all` | Admin | Mark one alert, or all, as read |
+| POST | `/api/support` | anyone (not admins) | Write to customer service: `{ "topic": "DELIVERY", "message": "...", "orderId": 12 }` when logged in, or `{ "topic", "message", "name", "email" }` as a visitor (5 an hour per computer). Topics: `SIGN_IN`, `ORDER`, `DELIVERY`, `RETURN`, `PAYMENT`, `CHANGE`, `OTHER` |
+| GET | `/api/support/mine` | logged in | My conversations with their messages, the most recent first (`customerUnread`: a new answer) |
+| POST | `/api/support/read` | logged in | I have seen the answers (the red number goes away) |
+| POST | `/api/support/:id/messages` | owner or Admin | Write in a conversation: `{ "message": "..." }`. An admin's answer is emailed to the customer; admins can add `"resolve": true` |
+| GET | `/api/support?status=` | Admin | Every conversation: `OPEN` (waiting for us) first, then `ANSWERED`, then `RESOLVED` |
+| PATCH | `/api/support/:id` | Admin | `{ "status": "RESOLVED" }`: mark solved or reopen without writing |
+| GET | `/api/notifications` | logged in | The 20 newest of my notifications and the unread count. Admins: stock alerts and customer service messages; customers: their order news and answers |
+| POST | `/api/notifications/:id/read`, `/api/notifications/read-all` | logged in | Mark one of mine, or all of mine, as read |
 | POST / DELETE | `/api/products/:id/image` | Admin | Upload a photo (form field `image`) or remove it |
 | GET | `/uploads/products/<file>` | anyone | The uploaded photos |
 | GET | `/health` | anyone | Liveness check |

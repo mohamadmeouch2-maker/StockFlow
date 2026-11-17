@@ -8,7 +8,7 @@ export async function resetDb() {
   await prisma.notification.deleteMany();
   await prisma.favorite.deleteMany();
   await prisma.review.deleteMany();
-  await prisma.orderIssue.deleteMany();
+  await prisma.supportTicket.deleteMany(); // their messages go too (cascade)
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();

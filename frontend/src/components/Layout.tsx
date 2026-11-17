@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Suspense, useCallback, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { favoritesApi } from "../api/favorites";
-import { issuesApi } from "../api/issues";
+import { supportApi } from "../api/support";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { useToast } from "../toast/useToast";
@@ -30,20 +30,24 @@ export function Layout() {
   const [menuOpenOn, setMenuOpenOn] = useState<string | null>(null);
   const menuOpen = menuOpenOn === pathname;
   const closeMenu = useCallback(() => setMenuOpenOn(null), []);
-  // Admins see how many problem reports are still open (checked again every minute).
-  const issues = useQuery({
-    queryKey: ["issues", "OPEN"],
-    queryFn: () => issuesApi.all("OPEN"),
-    enabled: user?.role === "ADMIN",
-    refetchInterval: 60_000,
-  });
-  const openIssues = issues.data?.length ?? 0;
+  // Customer service, checked again every minute. Admins: how many messages wait for an answer.
+  // Customers: how many conversations have a new answer they haven't seen.
+  const waiting = useQuery({ queryKey: ["support", "OPEN"], queryFn: () => supportApi.all("OPEN"), enabled: user?.role === "ADMIN", refetchInterval: 60_000 });
+  const waitingCount = waiting.data?.length ?? 0;
+  const mySupport = useQuery({ queryKey: ["support", "mine"], queryFn: supportApi.mine, enabled: user?.role === "CUSTOMER", refetchInterval: 60_000 });
+  const newReplies = mySupport.data?.filter((t) => t.customerUnread).length ?? 0;
   // Customers see how many products they saved (the same list the hearts use)
   const favorites = useQuery({ queryKey: ["favorites"], queryFn: favoritesApi.list, enabled: user?.role === "CUSTOMER" });
   const favoriteCount = favorites.data?.length ?? 0;
-  // A number on the ☰ button, so it is not hidden in the menu: items in the cart (customers), open problem reports (admins)
-  const badge = user?.role === "ADMIN" ? openIssues : user?.role === "CUSTOMER" ? count : 0;
-  const badgeText = user?.role === "ADMIN" ? `${badge} open problem report${badge === 1 ? "" : "s"}` : `${badge} item${badge === 1 ? "" : "s"} in the cart`;
+  // A number on the ☰ button, so it is not hidden in the menu. Red = needs attention: messages waiting for
+  // an answer (admins), new answers from customer service (customers). Otherwise blue: items in the cart.
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+  const badge =
+    user?.role === "ADMIN"
+      ? { n: waitingCount, alert: true, text: `${plural(waitingCount, "message")} waiting for an answer` }
+      : newReplies > 0
+        ? { n: newReplies, alert: true, text: `${plural(newReplies, "new reply")} from customer service` }
+        : { n: user ? count : 0, alert: false, text: `${plural(count, "item")} in the cart` };
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
@@ -60,7 +64,7 @@ export function Layout() {
           <button
             type="button"
             onClick={() => setMenuOpenOn(pathname)}
-            aria-label={badge > 0 ? `Menu, ${badgeText}` : "Menu"}
+            aria-label={badge.n > 0 ? `Menu, ${badge.text}` : "Menu"}
             aria-expanded={menuOpen}
             aria-controls="side-menu"
             className="relative -ml-2 rounded-lg p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
@@ -68,9 +72,9 @@ export function Layout() {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6" aria-hidden="true">
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            {badge > 0 && (
-              <span aria-hidden="true" className={`count absolute -top-1 -right-1 ml-0 ${user?.role === "ADMIN" ? "count-alert" : "count-brand"}`}>
-                {badge}
+            {badge.n > 0 && (
+              <span aria-hidden="true" className={`count absolute -top-1 -right-1 ml-0 ${badge.alert ? "count-alert" : "count-brand"}`}>
+                {badge.n}
               </span>
             )}
           </button>
@@ -82,7 +86,7 @@ export function Layout() {
           </Link>
 
           <div className="ml-auto flex items-center gap-2">
-            {user?.role === "ADMIN" && <NotificationBell />}
+            {user && <NotificationBell role={user.role} />}
             {user ? (
               <>
                 {/* The avatar and name open My account (name, address, password) */}
@@ -137,6 +141,12 @@ export function Layout() {
             </NavLink>
           </>
         )}
+        {user?.role !== "ADMIN" && (
+          <NavLink to="/help" className={menuLinkClass}>
+            Customer service
+            {newReplies > 0 && <span className="count count-alert ml-auto">{newReplies}</span>}
+          </NavLink>
+        )}
         {user?.role === "ADMIN" && (
           <>
             <p className="px-3 pt-4 pb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">Admin</p>
@@ -156,8 +166,8 @@ export function Layout() {
               Low stock
             </NavLink>
             <NavLink to="/admin/support" className={menuLinkClass}>
-              Support
-              {openIssues > 0 && <span className="count count-alert ml-auto">{openIssues}</span>}
+              Customer service
+              {waitingCount > 0 && <span className="count count-alert ml-auto">{waitingCount}</span>}
             </NavLink>
           </>
         )}
@@ -201,6 +211,9 @@ export function Layout() {
           <div className="flex gap-4">
             <Link to="/products" className="hover:text-slate-800">
               Products
+            </Link>
+            <Link to="/help" className="hover:text-slate-800">
+              Customer service
             </Link>
             <a href="https://github.com/mohamadmeouch2-maker/StockFlow" className="hover:text-slate-800">
               GitHub

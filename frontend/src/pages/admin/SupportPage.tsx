@@ -1,30 +1,32 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { issueLabel, issuesApi } from "../../api/issues";
-import type { IssueStatus, OrderIssue } from "../../api/types";
-import { OrderStatusBadge } from "../../components/OrderStatusBadge";
+import { supportApi } from "../../api/support";
+import type { SupportStatus } from "../../api/types";
 import { RowsSkeleton } from "../../components/Skeleton";
-import { useToast } from "../../toast/useToast";
+import { SupportConversation } from "../../components/SupportConversation";
 
-const filters: { value?: IssueStatus; label: string }[] = [
-  { value: "OPEN", label: "Open" },
-  { value: "RESOLVED", label: "Resolved" },
+const filters: { value?: SupportStatus; label: string }[] = [
+  { value: "OPEN", label: "Waiting for us" },
+  { value: "ANSWERED", label: "Answered" },
+  { value: "RESOLVED", label: "Solved" },
   { value: undefined, label: "All" },
 ];
 
-// Admin: problems customers reported with their orders. Reply and resolve them.
+// Admin: Customer service. Messages from customers and visitors (signing in, orders, delivery, returns,
+// payments and cards, changes). Answer them here; the customer also gets the answer by email.
 export function SupportPage() {
-  const [status, setStatus] = useState<IssueStatus | undefined>("OPEN");
-  const issues = useQuery({ queryKey: ["issues", status ?? "ALL"], queryFn: () => issuesApi.all(status) });
+  const [status, setStatus] = useState<SupportStatus | undefined>("OPEN");
+  // The same query as the number in the menu (["support", "OPEN"]), so both stay in step
+  const tickets = useQuery({ queryKey: ["support", status ?? "ALL"], queryFn: () => supportApi.all(status) });
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Support</h1>
-          <p className="text-sm text-slate-500">Problems customers reported with their orders. Open ones come first.</p>
+          <h1 className="page-title">Customer service</h1>
+          <p className="text-sm text-slate-500">Messages from customers and visitors. Answer them here: they also get your answer by email.</p>
         </div>
-        <div className="flex gap-2" role="group" aria-label="Filter by status">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
           {filters.map((f) => (
             <button
               key={f.label}
@@ -40,100 +42,18 @@ export function SupportPage() {
         </div>
       </div>
 
-      {issues.isLoading && <RowsSkeleton rows={3} />}
-      {issues.isError && <p className="text-danger-600">Could not load the reports. {issues.error.message}</p>}
-      {issues.data?.length === 0 && (
+      {tickets.isLoading && <RowsSkeleton rows={3} />}
+      {tickets.isError && <p className="text-danger-600">Could not load the messages. {tickets.error.message}</p>}
+      {tickets.data?.length === 0 && (
         <div className="card p-10 text-center text-slate-500">
-          <p className="text-lg font-medium text-slate-700">{status === "OPEN" ? "No open problems 🎉" : "No reports."}</p>
-          <p className="text-sm">When a customer reports a problem with an order, it appears here.</p>
+          <p className="text-lg font-medium text-slate-700">{status === "OPEN" ? "Nobody is waiting for an answer 🎉" : "No messages here."}</p>
+          <p className="text-sm">When a customer or a visitor writes to Customer service, the message appears here.</p>
         </div>
       )}
 
-      {issues.data?.map((i) => (
-        <IssueCard key={i.id} issue={i} />
+      {tickets.data?.map((t) => (
+        <SupportConversation key={t.id} ticket={t} viewer="STAFF" />
       ))}
-    </div>
-  );
-}
-
-function IssueCard({ issue }: { issue: OrderIssue }) {
-  const qc = useQueryClient();
-  const toast = useToast();
-  const [reply, setReply] = useState(issue.adminReply ?? "");
-
-  const update = useMutation({
-    mutationFn: (body: { reply?: string; status?: IssueStatus }) => issuesApi.update(issue.id, body),
-    onSuccess: (_, body) => {
-      toast(body.status === "RESOLVED" ? "Reply sent. The problem is resolved." : body.status === "OPEN" ? "Problem reopened" : "Reply saved");
-      qc.invalidateQueries({ queryKey: ["issues"] });
-    },
-  });
-
-  const open = issue.status === "OPEN";
-  const order = issue.order;
-
-  return (
-    <div className={`card overflow-hidden ${open ? "border-l-4 border-l-warning-400" : ""}`}>
-      <div className="flex flex-wrap items-center gap-3 border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm">
-        <span className="font-semibold text-slate-900">{issueLabel(issue.type)}</span>
-        <span className={`badge ${open ? "badge-warning" : "badge-success"}`}>{open ? "Open" : "Resolved"}</span>
-        <span className="text-slate-500">
-          Order #{issue.orderId} · {issue.user?.name} ({issue.user?.email})
-        </span>
-        <span className="ml-auto text-xs text-slate-500">{new Date(issue.createdAt).toLocaleString()}</span>
-      </div>
-
-      <div className="space-y-3 px-5 py-4 text-sm">
-        <p className="text-base text-slate-800">“{issue.message}”</p>
-        {order && (
-          <div className="flex flex-wrap items-center gap-2 text-slate-500">
-            <OrderStatusBadge status={order.status} />
-            <span>{order.items.map((it) => `${it.quantity} × ${it.product.name}`).join(", ")}</span>
-            <span>· ${Number(order.total).toFixed(2)}</span>
-          </div>
-        )}
-
-        <div>
-          <label htmlFor={`reply-${issue.id}`} className="label">
-            Reply to the customer
-          </label>
-          <textarea
-            id={`reply-${issue.id}`}
-            rows={2}
-            maxLength={1000}
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            placeholder="For example: Sorry about that! We are sending a replacement today."
-            className="input"
-          />
-        </div>
-        {update.isError && <p className="field-error">Could not save. {update.error.message}</p>}
-        <div className="flex flex-wrap gap-2">
-          {open ? (
-            <>
-              <button
-                disabled={update.isPending || !reply.trim()}
-                onClick={() => update.mutate({ reply: reply.trim(), status: "RESOLVED" })}
-                className="btn btn-primary"
-              >
-                Send reply & resolve
-              </button>
-              <button disabled={update.isPending || !reply.trim()} onClick={() => update.mutate({ reply: reply.trim() })} className="btn btn-outline">
-                Send reply only
-              </button>
-            </>
-          ) : (
-            <>
-              <button disabled={update.isPending || !reply.trim()} onClick={() => update.mutate({ reply: reply.trim() })} className="btn btn-outline">
-                Update reply
-              </button>
-              <button disabled={update.isPending} onClick={() => update.mutate({ status: "OPEN" })} className="btn btn-outline">
-                Reopen
-              </button>
-            </>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

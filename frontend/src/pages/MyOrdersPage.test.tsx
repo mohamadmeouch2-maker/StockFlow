@@ -26,7 +26,6 @@ const order: Order = {
     { productId: 1, quantity: 2, unitPrice: "4.50", product: { name: "Stapler" } },
     { productId: 2, quantity: 1, unitPrice: "10.00", product: { name: "Webcam" } },
   ],
-  issues: [],
 };
 vi.spyOn(ordersApi, "mine").mockResolvedValue([order]);
 vi.spyOn(productsApi, "get").mockImplementation(async (id) => (id === 1 ? product(1, "Stapler", 10) : product(2, "Webcam", 0)));

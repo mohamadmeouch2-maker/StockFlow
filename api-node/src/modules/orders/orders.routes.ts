@@ -5,7 +5,6 @@ import { prisma } from "../../lib/prisma";
 import { shipToFields } from "../../lib/shipTo";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
-import { reportBody, reportIssue } from "../issues/issues.routes";
 import { deliveryOptionsJson } from "./delivery";
 import { changeStatus, createOrder, withItems } from "./orders.service";
 
@@ -50,20 +49,15 @@ ordersRouter.get("/saved-address", requireRole("CUSTOMER"), async (_req, res) =>
   res.json(last && { ...last, from: "last-order" });
 });
 
-// FR-09: only my own orders, newest first, with any problems I reported.
+// FR-09: only my own orders, newest first.
 ordersRouter.get("/mine", async (_req, res) => {
   res.json(
     await prisma.order.findMany({
       where: { userId: res.locals.user.id },
-      include: { ...withItems, issues: { orderBy: { createdAt: "desc" } } },
+      include: withItems,
       orderBy: { createdAt: "desc" },
     }),
   );
-});
-
-// The customer reports a problem with one of their orders (wrong item, damaged, ...).
-ordersRouter.post("/:id/issues", requireRole("CUSTOMER"), validate(reportBody), async (req, res) => {
-  res.status(201).json(await reportIssue(parseId(req.params.id, "Order"), res.locals.user, res.locals.body));
 });
 
 // FR-10: cancel a Pending order; the stock comes back.
@@ -79,7 +73,7 @@ ordersRouter.get("/", requireRole("ADMIN"), validate(listQuery, "query"), async 
   const [items, total] = await prisma.$transaction([
     prisma.order.findMany({
       where,
-      include: { ...withItems, user: { select: { name: true, email: true } }, issues: { select: { id: true, status: true } } },
+      include: { ...withItems, user: { select: { name: true, email: true } } },
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,

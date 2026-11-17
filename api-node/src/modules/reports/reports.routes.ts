@@ -49,7 +49,7 @@ reportsRouter.get("/summary", validate(summaryQuery, "query"), async (_req, res)
     prisma.product.count(),
     prisma.product.count({ where: { stock: { lte: prisma.product.fields.reorderLevel } } }),
     prisma.product.count({ where: { stock: 0 } }),
-    prisma.orderIssue.count({ where: { status: "OPEN" } }),
+    prisma.supportTicket.count({ where: { status: "OPEN" } }), // customer service messages waiting for an answer
     prisma.order.groupBy({ by: ["status"], where: { createdAt: { gte: periodStart } }, _count: { _all: true } }),
     prisma.order.findMany({ where: { createdAt: { gte: from }, ...sale }, select: { createdAt: true, total: true } }),
     prisma.orderItem.groupBy({

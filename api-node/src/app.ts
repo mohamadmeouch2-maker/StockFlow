@@ -6,12 +6,12 @@ import { accountRouter } from "./modules/account/account.routes";
 import { authRouter } from "./modules/auth/auth.routes";
 import { categoriesRouter } from "./modules/categories/categories.routes";
 import { favoritesRouter } from "./modules/favorites/favorites.routes";
-import { issuesRouter } from "./modules/issues/issues.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { ordersRouter } from "./modules/orders/orders.routes";
 import { productsRouter } from "./modules/products/products.routes";
 import { promotionsRouter } from "./modules/promotions/promotions.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
+import { supportRouter } from "./modules/support/support.routes";
 import { reviewsRouter } from "./modules/reviews/reviews.routes";
 
 // The app is separate from the server so tests can use it without opening a port (guide 2.10).
@@ -35,11 +35,11 @@ app.use("/api/categories", categoriesRouter);
 app.use("/api/products/:id/reviews", reviewsRouter); // ratings out of 10 and comments
 app.use("/api/products", productsRouter);
 app.use("/api/orders", ordersRouter);
-app.use("/api/issues", issuesRouter); // problems customers report with their orders
 app.use("/api/reports", reportsRouter);
 app.use("/api/notifications", notificationsRouter); // stock alerts for admins
 app.use("/api/favorites", favoritesRouter); // customers' saved products
 app.use("/api/promotions", promotionsRouter); // sales, e.g. the Christmas Sale
+app.use("/api/support", supportRouter); // Customer service: customers and visitors write, admins answer
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Route not found", details: [] } });
 });

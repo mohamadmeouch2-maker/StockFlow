@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ordersApi } from "../api/orders";
 import { productsApi } from "../api/products";
 import type { Order } from "../api/types";
 import { useCart } from "../cart/useCart";
-import { OrderProblems } from "../components/OrderProblems";
 import { DeliveryBadge } from "../components/DeliveryBadge";
 import { OrderStatusBadge } from "../components/OrderStatusBadge";
 import { OrderTimeline } from "../components/OrderTimeline";
@@ -116,7 +115,12 @@ export function MyOrdersPage() {
               )}
             </div>
           </div>
-          <OrderProblems orderId={o.id} issues={o.issues ?? []} />
+          <p className="border-t border-slate-100 px-5 py-3 text-sm text-slate-600">
+            Something wrong with this order?{" "}
+            <Link to={`/help?topic=ORDER&order=${o.id}`} className="link">
+              Contact customer service
+            </Link>
+          </p>
         </div>
       ))}
     </div>

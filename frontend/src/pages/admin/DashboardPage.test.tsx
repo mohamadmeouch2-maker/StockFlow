@@ -44,13 +44,13 @@ test("the number tiles show this week's sales and orders, compared with the week
   expect(orders).toHaveTextContent("5 the week before");
 });
 
-test("restocking and open problems are shown and link to their pages", async () => {
+test("restocking and customer messages are shown and link to their pages", async () => {
   renderPage();
   const restock = await screen.findByRole("link", { name: /Need restocking/ });
   expect(restock).toHaveTextContent("11");
   expect(restock).toHaveTextContent("6 sold out");
   expect(restock).toHaveAttribute("href", "/admin/low-stock");
-  expect(screen.getByRole("link", { name: /Open problems/ })).toHaveAttribute("href", "/admin/support");
+  expect(screen.getByRole("link", { name: /Customer messages/ })).toHaveAttribute("href", "/admin/support");
 });
 
 test("best sellers, orders by status and the sales table are listed", async () => {

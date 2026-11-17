@@ -60,7 +60,6 @@ export type Order = {
   createdAt: string;
   items: { productId: number; quantity: number; unitPrice: string; product: { name: string } }[];
   user?: { name: string; email: string }; // only in the admin list
-  issues?: OrderIssue[]; // problems reported with this order (in "my orders")
 };
 
 // Ratings out of 10. average is null while nobody has rated the product.
@@ -75,31 +74,39 @@ export type Review = {
   updatedAt: string;
 };
 
-// A problem a customer reports with an order, and the store's answer.
-export type IssueType = "WRONG_ITEM" | "DAMAGED" | "MISSING_ITEM" | "LATE_DELIVERY" | "OTHER";
-export type IssueStatus = "OPEN" | "RESOLVED";
-export type OrderIssue = {
+// Customer service: a conversation between a customer (or a visitor) and the store.
+export type SupportTopic = "SIGN_IN" | "ORDER" | "DELIVERY" | "RETURN" | "PAYMENT" | "CHANGE" | "OTHER";
+export type SupportStatus = "OPEN" | "ANSWERED" | "RESOLVED"; // waiting for the store / waiting for the customer / solved
+export type SupportMessage = { id: number; author: "CUSTOMER" | "STAFF"; body: string; createdAt: string };
+export type SupportTicket = {
   id: number;
-  orderId: number;
-  type: IssueType;
-  message: string;
-  status: IssueStatus;
-  adminReply: string | null;
+  userId: number | null; // null = a visitor who was not logged in
+  name: string;
+  email: string; // where answers are emailed
+  topic: SupportTopic;
+  orderId: number | null;
+  status: SupportStatus;
+  customerUnread: boolean; // the store answered and the customer hasn't seen it yet
   createdAt: string;
   updatedAt: string;
-  user?: { name: string; email: string }; // admin list only
-  order?: Pick<Order, "id" | "status" | "total" | "createdAt" | "items">; // admin list only
+  messages: SupportMessage[]; // oldest first
+  order: { id: number; status: OrderStatus; total: string; createdAt: string; items: { quantity: number; product: { name: string } }[] } | null;
 };
 
-// An automatic stock alert for the admins (the bell in the admin menu).
+// A notification in the bell: for the admins (stock alerts, customer messages) or for one customer (order news, answers).
 export type Notification = {
   id: number;
-  type: "LOW_STOCK" | "OUT_OF_STOCK";
-  message: string; // e.g. "Stapler is low on stock: 4 left (reorder level 5)"
-  productId: number;
+  // For the admins: LOW_STOCK, OUT_OF_STOCK, SUPPORT_MESSAGE. For one customer: ORDER_*, SUPPORT_ANSWER.
+  type: "LOW_STOCK" | "OUT_OF_STOCK" | "SUPPORT_MESSAGE" | "ORDER_SHIPPED" | "ORDER_DELIVERED" | "ORDER_CANCELLED" | "SUPPORT_ANSWER";
+  message: string; // e.g. "Stapler is low on stock: 4 left (reorder level 5)" or "Your order #12 is on its way"
+  userId: number | null; // null = for the admins
+  productId: number | null; // stock alerts
+  ticketId: number | null; // customer service
+  orderId: number | null; // a customer's order
   readAt: string | null; // null = not read yet
   createdAt: string;
-  product: { name: string; imageUrl: string | null };
+  product: { name: string; imageUrl: string | null } | null;
+  ticket: { id: number; topic: SupportTopic; name: string } | null;
 };
 
 export type ApiErrorBody = {

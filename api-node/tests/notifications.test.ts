@@ -64,8 +64,42 @@ test("admins mark alerts as read, one or all", async () => {
   await request(app).post("/api/notifications/999999/read").set(auth(adminToken)).expect(404);
 });
 
-test("alerts are admin-only", async () => {
+const myBell = async (token = customerToken) => (await request(app).get("/api/notifications").set(auth(token)).expect(200)).body;
+
+test("everyone logged in has a bell, but sees only their own notifications", async () => {
   await request(app).get("/api/notifications").expect(401);
-  await request(app).get("/api/notifications").set(auth(customerToken)).expect(403);
-  await request(app).post("/api/notifications/read-all").set(auth(customerToken)).expect(403);
+  const adminAlert = (await prisma.notification.findFirstOrThrow({ where: { userId: null } })).id;
+  expect((await myBell()).items).toEqual([]); // no stock alerts for customers
+  await request(app).post(`/api/notifications/${adminAlert}/read`).set(auth(customerToken)).expect(404); // not theirs
+});
+
+test("the store shipping, delivering or cancelling an order rings the customer's bell; cancelling it yourself doesn't", async () => {
+  const categoryId = (await prisma.category.findFirstOrThrow()).id;
+  const pens = (await prisma.product.create({ data: { name: "Pens", price: 1, stock: 100, categoryId } })).id;
+  const status = (id: number, next: string) => request(app).patch(`/api/orders/${id}/status`).set(auth(adminToken)).send({ status: next }).expect(200);
+
+  const first = (await order(pens, 1).expect(201)).body.id;
+  await status(first, "SHIPPED");
+  let bell = await myBell();
+  expect(bell.unread).toBe(1);
+  expect(bell.items[0]).toMatchObject({ type: "ORDER_SHIPPED", message: `Your order #${first} is on its way`, orderId: first, readAt: null });
+  await status(first, "DELIVERED");
+  expect((await myBell()).items[0].message).toBe(`Your order #${first} was delivered`);
+
+  const second = (await order(pens, 1).expect(201)).body.id;
+  await request(app).post(`/api/orders/${second}/cancel`).set(auth(customerToken)).expect(200); // the customer did it: no news
+  expect((await myBell()).unread).toBe(2);
+
+  const third = (await order(pens, 1).expect(201)).body.id;
+  await status(third, "CANCELLED");
+  bell = await myBell();
+  expect(bell.items[0]).toMatchObject({ type: "ORDER_CANCELLED", message: `The store cancelled your order #${third}. Questions? Write to customer service.` });
+
+  // The customer reads them; the admins' alerts are not touched
+  const adminUnread = (await alerts()).unread;
+  await request(app).post(`/api/notifications/${bell.items[0].id}/read`).set(auth(customerToken)).expect(204);
+  await request(app).post("/api/notifications/read-all").set(auth(customerToken)).expect(204);
+  expect((await myBell()).unread).toBe(0);
+  expect((await alerts()).unread).toBe(adminUnread);
+  expect((await alerts()).items.some((n: { type: string }) => n.type.startsWith("ORDER_"))).toBe(false); // order news isn't in the admins' bell
 });

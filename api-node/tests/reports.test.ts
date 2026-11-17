@@ -39,7 +39,16 @@ test("the dashboard summary counts products, problems, daily sales and best sell
   await order("DELIVERED", "4.50", daysAgo(3), atLevel.id, 1);
   await order("DELIVERED", "100.00", daysAgo(20), plenty.id, 1);
   await order("DELIVERED", "500.00", daysAgo(40), empty.id, 9); // older than every period
-  await prisma.orderIssue.create({ data: { orderId: today.id, userId, type: "OTHER", message: "Where is my order?" } });
+  // Customer service: one message waiting for an answer, one already answered (not counted)
+  const ticket = {
+    userId,
+    name: "Buyer",
+    email: "buyer@test.dev",
+    orderId: today.id,
+    messages: { create: { author: "CUSTOMER" as const, body: "Where is my order?" } },
+  };
+  await prisma.supportTicket.create({ data: { ...ticket, topic: "DELIVERY" } });
+  await prisma.supportTicket.create({ data: { ...ticket, topic: "OTHER", status: "ANSWERED" } });
 
   // Default period: the last 30 days
   const res = await request(app).get("/api/reports/summary").set(auth(adminToken)).expect(200);

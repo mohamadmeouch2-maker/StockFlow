@@ -28,45 +28,62 @@ enum DeliveryMethod {
   EXPRESS // extra fee, next day
 }
 
-enum IssueType {
-  WRONG_ITEM
-  DAMAGED
-  MISSING_ITEM
-  LATE_DELIVERY
+// Customer service: what a message to the store is about
+enum SupportTopic {
+  SIGN_IN // signing in and my account
+  ORDER // an order (wrong, missing or damaged item...)
+  DELIVERY
+  RETURN
+  PAYMENT // payments and cards
+  CHANGE // change or cancel an order
   OTHER
 }
 
-enum IssueStatus {
-  OPEN
-  RESOLVED
+enum SupportStatus {
+  OPEN // waiting for the store's answer
+  ANSWERED // the store answered: waiting for the customer
+  RESOLVED // solved
+}
+
+// Who wrote a message in a conversation
+enum SupportAuthor {
+  CUSTOMER // the customer (or a visitor who is not logged in)
+  STAFF // an admin, for the store
 }
 
 enum NotificationType {
   LOW_STOCK // stock went down to the reorder level or below
   OUT_OF_STOCK // stock went down to 0
+  SUPPORT_MESSAGE // a customer or a visitor wrote to customer service
+  // For one customer:
+  ORDER_SHIPPED // the store shipped their order
+  ORDER_DELIVERED // their order was delivered
+  ORDER_CANCELLED // the store cancelled their order
+  SUPPORT_ANSWER // customer service answered them
 }
 
 model User {
-  id              Int          @id @default(autoincrement())
+  id              Int             @id @default(autoincrement())
   name            String
-  email           String       @unique
-  passwordHash    String       @map("password_hash")
-  role            Role         @default(CUSTOMER)
+  email           String          @unique
+  passwordHash    String          @map("password_hash")
+  role            Role            @default(CUSTOMER)
   // The delivery address saved in My account (customers); the cart fills it in. null = none saved.
   phone           String?
   city            String?
   address         String?
   // When the user typed the 6-digit code from the Register email. null = not verified: can't log in yet.
-  emailVerifiedAt DateTime?    @map("email_verified_at")
+  emailVerifiedAt DateTime?       @map("email_verified_at")
   // Goes up by 1 when the password changes. A login token remembers the number it was made with,
   // so after a password change every older login (on any device) stops working.
-  tokenVersion    Int          @default(0) @map("token_version")
-  createdAt       DateTime     @default(now()) @map("created_at")
+  tokenVersion    Int             @default(0) @map("token_version")
+  createdAt       DateTime        @default(now()) @map("created_at")
   emailCode       EmailCode?
   orders          Order[]
-  issues          OrderIssue[]
+  supportTickets  SupportTicket[]
   reviews         Review[]
   favorites       Favorite[]
+  notifications   Notification[] // the customer's bell
 
   @@map("users")
 }
@@ -126,26 +143,27 @@ model Product {
 }
 
 model Order {
-  id          Int            @id @default(autoincrement())
-  userId      Int            @map("user_id")
-  user        User           @relation(fields: [userId], references: [id])
-  status      OrderStatus    @default(PENDING)
-  total       Decimal        @db.Decimal(10, 2) // the products + the delivery fee
-  delivery    DeliveryMethod @default(STANDARD)
-  deliveryFee Decimal        @default(0) @map("delivery_fee") @db.Decimal(10, 2)
-  deliverBy   DateTime?      @map("deliver_by") // the latest expected arrival day
+  id             Int             @id @default(autoincrement())
+  userId         Int             @map("user_id")
+  user           User            @relation(fields: [userId], references: [id])
+  status         OrderStatus     @default(PENDING)
+  total          Decimal         @db.Decimal(10, 2) // the products + the delivery fee
+  delivery       DeliveryMethod  @default(STANDARD)
+  deliveryFee    Decimal         @default(0) @map("delivery_fee") @db.Decimal(10, 2)
+  deliverBy      DateTime?       @map("deliver_by") // the latest expected arrival day
   // Where to bring the order, typed in the cart. null only for orders from before Nov 11.
-  phone       String?
-  city        String?
-  address     String? // street, building, floor
+  phone          String?
+  city           String?
+  address        String? // street, building, floor
   // When each step happened, for the tracking timeline (null = not yet, or before Nov 11)
-  shippedAt   DateTime?      @map("shipped_at")
-  deliveredAt DateTime?      @map("delivered_at")
-  cancelledAt DateTime?      @map("cancelled_at")
-  createdAt   DateTime       @default(now()) @map("created_at")
-  updatedAt   DateTime       @updatedAt @map("updated_at")
-  items       OrderItem[]
-  issues      OrderIssue[]
+  shippedAt      DateTime?       @map("shipped_at")
+  deliveredAt    DateTime?       @map("delivered_at")
+  cancelledAt    DateTime?       @map("cancelled_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  items          OrderItem[]
+  supportTickets SupportTicket[]
+  notifications  Notification[] // "shipped", "delivered", "cancelled" in the customer's bell
 
   @@index([userId])
   @@map("orders")
@@ -168,38 +186,68 @@ model Review {
   @@map("reviews")
 }
 
-// A problem a customer reports about one of their orders, and the store's answer.
-model OrderIssue {
-  id         Int         @id @default(autoincrement())
-  orderId    Int         @map("order_id")
-  order      Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  userId     Int         @map("user_id")
-  user       User        @relation(fields: [userId], references: [id])
-  type       IssueType
-  message    String
-  status     IssueStatus @default(OPEN)
-  adminReply String?     @map("admin_reply")
-  createdAt  DateTime    @default(now()) @map("created_at")
-  updatedAt  DateTime    @updatedAt @map("updated_at")
+// Customer service: a conversation between a customer and the store.
+// Visitors who are not logged in can write too (e.g. "I can't sign in"): then userId is null
+// and the answers go to the email they typed.
+model SupportTicket {
+  id             Int              @id @default(autoincrement())
+  userId         Int?             @map("user_id")
+  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String // who wrote: the account's name, or the name a visitor typed
+  email          String // where answers are emailed
+  topic          SupportTopic
+  orderId        Int?             @map("order_id") // the order it is about, if any
+  order          Order?           @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  status         SupportStatus    @default(OPEN)
+  customerUnread Boolean          @default(false) @map("customer_unread") // the store answered and the customer hasn't seen it yet
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at") // the last message (newest conversations first)
+  messages       SupportMessage[]
+  notifications  Notification[]
 
-  @@index([orderId])
   @@index([status])
-  @@map("order_issues")
+  @@index([userId])
+  @@map("support_tickets")
 }
 
-// An automatic alert for the admins, e.g. "Stapler is low on stock: 4 left".
-// Created when an order takes a product down to its reorder level or to 0.
-// The admins share the alerts: when one admin reads it, it is read for all of them.
+// One message in a customer service conversation.
+model SupportMessage {
+  id        Int           @id @default(autoincrement())
+  ticketId  Int           @map("ticket_id")
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    SupportAuthor
+  body      String
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([ticketId])
+  @@map("support_messages")
+}
+
+// A notification in the bell. Two audiences:
+//   userId null: for the admins, shared (when one admin reads it, it is read for all of them).
+//     Stock alerts (productId): an order took a product down to its reorder level or to 0.
+//     Customer service (ticketId): a customer or a visitor wrote.
+//   userId set: for that customer only.
+//     Their order (orderId) was shipped, delivered or cancelled by the store.
+//     Customer service answered them (ticketId).
+// A database rule keeps exactly one of productId, ticketId and orderId.
 model Notification {
   id        Int              @id @default(autoincrement())
   type      NotificationType
   message   String
-  productId Int              @map("product_id")
-  product   Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    Int?             @map("user_id") // null = for the admins
+  user      User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int?             @map("product_id") // stock alerts
+  product   Product?         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  ticketId  Int?             @map("ticket_id") // customer service
+  ticket    SupportTicket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  orderId   Int?             @map("order_id") // a customer's order
+  order     Order?           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   readAt    DateTime?        @map("read_at") // null = not read yet
   createdAt DateTime         @default(now()) @map("created_at")
 
   @@index([readAt])
+  @@index([userId])
   @@map("notifications")
 }
 
