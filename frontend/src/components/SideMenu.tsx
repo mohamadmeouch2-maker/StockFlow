@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { LogoMark } from "./Logo";
+import { useT } from "../i18n/useT";
 
 type Props = { open: boolean; onClose: () => void; children: ReactNode };
 
@@ -8,6 +9,7 @@ type Props = { open: boolean; onClose: () => void; children: ReactNode };
 // It closes with ✕, the Escape key, a click outside it, or a click on a link.
 // While it is open the page behind it can't scroll, and Tab stays inside the menu (Layout makes the page `inert`).
 export function SideMenu({ open, onClose, children }: Props) {
+  const { t } = useT();
   const panel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -41,10 +43,10 @@ export function SideMenu({ open, onClose, children }: Props) {
         id="side-menu"
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={t("Menu")}
         // A click on any link inside closes the menu (also a link to the page that is already open)
         onClick={(e) => (e.target as HTMLElement).closest("a") && onClose()}
-        className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-xl transition-transform duration-200 motion-reduce:transition-none ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-xl transition-transform duration-200 motion-reduce:transition-none ${open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"}`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900">
@@ -56,7 +58,7 @@ export function SideMenu({ open, onClose, children }: Props) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t("Close menu")}
             className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5" aria-hidden="true">
@@ -64,7 +66,7 @@ export function SideMenu({ open, onClose, children }: Props) {
             </svg>
           </button>
         </div>
-        <nav aria-label="Main" className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav aria-label={t("Main")} className="flex-1 space-y-1 overflow-y-auto p-3">
           {children}
         </nav>
       </div>

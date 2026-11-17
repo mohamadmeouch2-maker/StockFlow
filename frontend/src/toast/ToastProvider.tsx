@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ToastContext, type ToastKind } from "./toastContext";
+import { useT } from "../i18n/useT";
 
 type Toast = { id: number; message: string; kind: ToastKind };
 
@@ -25,7 +26,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
       {/* aria-live: screen readers read new messages out loud */}
-      <div aria-live="polite" className="pointer-events-none fixed right-4 bottom-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
+      <div aria-live="polite" className="pointer-events-none fixed end-4 bottom-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={dismiss} />
         ))}
@@ -35,6 +36,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => void }) {
+  const { t } = useT();
   // Errors stay a bit longer, so there is time to read them.
   useEffect(() => {
     const timer = setTimeout(() => onClose(toast.id), toast.kind === "error" ? 6000 : 3500);
@@ -51,7 +53,7 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
         {icon}
       </span>
       <p className="flex-1">{toast.message}</p>
-      <button onClick={() => onClose(toast.id)} aria-label="Close message" className="text-slate-400 hover:text-white">
+      <button onClick={() => onClose(toast.id)} aria-label={t("Close message")} className="text-slate-400 hover:text-white">
         ✕
       </button>
     </div>

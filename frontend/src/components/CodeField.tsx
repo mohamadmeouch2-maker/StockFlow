@@ -1,14 +1,16 @@
 import type { ReactNode, Ref } from "react";
+import { useT } from "../i18n/useT";
 
 type Props = { value: string; onChange: (code: string) => void; onBlur?: () => void; error?: ReactNode; ref?: Ref<HTMLInputElement> };
 
 // The box for the 6-digit code from an email ("Check your email" and "Reset your password").
 // Digits only: "482 913" pasted from the email becomes "482913".
 export function CodeField({ value, onChange, onBlur, error, ref }: Props) {
+  const { t } = useT();
   return (
     <div>
       <label htmlFor="code" className="label">
-        Code
+        {t("Code")}
       </label>
       <input
         id="code"
@@ -26,7 +28,7 @@ export function CodeField({ value, onChange, onBlur, error, ref }: Props) {
       />
       {error && (
         <p id="code-error" className="field-error">
-          {error}
+          {typeof error === "string" ? t(error) : error}
         </p>
       )}
     </div>

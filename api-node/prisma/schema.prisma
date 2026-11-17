@@ -288,3 +288,19 @@ model OrderItem {
 
   @@map("order_items")
 }
+
+// The other currencies the website can show prices in. US dollars are the shop's own currency.
+enum Currency {
+  LBP // Lebanese pound
+  EUR // euro
+}
+
+// Exchange rates for showing prices in other currencies. Prices and orders stay in US dollars:
+// the website only converts them for display. An admin keeps the rates up to date (Dashboard).
+model ExchangeRate {
+  currency  Currency @id
+  rate      Decimal  @db.Decimal(14, 4) // how much of this currency 1 US dollar is, e.g. 89500 (LBP)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("exchange_rates")
+}

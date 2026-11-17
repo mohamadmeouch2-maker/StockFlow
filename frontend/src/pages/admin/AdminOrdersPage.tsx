@@ -7,14 +7,18 @@ import { OrderStatusBadge } from "../../components/OrderStatusBadge";
 import { Pagination } from "../../components/Pagination";
 import { RowsSkeleton } from "../../components/Skeleton";
 import { useToast } from "../../toast/useToast";
+import { useT } from "../../i18n/useT";
+import { msg } from "../../i18n/core";
+import { dateTime } from "../../utils/format";
+import { useCurrency } from "../../currency/useCurrency";
 
 // FR-12 (guide 4.11): all orders with a status filter. Each row shows only the valid next actions.
 const actions: Record<OrderStatus, { label: string; status: Exclude<OrderStatus, "PENDING"> }[]> = {
   PENDING: [
-    { label: "Mark shipped", status: "SHIPPED" },
-    { label: "Cancel", status: "CANCELLED" },
+    { label: msg("Mark shipped"), status: "SHIPPED" },
+    { label: msg("Cancel"), status: "CANCELLED" },
   ],
-  SHIPPED: [{ label: "Mark delivered", status: "DELIVERED" }],
+  SHIPPED: [{ label: msg("Mark delivered"), status: "DELIVERED" }],
   DELIVERED: [],
   CANCELLED: [],
 };
@@ -24,6 +28,8 @@ export function AdminOrdersPage() {
   const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { money } = useCurrency();
+  const { t } = useT();
   // 20 orders per page, newest first
   const orders = useQuery({
     queryKey: ["orders", "all", status, page],
@@ -32,12 +38,15 @@ export function AdminOrdersPage() {
   });
   const d = orders.data;
   const totalPages = d ? Math.max(1, Math.ceil(d.total / d.pageSize)) : 1;
-  const showing = d && d.total > 0 ? `Showing ${(d.page - 1) * d.pageSize + 1}–${(d.page - 1) * d.pageSize + d.items.length} of ${d.total} orders` : "";
+  const showing =
+    d && d.total > 0
+      ? t("Showing {from}–{to} of {count} orders", { from: (d.page - 1) * d.pageSize + 1, to: (d.page - 1) * d.pageSize + d.items.length, count: d.total })
+      : "";
 
   const change = useMutation({
     mutationFn: ({ id, next }: { id: number; next: Exclude<OrderStatus, "PENDING"> }) => ordersApi.setStatus(id, next),
     onSuccess: (order) => {
-      toast(`Order #${order.id} is now ${order.status.toLowerCase()}`);
+      toast(t("Order #{id} is now: {status}", { id: order.id, status: t(order.status.charAt(0) + order.status.slice(1).toLowerCase()) }));
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] }); // a cancel gives stock back
       queryClient.invalidateQueries({ queryKey: ["product"] });
@@ -50,11 +59,11 @@ export function AdminOrdersPage() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h1 className="page-title">Manage orders</h1>
+          <h1 className="page-title">{t("Manage orders")}</h1>
           <p className="text-sm text-slate-500">{showing}</p>
         </div>
         <select
-          aria-label="Filter by status"
+          aria-label={t("Filter by status")}
           value={status ?? ""}
           onChange={(e) => {
             setStatus((e.target.value || undefined) as OrderStatus | undefined);
@@ -62,30 +71,38 @@ export function AdminOrdersPage() {
           }}
           className="input w-auto"
         >
-          <option value="">All statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="SHIPPED">Shipped</option>
-          <option value="DELIVERED">Delivered</option>
-          <option value="CANCELLED">Cancelled</option>
+          <option value="">{t("All statuses")}</option>
+          <option value="PENDING">{t("Pending")}</option>
+          <option value="SHIPPED">{t("Shipped")}</option>
+          <option value="DELIVERED">{t("Delivered")}</option>
+          <option value="CANCELLED">{t("Cancelled")}</option>
         </select>
       </div>
 
       {orders.isLoading && <RowsSkeleton />}
-      {orders.isError && <p className="text-danger-600">Could not load orders. {orders.error.message}</p>}
-      {change.isError && <p className="alert-danger">Could not change the status. {change.error.message}</p>}
-      {d?.items.length === 0 && <div className="card p-10 text-center text-slate-500">No orders with this status.</div>}
+      {orders.isError && (
+        <p className="text-danger-600">
+          {t("Could not load orders.")} {orders.error.message}
+        </p>
+      )}
+      {change.isError && (
+        <p className="alert-danger">
+          {t("Could not change the status.")} {change.error.message}
+        </p>
+      )}
+      {d?.items.length === 0 && <div className="card p-10 text-center text-slate-500">{t("No orders with this status.")}</div>}
 
       {!!d?.items.length && (
         <div className="data-table-wrap">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Order</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Delivery</th>
-                <th>Status</th>
+                <th>{t("Order")}</th>
+                <th>{t("Customer")}</th>
+                <th>{t("Items")}</th>
+                <th>{t("Total")}</th>
+                <th>{t("Delivery")}</th>
+                <th>{t("Status")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -94,7 +111,7 @@ export function AdminOrdersPage() {
                 <tr key={o.id}>
                   <td>
                     <span className="font-medium text-slate-900">#{o.id}</span>
-                    <div className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString()}</div>
+                    <div className="text-xs text-slate-500">{dateTime(o.createdAt)}</div>
                   </td>
                   <td className="max-w-60">
                     <span className="font-medium text-slate-900">{o.user?.name ?? o.userId}</span>
@@ -109,11 +126,11 @@ export function AdminOrdersPage() {
                         </div>
                       </>
                     ) : (
-                      <div className="text-xs text-slate-400">No address (older order)</div>
+                      <div className="text-xs text-slate-400">{t("No address (older order)")}</div>
                     )}
                   </td>
                   <td>{items(o)}</td>
-                  <td>${Number(o.total).toFixed(2)}</td>
+                  <td>{money(o.total)}</td>
                   <td>
                     {/* Express orders first: they must arrive the next day */}
                     <DeliveryBadge delivery={o.delivery} deliverBy={o.status === "PENDING" || o.status === "SHIPPED" ? o.deliverBy : null} onTheWay />
@@ -121,7 +138,7 @@ export function AdminOrdersPage() {
                   <td>
                     <OrderStatusBadge status={o.status} />
                   </td>
-                  <td className="space-x-2 text-right whitespace-nowrap">
+                  <td className="space-x-2 text-end whitespace-nowrap">
                     {actions[o.status].map((a) => (
                       <button
                         key={a.status}
@@ -129,7 +146,7 @@ export function AdminOrdersPage() {
                         onClick={() => change.mutate({ id: o.id, next: a.status })}
                         className={a.status === "CANCELLED" ? "btn btn-danger px-3 py-1" : "btn btn-primary px-3 py-1"}
                       >
-                        {a.label}
+                        {t(a.label)}
                       </button>
                     ))}
                   </td>

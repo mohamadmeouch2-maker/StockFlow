@@ -146,7 +146,7 @@
 
   /* Numbers next to menu links: blue = just a count, red = something needs your attention */
   .count {
-    @apply ml-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold text-white;
+    @apply ms-1.5 rounded-full px-1.5 py-0.5 text-xs font-semibold text-white;
   }
   .count-brand {
     @apply bg-brand-600;
@@ -165,7 +165,7 @@
     @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm;
   }
   .data-table {
-    @apply w-full text-left text-sm;
+    @apply w-full text-start text-sm;
   }
   .data-table th {
     @apply bg-slate-50 px-4 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase;

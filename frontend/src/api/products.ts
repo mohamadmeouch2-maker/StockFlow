@@ -1,14 +1,15 @@
 import { api } from "./client";
 import type { Category, Paged, Product } from "./types";
+import { msg } from "../i18n/core";
 
 // How the product list can be sorted (the API does the sorting).
 export type ProductSort = "name" | "price_asc" | "price_desc" | "rating" | "newest";
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
-  { value: "name", label: "Name (A–Z)" },
-  { value: "price_asc", label: "Price: low to high" },
-  { value: "price_desc", label: "Price: high to low" },
-  { value: "rating", label: "Best rated" },
-  { value: "newest", label: "Newest" },
+  { value: "name", label: msg("Name (A–Z)") },
+  { value: "price_asc", label: msg("Price: low to high") },
+  { value: "price_desc", label: msg("Price: high to low") },
+  { value: "rating", label: msg("Best rated") },
+  { value: "newest", label: msg("Newest") },
 ];
 
 export type ProductInput = Omit<Product, "id" | "category" | "price" | "imageUrl"> & { price: number };

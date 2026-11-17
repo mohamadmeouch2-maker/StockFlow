@@ -11,9 +11,11 @@ import { SaleBanner } from "../components/SaleBanner";
 import { ProductCardsSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useDebounce } from "../hooks/useDebounce";
+import { useT } from "../i18n/useT";
 
 // FR-04: product list with search, category filter and pagination (guide 4.7).
 export function ProductsPage() {
+  const { t } = useT();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number>();
@@ -44,26 +46,29 @@ export function ProductsPage() {
 
   // "Showing 1–12 of 15 products"
   const d = products.data;
-  const showing = d && d.total > 0 ? `Showing ${(d.page - 1) * d.pageSize + 1}–${(d.page - 1) * d.pageSize + d.items.length} of ${d.total} products` : "";
+  const showing =
+    d && d.total > 0
+      ? t("Showing {from}–{to} of {count} products", { from: (d.page - 1) * d.pageSize + 1, to: (d.page - 1) * d.pageSize + d.items.length, count: d.total })
+      : "";
 
   return (
     <section id="catalog" className="scroll-mt-20 space-y-5">
       <SaleBanner showingDeals={onSale} onToggle={toggleDeals} />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="page-title">{onSale ? "Christmas deals 🎁" : "Our products"}</h2>
+          <h2 className="page-title">{onSale ? t("Christmas deals 🎁") : t("Our products")}</h2>
           <p className="text-sm text-slate-500">{showing}</p>
         </div>
         <div className="relative w-full sm:w-80">
           <label className="sr-only" htmlFor="search">
-            Search
+            {t("Search")}
           </label>
           <svg
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            className="pointer-events-none absolute top-2.5 left-3 h-5 w-5 text-slate-400"
+            className="pointer-events-none absolute top-2.5 start-3 h-5 w-5 text-slate-400"
             aria-hidden="true"
           >
             <circle cx="11" cy="11" r="7" />
@@ -71,8 +76,8 @@ export function ProductsPage() {
           </svg>
           <input
             id="search"
-            className="input pl-10"
-            placeholder="Search products"
+            className="input ps-10"
+            placeholder={t("Search products")}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -84,8 +89,8 @@ export function ProductsPage() {
 
       {/* Category buttons (FR-04 filter) on the left, sorting and "in stock only" on the right */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Category">
-          {[{ id: undefined, name: "All categories" }, ...(categories.data ?? [])].map((c) => {
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t("Category")}>
+          {[{ id: undefined, name: t("All categories") }, ...(categories.data ?? [])].map((c) => {
             const active = categoryId === c.id;
             return (
               <button
@@ -114,10 +119,10 @@ export function ProductsPage() {
               }}
               className="h-4 w-4 accent-brand-600"
             />
-            In stock only
+            {t("In stock only")}
           </label>
           <label className="flex items-center gap-2 text-sm font-medium text-slate-600">
-            Sort by
+            {t("Sort by")}
             <select
               value={sort}
               onChange={(e) => {
@@ -128,7 +133,7 @@ export function ProductsPage() {
             >
               {SORT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
-                  {o.label}
+                  {t(o.label)}
                 </option>
               ))}
             </select>
@@ -137,27 +142,31 @@ export function ProductsPage() {
       </div>
 
       {products.isLoading && <ProductCardsSkeleton />}
-      {products.isError && <p className="text-danger-600">Could not load products. {products.error.message}</p>}
+      {products.isError && (
+        <p className="text-danger-600">
+          {t("Could not load products.")} {products.error.message}
+        </p>
+      )}
       {products.data?.items.length === 0 && (
         <div className="card p-10 text-center text-slate-500">
-          <p className="text-lg font-medium text-slate-700">No products match your search.</p>
-          <p className="text-sm">Try another word or category.</p>
+          <p className="text-lg font-medium text-slate-700">{t("No products match your search.")}</p>
+          <p className="text-sm">{t("Try another word or category.")}</p>
         </div>
       )}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {products.data?.items.map((p) => (
           <li key={p.id} className="card card-hover group relative flex gap-4 p-4">
-            <FavoriteButton product={p} className="absolute top-2 right-2" />
+            <FavoriteButton product={p} className="absolute top-2 end-2" />
             <Link to={`/products/${p.id}`} className="relative shrink-0">
               <ProductImage src={p.imageUrl} alt={p.name} className="h-24 w-24" />
               {p.salePrice && (
-                <span className="absolute -top-2 -left-2 rounded-full bg-sale-600 px-2 py-0.5 text-xs font-bold text-white shadow" aria-hidden="true">
-                  🎁 Sale
+                <span className="absolute -top-2 -start-2 rounded-full bg-sale-600 px-2 py-0.5 text-xs font-bold text-white shadow" aria-hidden="true">
+                  {t("🎁 Sale")}
                 </span>
               )}
             </Link>
-            <div className="flex min-w-0 flex-1 flex-col pr-6">
+            <div className="flex min-w-0 flex-1 flex-col pe-6">
               <span className="text-xs font-medium tracking-wide text-slate-400 uppercase">{p.category?.name}</span>
               <Link to={`/products/${p.id}`} className="font-semibold text-slate-900 group-hover:text-brand-700">
                 {p.name}
@@ -172,7 +181,7 @@ export function ProductsPage() {
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                 <StockBadge product={p} />
                 <Link to={`/products/${p.id}`} className="text-sm font-medium whitespace-nowrap text-brand-600 hover:underline">
-                  View details →
+                  {t("View details →")}
                 </Link>
               </div>
             </div>

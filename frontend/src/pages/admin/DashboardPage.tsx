@@ -5,15 +5,19 @@ import { reportsApi, type Summary } from "../../api/reports";
 import type { OrderStatus } from "../../api/types";
 import { OrderStatusBadge } from "../../components/OrderStatusBadge";
 import { ProductImage } from "../../components/ProductImage";
+import { RatesCard } from "../../components/RatesCard";
 import { SaleCard } from "../../components/SaleCard";
 import { SalesChart } from "../../components/SalesChart";
 import { DashboardSkeleton } from "../../components/Skeleton";
-import { dayToDate, money } from "../../utils/format";
+import { dayToDate } from "../../utils/format";
+import { useT } from "../../i18n/useT";
+import { useCurrency } from "../../currency/useCurrency";
 
 const PERIODS = [7, 14, 30]; // days the admin can choose; 30 is the default (FR-14)
 
 // The admin's home page: how the store is doing, at a glance.
 export function DashboardPage() {
+  const { t, locale } = useT();
   const [days, setDays] = useState(30);
   const summary = useQuery({
     queryKey: ["reports", "summary", days],
@@ -22,22 +26,28 @@ export function DashboardPage() {
     placeholderData: keepPreviousData, // keep the old numbers on screen while the new period loads
   });
   const s = summary.data;
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric" });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="page-title">Dashboard</h1>
-          <p className="text-sm text-slate-500">How the store is doing · {today}</p>
+          <h1 className="page-title">{t("Dashboard")}</h1>
+          <p className="text-sm text-slate-500">
+            {t("How the store is doing")} · {today}
+          </p>
         </div>
         <Link to="/admin/products/new" className="btn btn-primary">
-          + New product
+          {t("+ New product")}
         </Link>
       </div>
 
       {summary.isLoading && <DashboardSkeleton />}
-      {summary.isError && <p className="text-danger-600">Could not load the dashboard. {summary.error.message}</p>}
+      {summary.isError && (
+        <p className="text-danger-600">
+          {t("Could not load the dashboard.")} {summary.error.message}
+        </p>
+      )}
       {s && <Dashboard s={s} days={days} onDays={setDays} updating={summary.isPlaceholderData} />}
     </div>
   );
@@ -46,66 +56,76 @@ export function DashboardPage() {
 type DashboardProps = { s: Summary; days: number; onDays: (days: number) => void; updating: boolean };
 
 function Dashboard({ s, days, onDays, updating }: DashboardProps) {
+  const { t, locale } = useT();
+  const { money } = useCurrency();
   // This week (the last 7 days) compared with the 7 days before it.
   const sales = Number(s.thisWeek.revenue);
   const before = Number(s.lastWeek.revenue);
   const change = before > 0 ? Math.round(((sales - before) / before) * 100) : null;
   const allOrders = Object.values(s.ordersByStatus).reduce((a, b) => a + b, 0);
   const bestSold = s.bestSellers[0]?.sold ?? 0;
-  const period = `the last ${s.days} days`;
 
   return (
     <>
       {/* The four main numbers */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
-          label="Sales, last 7 days"
+          label={t("Sales, last 7 days")}
           icon="💵"
           value={money(sales)}
           note={
             change === null ? (
-              <span className="text-slate-500">No sales the week before</span>
+              <span className="text-slate-500">{t("No sales the week before")}</span>
             ) : (
               <span className={change >= 0 ? "text-success-700" : "text-danger-600"}>
-                {change >= 0 ? "▲" : "▼"} {Math.abs(change)}% <span className="text-slate-500">vs the week before</span>
+                {change >= 0 ? "▲" : "▼"} {Math.abs(change)}% <span className="text-slate-500">{t("vs the week before")}</span>
               </span>
             )
           }
         />
         <StatTile
-          label="Orders, last 7 days"
+          label={t("Orders, last 7 days")}
           icon="🧾"
           value={String(s.thisWeek.orders)}
           to="/admin/orders"
-          note={<span className="text-slate-500">{s.lastWeek.orders} the week before</span>}
+          note={<span className="text-slate-500">{t("{count} the week before", { count: s.lastWeek.orders })}</span>}
         />
         <StatTile
-          label="Need restocking"
+          label={t("Need restocking")}
           icon="📦"
           value={String(s.products.lowStock)}
           to="/admin/low-stock"
           note={
             s.products.soldOut > 0 ? (
-              <span className="text-warning-700">⚠ {s.products.soldOut} sold out</span>
+              <span className="text-warning-700">⚠ {t("{count} sold out", { count: s.products.soldOut })}</span>
             ) : (
-              <span className="text-slate-500">of {s.products.total} products</span>
+              <span className="text-slate-500">{t("of {count} products", { count: s.products.total })}</span>
             )
           }
         />
         <StatTile
-          label="Customer messages"
+          label={t("Customer messages")}
           icon="💬"
           value={String(s.openIssues)}
           to="/admin/support"
-          note={s.openIssues > 0 ? <span className="text-warning-700">⚠ Waiting for an answer</span> : <span className="text-success-700">✓ All answered</span>}
+          note={
+            s.openIssues > 0 ? (
+              <span className="text-warning-700">⚠ {t("Waiting for an answer")}</span>
+            ) : (
+              <span className="text-success-700">✓ {t("All answered")}</span>
+            )
+          }
         />
       </div>
 
-      <SaleCard />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SaleCard />
+        <RatesCard />
+      </div>
 
       {/* The period: everything below shows only these days */}
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Period">
-        <span className="mr-1 text-sm font-medium text-slate-600">Show:</span>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("Period")}>
+        <span className="me-1 text-sm font-medium text-slate-600">{t("Show:")}</span>
         {PERIODS.map((d) => (
           <button
             key={d}
@@ -117,7 +137,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
                 : "border-slate-300 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700"
             }`}
           >
-            Last {d} days
+            {t("Last {count} days", { count: d })}
           </button>
         ))}
       </div>
@@ -127,24 +147,24 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Sales per day (FR-14) */}
           <section className="card p-5 lg:col-span-2">
-            <h2 className="font-semibold text-slate-900">Sales per day</h2>
-            <p className="mb-4 text-sm text-slate-500">Cancelled orders are not counted. Point at a day to see its numbers.</p>
+            <h2 className="font-semibold text-slate-900">{t("Sales per day")}</h2>
+            <p className="mb-4 text-sm text-slate-500">{t("Cancelled orders are not counted. Point at a day to see its numbers.")}</p>
             <SalesChart days={s.salesByDay} />
             {/* The same numbers as a table, for people who can't see the chart */}
             <details className="mt-3 text-sm">
-              <summary className="cursor-pointer font-medium text-brand-600 hover:underline">Show as a table</summary>
+              <summary className="cursor-pointer font-medium text-brand-600 hover:underline">{t("Show as a table")}</summary>
               <table className="data-table mt-2">
                 <thead>
                   <tr>
-                    <th>Day</th>
-                    <th>Orders</th>
-                    <th>Sales</th>
+                    <th>{t("Day")}</th>
+                    <th>{t("Orders")}</th>
+                    <th>{t("Sales")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {s.salesByDay.map((d) => (
                     <tr key={d.date}>
-                      <td>{dayToDate(d.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}</td>
+                      <td>{dayToDate(d.date).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })}</td>
                       <td>{d.orders}</td>
                       <td className="tabular-nums">{money(Number(d.revenue))}</td>
                     </tr>
@@ -156,10 +176,8 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
 
           {/* Orders by status */}
           <section className="card flex flex-col p-5">
-            <h2 className="font-semibold text-slate-900">Orders by status</h2>
-            <p className="mb-4 text-sm text-slate-500">
-              {allOrders} orders in {period}
-            </p>
+            <h2 className="font-semibold text-slate-900">{t("Orders by status")}</h2>
+            <p className="mb-4 text-sm text-slate-500">{t("{count} orders in the last {days} days", { count: allOrders, days: s.days })}</p>
             <ul className="space-y-4">
               {(Object.keys(s.ordersByStatus) as OrderStatus[]).map((status) => (
                 <li key={status}>
@@ -172,7 +190,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
               ))}
             </ul>
             <Link to="/admin/orders" className="link mt-auto pt-4 text-sm">
-              Manage orders →
+              {t("Manage orders →")}
             </Link>
           </section>
         </div>
@@ -180,9 +198,9 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Best sellers: the top 5 (FR-15) */}
           <section className="card p-5 lg:col-span-2">
-            <h2 className="font-semibold text-slate-900">Best sellers</h2>
-            <p className="mb-4 text-sm text-slate-500">Pieces sold in {period}</p>
-            {s.bestSellers.length === 0 && <p className="text-sm text-slate-500">No sales in this period.</p>}
+            <h2 className="font-semibold text-slate-900">{t("Best sellers")}</h2>
+            <p className="mb-4 text-sm text-slate-500">{t("Pieces sold in the last {days} days", { days: s.days })}</p>
+            {s.bestSellers.length === 0 && <p className="text-sm text-slate-500">{t("No sales in this period.")}</p>}
             <ol className="space-y-3">
               {s.bestSellers.map((b, i) => (
                 <li key={b.productId} className="flex items-center gap-3">
@@ -193,7 +211,7 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
                       <Link to={`/products/${b.productId}`} className="truncate font-medium text-slate-900 hover:text-brand-700">
                         {b.name}
                       </Link>
-                      <span className="whitespace-nowrap text-slate-500">{b.sold} sold</span>
+                      <span className="whitespace-nowrap text-slate-500">{t("{count} sold", { count: b.sold })}</span>
                     </div>
                     <Meter value={b.sold} max={bestSold} />
                   </div>
@@ -204,21 +222,21 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
 
           {/* Shortcuts */}
           <section className="card flex flex-col gap-2 p-5">
-            <h2 className="mb-2 font-semibold text-slate-900">Quick actions</h2>
+            <h2 className="mb-2 font-semibold text-slate-900">{t("Quick actions")}</h2>
             <Link to="/admin/products/new" className="btn btn-primary">
-              + Add a product
+              {t("+ Add a product")}
             </Link>
             <Link to="/admin/categories" className="btn btn-outline">
-              Manage categories
+              {t("Manage categories")}
             </Link>
             <Link to="/admin/low-stock" className="btn btn-outline">
-              Restock low items ({s.products.lowStock})
+              {t("Restock low items ({count})", { count: s.products.lowStock })}
             </Link>
             <Link to="/admin/support" className="btn btn-outline">
-              Answer customers ({s.openIssues})
+              {t("Answer customers ({count})", { count: s.openIssues })}
             </Link>
             <Link to="/products" className="btn btn-outline">
-              See the shop as customers do
+              {t("See the shop as customers do")}
             </Link>
           </section>
         </div>

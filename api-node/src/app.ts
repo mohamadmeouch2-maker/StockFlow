@@ -4,6 +4,7 @@ import { uploadRoot } from "./lib/uploads";
 import { errorHandler } from "./middleware/error";
 import { accountRouter } from "./modules/account/account.routes";
 import { authRouter } from "./modules/auth/auth.routes";
+import { currenciesRouter } from "./modules/currencies/currencies.routes";
 import { categoriesRouter } from "./modules/categories/categories.routes";
 import { favoritesRouter } from "./modules/favorites/favorites.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
@@ -40,6 +41,7 @@ app.use("/api/notifications", notificationsRouter); // stock alerts for admins
 app.use("/api/favorites", favoritesRouter); // customers' saved products
 app.use("/api/promotions", promotionsRouter); // sales, e.g. the Christmas Sale
 app.use("/api/support", supportRouter); // Customer service: customers and visitors write, admins answer
+app.use("/api/currencies", currenciesRouter); // exchange rates for showing prices in LBP or EUR
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "NOT_FOUND", message: "Route not found", details: [] } });
 });

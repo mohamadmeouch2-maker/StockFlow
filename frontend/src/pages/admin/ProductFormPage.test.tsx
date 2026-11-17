@@ -26,7 +26,7 @@ const renderForm = () =>
 
 test("shows validation errors and does not submit invalid data (FR-11)", async () => {
   renderForm();
-  await userEvent.type(await screen.findByLabelText("Price"), "-5");
+  await userEvent.type(await screen.findByLabelText("Price (US dollars)"), "-5");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
   expect(await screen.findByText("At least 2 characters")).toBeInTheDocument();
   expect(screen.getByText("Must be above 0")).toBeInTheDocument();
@@ -37,7 +37,7 @@ test("shows validation errors and does not submit invalid data (FR-11)", async (
 test("submits valid data as numbers (FR-11)", async () => {
   renderForm();
   await userEvent.type(await screen.findByLabelText("Name"), "Stapler");
-  await userEvent.type(screen.getByLabelText("Price"), "4.5");
+  await userEvent.type(screen.getByLabelText("Price (US dollars)"), "4.5");
   await userEvent.type(screen.getByLabelText("Stock"), "10");
   await userEvent.selectOptions(screen.getByLabelText("Category"), "1");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));
@@ -53,7 +53,7 @@ test("uploads the chosen photo for the new product after saving (FR-17)", async 
   await userEvent.upload(await screen.findByLabelText("Photo"), photo);
   expect(screen.getByAltText("New photo preview")).toBeInTheDocument();
   await userEvent.type(screen.getByLabelText("Name"), "Stapler");
-  await userEvent.type(screen.getByLabelText("Price"), "4.5");
+  await userEvent.type(screen.getByLabelText("Price (US dollars)"), "4.5");
   await userEvent.type(screen.getByLabelText("Stock"), "10");
   await userEvent.selectOptions(screen.getByLabelText("Category"), "1");
   await userEvent.click(screen.getByRole("button", { name: "Save" }));

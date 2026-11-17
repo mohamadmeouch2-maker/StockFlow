@@ -12,12 +12,23 @@ import { ProductImage } from "../components/ProductImage";
 import { useToast } from "../toast/useToast";
 import { addDays, effectivePrice, shortDate } from "../utils/format";
 import { shipToSchema } from "../utils/validation";
+import { useT } from "../i18n/useT";
+import { t as tr, tx } from "../i18n/core";
+import { useCurrency } from "../currency/useCurrency";
+import { formatMoney } from "../currency/money";
 
 // "Next day" or "3–5 days"
-const howLong = (o: DeliveryOption) => (o.maxDays === 1 ? "Next day" : o.minDays === o.maxDays ? `${o.maxDays} days` : `${o.minDays}–${o.maxDays} days`);
+const howLong = (o: DeliveryOption) =>
+  o.maxDays === 1
+    ? tr("Next day")
+    : o.minDays === o.maxDays
+      ? tr("{count} days", { count: o.maxDays })
+      : tr("{min}–{count} days", { min: o.minDays, count: o.maxDays });
 
 // FR-06 / FR-07: review the cart and place the order (guide 4.8).
 export function CartPage() {
+  const { t, locale } = useT();
+  const { money, currency, rate } = useCurrency();
   const { items, setQuantity, remove, clear } = useCart();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -55,7 +66,7 @@ export function CartPage() {
       queryClient.invalidateQueries({ queryKey: ["product"] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
       navigate("/orders");
-      toast(`Order #${order.id} placed. It arrives by ${shortDate(order.deliverBy ?? new Date())}. Thank you!`);
+      toast(t("Order #{id} placed. It arrives by {date}. Thank you!", { id: order.id, date: shortDate(order.deliverBy ?? new Date()) }));
     },
     // A field the server didn't accept: its message goes under that field
     onError: (err) => {
@@ -72,10 +83,10 @@ export function CartPage() {
     return (
       <div className="card mx-auto max-w-md space-y-4 p-10 text-center">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-50 text-2xl">🛒</div>
-        <h1 className="page-title">Your cart is empty</h1>
-        <p className="text-slate-500">Find something you need and add it to your cart.</p>
+        <h1 className="page-title">{t("Your cart is empty")}</h1>
+        <p className="text-slate-500">{t("Find something you need and add it to your cart.")}</p>
         <Link to="/products" className="btn btn-primary">
-          Browse products
+          {t("Browse products")}
         </Link>
       </div>
     );
@@ -84,7 +95,7 @@ export function CartPage() {
 
   return (
     <div className="space-y-5">
-      <h1 className="page-title">Your cart</h1>
+      <h1 className="page-title">{t("Your cart")}</h1>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <ul className="card divide-y divide-slate-100">
@@ -96,13 +107,19 @@ export function CartPage() {
                     {product.name}
                   </Link>
                   <p className="text-sm text-slate-500">
-                    {product.salePrice && <del className="mr-1">${Number(product.price).toFixed(2)}</del>}
-                    <span className={product.salePrice ? "font-medium text-sale-600" : ""}>${effectivePrice(product).toFixed(2)}</span> each
-                    {product.promotion && <span className="ml-1 rounded bg-sale-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
+                    {product.salePrice && <del className="me-1">{money(product.price)}</del>}
+                    {tx("{price} each", {
+                      price: (
+                        <span key="price" className={product.salePrice ? "font-medium text-sale-600" : ""}>
+                          {money(effectivePrice(product))}
+                        </span>
+                      ),
+                    })}
+                    {product.promotion && <span className="ms-1 rounded bg-sale-600 px-1 text-xs font-bold text-white">-{product.promotion.percent}%</span>}
                   </p>
                 </div>
                 <label className="sr-only" htmlFor={`qty-${product.id}`}>
-                  Quantity of {product.name}
+                  {t("Quantity of {name}", { name: product.name })}
                 </label>
                 <input
                   id={`qty-${product.id}`}
@@ -113,9 +130,9 @@ export function CartPage() {
                   onChange={(e) => setQuantity(product.id, Number(e.target.value))}
                   className="input w-20"
                 />
-                <span className="w-20 text-right font-semibold">${(effectivePrice(product) * quantity).toFixed(2)}</span>
+                <span className="min-w-20 text-end font-semibold">{money(effectivePrice(product) * quantity)}</span>
                 <button onClick={() => remove(product.id)} className="text-sm text-danger-600 hover:underline">
-                  Remove
+                  {t("Remove")}
                 </button>
               </li>
             ))}
@@ -125,18 +142,21 @@ export function CartPage() {
           <form id="checkout" onSubmit={handleSubmit((shipTo) => placeOrder.mutate(shipTo))} className="card space-y-4 p-6">
             <div>
               <h2 className="font-semibold text-slate-900">
-                <span aria-hidden="true">📍 </span>Delivery address
+                <span aria-hidden="true">📍 </span>
+                {t("Delivery address")}
               </h2>
               <p className="text-sm text-slate-500">
                 {saved.data
-                  ? `Filled in from ${saved.data.from === "account" ? "My account" : "your last order"}. Change it if this one goes somewhere else.`
-                  : "Where should we bring your order?"}
+                  ? saved.data.from === "account"
+                    ? t("Filled in from My account. Change it if this one goes somewhere else.")
+                    : t("Filled in from your last order. Change it if this one goes somewhere else.")
+                  : t("Where should we bring your order?")}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormField
                 id="phone"
-                label="Phone number"
+                label={t("Phone number")}
                 type="tel"
                 autoComplete="tel"
                 placeholder="+961 70 123 456"
@@ -146,9 +166,9 @@ export function CartPage() {
               />
               <FormField
                 id="city"
-                label="City"
+                label={t("City")}
                 autoComplete="address-level2"
-                placeholder="Beirut"
+                placeholder={t("Beirut")}
                 maxLength={60}
                 {...register("city")}
                 error={errors.city?.message}
@@ -156,27 +176,27 @@ export function CartPage() {
             </div>
             <div>
               <label htmlFor="address" className="label">
-                Address
+                {t("Address")}
               </label>
               <textarea
                 id="address"
                 rows={2}
                 autoComplete="street-address"
-                placeholder="Street, building, floor"
+                placeholder={t("Street, building, floor")}
                 maxLength={300}
                 {...register("address")}
                 className="input"
               />
-              {errors.address && <p className="field-error">{errors.address.message}</p>}
+              {errors.address?.message && <p className="field-error">{t(errors.address.message)}</p>}
             </div>
           </form>
         </div>
 
         <div className="card h-fit space-y-4 p-6">
-          <h2 className="font-semibold text-slate-900">Order summary</h2>
+          <h2 className="font-semibold text-slate-900">{t("Order summary")}</h2>
           {/* Delivery: the same products, faster for a higher price */}
           <fieldset className="space-y-2">
-            <legend className="label">Delivery</legend>
+            <legend className="label">{t("Delivery")}</legend>
             {options.data?.map((o) => {
               const chosen = delivery === o.id;
               return (
@@ -191,44 +211,60 @@ export function CartPage() {
                     <span className="flex justify-between gap-2 font-medium text-slate-900">
                       <span>
                         <span aria-hidden="true">{o.id === "EXPRESS" ? "⚡ " : "🚚 "}</span>
-                        {o.label}
+                        {t(o.label)}
                       </span>
-                      <span>{Number(o.fee) === 0 ? "Free" : `+$${o.fee}`}</span>
+                      <span>{Number(o.fee) === 0 ? t("Free") : `+${money(o.fee)}`}</span>
                     </span>
                     <span className="block text-sm text-slate-500">
-                      {howLong(o)} · arrives by {shortDate(addDays(o.maxDays))}
+                      {howLong(o)} · {t("arrives by {date}", { date: shortDate(addDays(o.maxDays)) })}
                     </span>
                   </span>
                 </label>
               );
             })}
-            {options.isError && <p className="text-sm text-slate-500">Standard delivery (free) will be used.</p>}
+            {options.isError && <p className="text-sm text-slate-500">{t("Standard delivery (free) will be used.")}</p>}
           </fieldset>
 
           <div className="space-y-1.5 border-t border-slate-100 pt-4 text-sm text-slate-600">
             <div className="flex justify-between">
-              <span>Items ({pieces})</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{t("Items ({count})", { count: pieces })}</span>
+              <span>{money(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Delivery</span>
-              <span>{deliveryFee === 0 ? "Free" : `$${deliveryFee.toFixed(2)}`}</span>
+              <span>{t("Delivery")}</span>
+              <span>{deliveryFee === 0 ? t("Free") : money(deliveryFee)}</span>
             </div>
           </div>
           <div className="flex justify-between border-t border-slate-100 pt-4 text-lg font-bold text-slate-900">
-            <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>{t("Total")}</span>
+            <span>{money(total)}</span>
           </div>
-          <p className="text-xs text-slate-500">The final total is calculated by the server from the current prices.</p>
+          {/* Another currency: say the rate, and that the order itself is in US dollars */}
+          {currency !== "USD" && (
+            <p className="text-xs text-slate-500">
+              {t("Converted at 1 USD = {rate} {currency}. The order is saved in US dollars: {usd}.", {
+                rate: rate.toLocaleString(locale),
+                currency,
+                usd: formatMoney(total, "USD", 1, locale),
+              })}
+            </p>
+          )}
+          <p className="text-xs text-slate-500">{t("The final total is calculated by the server from the current prices.")}</p>
 
           {placeOrder.error instanceof ApiError && placeOrder.error.code === "INSUFFICIENT_STOCK" ? (
-            <p className="alert-danger">Some items are no longer available ({placeOrder.error.message}). Adjust quantities and try again.</p>
+            <p className="alert-danger">
+              {t("Some items are no longer available ({reason}). Adjust quantities and try again.", { reason: placeOrder.error.message })}
+            </p>
           ) : (
-            placeOrder.isError && <p className="alert-danger">Could not place the order. {placeOrder.error.message}</p>
+            placeOrder.isError && (
+              <p className="alert-danger">
+                {t("Could not place the order.")} {placeOrder.error.message}
+              </p>
+            )
           )}
 
           <button type="submit" form="checkout" disabled={placeOrder.isPending} className="btn btn-primary w-full py-2.5">
-            {placeOrder.isPending ? "Placing order..." : "Place order"}
+            {placeOrder.isPending ? t("Placing order...") : t("Place order")}
           </button>
         </div>
       </div>

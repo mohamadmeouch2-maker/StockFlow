@@ -1,17 +1,19 @@
 import type { ComponentProps } from "react";
+import { useT } from "../i18n/useT";
 
 // ComponentProps<"input"> includes `ref`, so react-hook-form's register() can be spread in.
 type Props = ComponentProps<"input"> & { id: string; label: string; error?: string };
 
 // A label, an input and its red error message (NFR-10: every field has a label).
 export function FormField({ id, label, error, ...input }: Props) {
+  const { t } = useT();
   return (
     <div>
       <label htmlFor={id} className="label">
         {label}
       </label>
       <input id={id} {...input} className="input" />
-      {error && <p className="field-error">{error}</p>}
+      {error && <p className="field-error">{t(error)}</p>}
     </div>
   );
 }

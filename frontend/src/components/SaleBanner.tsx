@@ -2,9 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { promotionsApi } from "../api/promotions";
 import { shortDate } from "../utils/format";
 import { Snow } from "./ChristmasSalePopup";
+import { useT } from "../i18n/useT";
 
 // On the products page while a sale is on: "Christmas Sale: 30% off 11 products" + a button to see only those.
 export function SaleBanner({ showingDeals, onToggle }: { showingDeals: boolean; onToggle: () => void }) {
+  const { t } = useT();
   const sale = useQuery({ queryKey: ["promotion"], queryFn: promotionsApi.current, staleTime: 60_000 });
   const promo = sale.data;
   if (!promo) return null;
@@ -18,13 +20,13 @@ export function SaleBanner({ showingDeals, onToggle }: { showingDeals: boolean; 
           </span>
           <div>
             <p className="text-lg font-bold">
-              {promo.name}: {promo.percent}% off {promo.productCount} products
+              {t("{name}: {percent}% off {count} products", { name: promo.name, percent: promo.percent, count: promo.productCount ?? 0 })}
             </p>
-            <p className="text-sm text-white/80">Until {shortDate(promo.endsAt)}, while stocks last</p>
+            <p className="text-sm text-white/80">{t("Until {date}, while stocks last", { date: shortDate(promo.endsAt) })}</p>
           </div>
         </div>
         <button onClick={onToggle} aria-pressed={showingDeals} className="btn bg-white font-semibold text-red-700 hover:bg-amber-50">
-          {showingDeals ? "Show all products" : "Show the deals 🎄"}
+          {showingDeals ? t("Show all products") : t("Show the deals 🎄")}
         </button>
       </div>
     </div>

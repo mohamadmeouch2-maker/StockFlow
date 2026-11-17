@@ -15,6 +15,8 @@ import { ProductDetailSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useToast } from "../toast/useToast";
 import { shortDate } from "../utils/format";
+import { useT } from "../i18n/useT";
+import { tx } from "../i18n/core";
 
 // Counts one view per product per visit (not on every refresh).
 function useCountView(id: number) {
@@ -28,6 +30,7 @@ function useCountView(id: number) {
 
 // FR-05: name, description, price, category and stock status of one product.
 export function ProductDetailPage() {
+  const { t } = useT();
   const id = Number(useParams().id);
   const product = useQuery({ queryKey: ["product", id], queryFn: () => productsApi.get(id) });
   const p = product.data;
@@ -35,9 +38,9 @@ export function ProductDetailPage() {
 
   return (
     <div className="space-y-5">
-      <nav className="text-sm text-slate-500" aria-label="Breadcrumb">
+      <nav className="text-sm text-slate-500" aria-label={t("Breadcrumb")}>
         <Link to="/products" className="link">
-          Products
+          {t("Products")}
         </Link>
         {p && <span> / {p.category?.name} / </span>}
         {p && <span className="text-slate-700">{p.name}</span>}
@@ -77,15 +80,15 @@ export function ProductDetailPage() {
               <StockBadge product={p} />
               <span className="text-sm text-slate-500">{p.stock} left</span>
             </div>
-            <p className="text-slate-600">{p.description || "No description."}</p>
+            <p className="text-slate-600">{p.description || t("No description.")}</p>
 
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg bg-slate-50 p-4 text-sm">
-              <dt className="text-slate-500">Product code</dt>
+              <dt className="text-slate-500">{t("Product code")}</dt>
               <dd className="font-medium text-slate-800">SF-{String(p.id).padStart(4, "0")}</dd>
-              <dt className="text-slate-500">Category</dt>
+              <dt className="text-slate-500">{t("Category")}</dt>
               <dd className="font-medium text-slate-800">{p.category?.name}</dd>
-              <dt className="text-slate-500">Availability</dt>
-              <dd className="font-medium text-slate-800">{p.stock > 0 ? `${p.stock} in stock` : "Sold out"}</dd>
+              <dt className="text-slate-500">{t("Availability")}</dt>
+              <dd className="font-medium text-slate-800">{p.stock > 0 ? t("{count} in stock", { count: p.stock }) : t("Sold out")}</dd>
             </dl>
 
             <BuyBox product={p} />
@@ -104,18 +107,19 @@ function BuyBox({ product }: { product: Product }) {
   const { items, add } = useCart();
   const location = useLocation();
   const toast = useToast();
+  const { t } = useT();
   const inCart = items.find((i) => i.product.id === product.id)?.quantity ?? 0;
 
   if (!user)
     return (
       <Link to="/login" state={{ from: location }} className="btn btn-primary self-start">
-        Log in to buy
+        {t("Log in to buy")}
       </Link>
     );
   if (user.role === "ADMIN")
     return (
       <Link to={`/admin/products/${product.id}/edit`} className="btn btn-outline self-start">
-        Edit product
+        {t("Edit product")}
       </Link>
     );
 
@@ -126,21 +130,28 @@ function BuyBox({ product }: { product: Product }) {
         disabled={!canAdd}
         onClick={() => {
           add(product);
-          toast(`${product.name} added to your cart`);
+          toast(t("{name} added to your cart", { name: product.name }));
         }}
         className="btn btn-primary px-6 py-2.5"
       >
-        Add to cart
+        {t("Add to cart")}
       </button>
       {inCart > 0 && (
         <span className="text-sm text-slate-600">
-          {inCart} in your{" "}
-          <Link to="/cart" className="link">
-            cart
-          </Link>
+          {tx(
+            "{count} in your {cart}",
+            {
+              cart: (
+                <Link key="cart" to="/cart" className="link">
+                  {t("cart")}
+                </Link>
+              ),
+            },
+            { count: inCart },
+          )}
         </span>
       )}
-      {!canAdd && product.stock > 0 && <span className="text-sm text-slate-500">You have all the available stock in your cart.</span>}
+      {!canAdd && product.stock > 0 && <span className="text-sm text-slate-500">{t("You have all the available stock in your cart.")}</span>}
     </div>
   );
 }

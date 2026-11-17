@@ -3,15 +3,17 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
+import { msg } from "../i18n/core";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
 import { useToast } from "../toast/useToast";
+import { useT } from "../i18n/useT";
 
 const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(1, "Enter your password"),
+  email: z.string().email(msg("Enter a valid email")),
+  password: z.string().min(1, msg("Enter your password")),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -22,6 +24,7 @@ export function LoginPage() {
   const from = (useLocation().state as { from?: { pathname: string } } | null)?.from?.pathname;
   const [serverError, setServerError] = useState("");
   const toast = useToast();
+  const { t } = useT();
 
   const {
     register,
@@ -35,13 +38,13 @@ export function LoginPage() {
     setServerError("");
     try {
       const user = await login(v.email, v.password);
-      toast(`Welcome back, ${user.name}!`);
+      toast(t("Welcome back, {name}!", { name: user.name }));
       navigate(from ?? (user.role === "ADMIN" ? "/admin" : "/products"), { replace: true });
     } catch (err) {
       // Right password, but the email was never verified: ask for the code from the email.
       if (err instanceof ApiError && err.code === "EMAIL_NOT_VERIFIED")
         return navigate(`/verify-email?email=${encodeURIComponent(v.email.trim().toLowerCase())}`);
-      setServerError(err instanceof Error ? err.message : "Login failed");
+      setServerError(err instanceof Error ? err.message : t("Login failed"));
     }
   };
 
@@ -49,26 +52,33 @@ export function LoginPage() {
     <form onSubmit={handleSubmit(onSubmit)} className="card mx-auto max-w-md space-y-5 p-8">
       <div className="space-y-2 text-center">
         <LogoMark className="mx-auto h-12 w-12" />
-        <h1 className="page-title">Welcome back</h1>
-        <p className="text-sm text-slate-500">Log in to order products and follow your orders.</p>
+        <h1 className="page-title">{t("Welcome back")}</h1>
+        <p className="text-sm text-slate-500">{t("Log in to order products and follow your orders.")}</p>
       </div>
-      <FormField id="email" label="Email" type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
+      <FormField id="email" label={t("Email")} type="email" autoComplete="email" {...register("email")} error={errors.email?.message} />
       <div>
-        <FormField id="password" label="Password" type="password" autoComplete="current-password" {...register("password")} error={errors.password?.message} />
-        <p className="mt-1 text-right text-sm">
+        <FormField
+          id="password"
+          label={t("Password")}
+          type="password"
+          autoComplete="current-password"
+          {...register("password")}
+          error={errors.password?.message}
+        />
+        <p className="mt-1 text-end text-sm">
           <Link to={email ? `/forgot-password?email=${encodeURIComponent(email)}` : "/forgot-password"} className="link">
-            Forgot password?
+            {t("Forgot password?")}
           </Link>
         </p>
       </div>
       {serverError && <p className="alert-danger">{serverError}</p>}
       <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
-        {isSubmitting ? "Logging in..." : "Log in"}
+        {isSubmitting ? t("Logging in...") : t("Log in")}
       </button>
       <p className="text-center text-sm text-slate-600">
-        No account?{" "}
+        {t("No account?")}{" "}
         <Link to="/register" className="link">
-          Register
+          {t("Register")}
         </Link>
       </p>
     </form>

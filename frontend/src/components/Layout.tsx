@@ -11,6 +11,9 @@ import { LogoMark } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
 import { SideMenu } from "./SideMenu";
 import { RowsSkeleton } from "./Skeleton";
+import { useT } from "../i18n/useT";
+import { CurrencySelect } from "./CurrencySelect";
+import { LanguageSelect } from "./LanguageSelect";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
@@ -26,6 +29,7 @@ export function Layout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const toast = useToast();
+  const { t } = useT();
   // The ☰ menu is open on the page where it was opened: going to another page closes it by itself.
   const [menuOpenOn, setMenuOpenOn] = useState<string | null>(null);
   const menuOpen = menuOpenOn === pathname;
@@ -41,80 +45,83 @@ export function Layout() {
   const favoriteCount = favorites.data?.length ?? 0;
   // A number on the ☰ button, so it is not hidden in the menu. Red = needs attention: messages waiting for
   // an answer (admins), new answers from customer service (customers). Otherwise blue: items in the cart.
-  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
   const badge =
     user?.role === "ADMIN"
-      ? { n: waitingCount, alert: true, text: `${plural(waitingCount, "message")} waiting for an answer` }
+      ? { n: waitingCount, alert: true, text: t("{count} messages waiting for an answer", { count: waitingCount }) }
       : newReplies > 0
-        ? { n: newReplies, alert: true, text: `${plural(newReplies, "new reply")} from customer service` }
-        : { n: user ? count : 0, alert: false, text: `${plural(count, "item")} in the cart` };
+        ? { n: newReplies, alert: true, text: t("{count} new replies from customer service", { count: newReplies }) }
+        : { n: user ? count : 0, alert: false, text: t("{count} items in the cart", { count }) };
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
     logout();
     navigate("/products");
-    toast("You are logged out. See you soon!", "info");
+    toast(t("You are logged out. See you soon!"), "info");
   };
 
   return (
     <div className="flex min-h-screen flex-col">
       {/* Stays at the top while scrolling. `inert` while the menu is open: Tab stays inside the menu. */}
-      <nav aria-label="Top" inert={menuOpen} className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <nav aria-label={t("Top")} inert={menuOpen} className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-2 px-6 py-3">
           <button
             type="button"
             onClick={() => setMenuOpenOn(pathname)}
-            aria-label={badge.n > 0 ? `Menu, ${badge.text}` : "Menu"}
+            aria-label={badge.n > 0 ? t("Menu, {details}", { details: badge.text }) : t("Menu")}
             aria-expanded={menuOpen}
             aria-controls="side-menu"
-            className="relative -ml-2 rounded-lg p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
+            className="relative -ms-2 rounded-lg p-2 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-6 w-6" aria-hidden="true">
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
             {badge.n > 0 && (
-              <span aria-hidden="true" className={`count absolute -top-1 -right-1 ml-0 ${badge.alert ? "count-alert" : "count-brand"}`}>
+              <span aria-hidden="true" className={`count absolute -top-1 -end-1 ms-0 ${badge.alert ? "count-alert" : "count-brand"}`}>
                 {badge.n}
               </span>
             )}
           </button>
-          <Link to="/" className="mr-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+          <Link to="/" className="me-4 flex items-center gap-2 text-lg font-bold text-slate-900">
             <LogoMark className="h-8 w-8" />
             <span>
               Stock<span className="text-brand-600">Flow</span>
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
+            <LanguageSelect />
+            <CurrencySelect />
             {user && <NotificationBell role={user.role} />}
             {user ? (
               <>
                 {/* The avatar and name open My account (name, address, password) */}
                 <NavLink
                   to="/account"
-                  title="My account"
+                  title={t("My account")}
                   className={({ isActive }) =>
-                    `flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 text-sm transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100"}`
+                    `flex items-center gap-2 rounded-lg py-1 pe-2 ps-1 text-sm transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100"}`
                   }
                 >
-                  <span className="sr-only">My account: </span>
+                  <span className="sr-only">{t("My account")}: </span>
                   <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                   <span className="hidden sm:inline">{user.name}</span>
-                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline">{user.role.toLowerCase()}</span>
+                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline">
+                    {user.role === "ADMIN" ? t("admin") : t("customer")}
+                  </span>
                 </NavLink>
                 <button onClick={onLogout} className="btn btn-outline py-1.5">
-                  Log out
+                  {t("Log out")}
                 </button>
               </>
             ) : (
               <>
                 <NavLink to="/login" className={linkClass}>
-                  Log in
+                  {t("Log in")}
                 </NavLink>
                 <Link to="/register" className="btn btn-primary py-1.5">
-                  Register
+                  {t("Register")}
                 </Link>
               </>
             )}
@@ -124,65 +131,65 @@ export function Layout() {
 
       <SideMenu open={menuOpen} onClose={closeMenu}>
         <NavLink to="/products" end className={menuLinkClass}>
-          Products
+          {t("Products")}
         </NavLink>
         {user?.role === "CUSTOMER" && (
           <>
             <NavLink to="/cart" className={menuLinkClass}>
-              Cart
-              {count > 0 && <span className="count count-brand ml-auto">{count}</span>}
+              {t("Cart")}
+              {count > 0 && <span className="count count-brand ms-auto">{count}</span>}
             </NavLink>
             <NavLink to="/favorites" className={menuLinkClass}>
-              Favourites
-              {favoriteCount > 0 && <span className="count count-brand ml-auto">{favoriteCount}</span>}
+              {t("Favourites")}
+              {favoriteCount > 0 && <span className="count count-brand ms-auto">{favoriteCount}</span>}
             </NavLink>
             <NavLink to="/orders" className={menuLinkClass}>
-              My orders
+              {t("My orders")}
             </NavLink>
           </>
         )}
         {user?.role !== "ADMIN" && (
           <NavLink to="/help" className={menuLinkClass}>
-            Customer service
-            {newReplies > 0 && <span className="count count-alert ml-auto">{newReplies}</span>}
+            {t("Customer service")}
+            {newReplies > 0 && <span className="count count-alert ms-auto">{newReplies}</span>}
           </NavLink>
         )}
         {user?.role === "ADMIN" && (
           <>
-            <p className="px-3 pt-4 pb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">Admin</p>
+            <p className="px-3 pt-4 pb-1 text-xs font-semibold tracking-wide text-slate-400 uppercase">{t("Admin")}</p>
             <NavLink to="/admin" end className={menuLinkClass}>
-              Dashboard
+              {t("Dashboard")}
             </NavLink>
             <NavLink to="/admin/products" className={menuLinkClass}>
-              Manage products
+              {t("Manage products")}
             </NavLink>
             <NavLink to="/admin/categories" className={menuLinkClass}>
-              Categories
+              {t("Categories")}
             </NavLink>
             <NavLink to="/admin/orders" className={menuLinkClass}>
-              Manage orders
+              {t("Manage orders")}
             </NavLink>
             <NavLink to="/admin/low-stock" className={menuLinkClass}>
-              Low stock
+              {t("Low stock")}
             </NavLink>
             <NavLink to="/admin/support" className={menuLinkClass}>
-              Customer service
-              {waitingCount > 0 && <span className="count count-alert ml-auto">{waitingCount}</span>}
+              {t("Customer service")}
+              {waitingCount > 0 && <span className="count count-alert ms-auto">{waitingCount}</span>}
             </NavLink>
           </>
         )}
         <hr className="my-3 border-slate-200" />
         {user ? (
           <NavLink to="/account" className={menuLinkClass}>
-            My account
+            {t("My account")}
           </NavLink>
         ) : (
           <>
             <NavLink to="/login" className={menuLinkClass}>
-              Log in
+              {t("Log in")}
             </NavLink>
             <NavLink to="/register" className={menuLinkClass}>
-              Register
+              {t("Register")}
             </NavLink>
           </>
         )}
@@ -205,21 +212,23 @@ export function Layout() {
           <div className="flex items-center gap-2">
             <LogoMark className="h-6 w-6" />
             <span>
-              <strong className="text-slate-700">StockFlow</strong>: inventory and orders, made simple
+              <strong className="text-slate-700">StockFlow</strong>: {t("inventory and orders, made simple")}
             </span>
           </div>
           <div className="flex gap-4">
             <Link to="/products" className="hover:text-slate-800">
-              Products
+              {t("Products")}
             </Link>
             <Link to="/help" className="hover:text-slate-800">
-              Customer service
+              {t("Customer service")}
             </Link>
             <a href="https://github.com/mohamadmeouch2-maker/StockFlow" className="hover:text-slate-800">
               GitHub
             </a>
           </div>
-          <p>© {new Date().getFullYear()} StockFlow · Training project</p>
+          <p>
+            © {new Date().getFullYear()} StockFlow · {t("Training project")}
+          </p>
         </div>
       </footer>
     </div>

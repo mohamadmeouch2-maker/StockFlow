@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { LogoMark } from "./Logo";
+import { useT } from "../i18n/useT";
 
 export const SHOW_MS = 2000; // how long the logo stays
 export const FADE_MS = 400; // then it fades out
@@ -7,6 +8,7 @@ export const FADE_MS = 400; // then it fades out
 // The welcome screen with the logo, shown every time the website is opened (or refreshed).
 // The pages already load behind it, so no time is lost.
 export function SplashScreen() {
+  const { t } = useT();
   const [phase, setPhase] = useState<"show" | "fade" | "done">("show");
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export function SplashScreen() {
   return (
     <div
       role="status"
-      aria-label="StockFlow is starting"
+      aria-label={t("StockFlow is starting")}
       className={`fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white transition-opacity duration-[400ms] ${
         phase === "fade" ? "opacity-0" : "opacity-100"
       }`}
@@ -32,7 +34,7 @@ export function SplashScreen() {
       <p className="splash-pop text-3xl font-bold text-slate-900">
         Stock<span className="text-brand-600">Flow</span>
       </p>
-      <p className="text-sm text-slate-500">Inventory and orders, made simple</p>
+      <p className="text-sm text-slate-500">{t("Inventory and orders, made simple")}</p>
     </div>
   );
 }

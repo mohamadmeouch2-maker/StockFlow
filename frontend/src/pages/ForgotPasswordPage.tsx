@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
+import { msg } from "../i18n/core";
 import { authApi } from "../api/auth";
 import { FormField } from "../components/FormField";
 import { LogoMark } from "../components/Logo";
+import { useT } from "../i18n/useT";
 
-const schema = z.object({ email: z.string().trim().email("Enter a valid email") });
+const schema = z.object({ email: z.string().trim().email(msg("Enter a valid email")) });
 type FormValues = z.infer<typeof schema>;
 
 // "Forgot password?", step 1: the email of the account. The API emails it a 6-digit code,
@@ -17,6 +19,7 @@ export function ForgotPasswordPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const { t } = useT();
 
   const {
     register,
@@ -31,7 +34,7 @@ export function ForgotPasswordPage() {
       await authApi.forgotPassword(email);
       navigate(`/reset-password?email=${encodeURIComponent(email)}&sent=1`);
     } catch (err) {
-      setServerError(err instanceof Error ? err.message : "Could not send the code");
+      setServerError(err instanceof Error ? err.message : t("Could not send the code"));
     }
   };
 
@@ -39,18 +42,18 @@ export function ForgotPasswordPage() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="card mx-auto max-w-md space-y-5 p-8">
       <div className="space-y-2 text-center">
         <LogoMark className="mx-auto h-12 w-12" />
-        <h1 className="page-title">Forgot your password?</h1>
-        <p className="text-sm text-slate-500">Type the email of your account. We'll send you a 6-digit code to choose a new password.</p>
+        <h1 className="page-title">{t("Forgot your password?")}</h1>
+        <p className="text-sm text-slate-500">{t("Type the email of your account. We'll send you a 6-digit code to choose a new password.")}</p>
       </div>
-      <FormField id="email" label="Email" type="email" autoComplete="email" autoFocus {...register("email")} error={errors.email?.message} />
+      <FormField id="email" label={t("Email")} type="email" autoComplete="email" autoFocus {...register("email")} error={errors.email?.message} />
       {serverError && <p className="alert-danger">{serverError}</p>}
       <button disabled={isSubmitting} className="btn btn-primary w-full py-2.5">
-        {isSubmitting ? "Sending..." : "Send me a code"}
+        {isSubmitting ? t("Sending...") : t("Send me a code")}
       </button>
       <p className="text-center text-sm text-slate-600">
-        Remembered it?{" "}
+        {t("Remembered it?")}{" "}
         <Link to="/login" className="link">
-          Log in
+          {t("Log in")}
         </Link>
       </p>
     </form>

@@ -4,25 +4,28 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
+import { msg } from "../../i18n/core";
 import { ApiError } from "../../api/client";
 import { IMAGE_TYPES, MAX_IMAGE_MB, productsApi } from "../../api/products";
 import { ProductImage } from "../../components/ProductImage";
 import { FormSkeleton } from "../../components/Skeleton";
 import { useToast } from "../../toast/useToast";
+import { useT } from "../../i18n/useT";
+import { t as tr } from "../../i18n/core";
 
 // FR-11: one form for both "new product" and "edit product" (guide 4.10).
 const schema = z.object({
-  name: z.string().min(2, "At least 2 characters"),
+  name: z.string().min(2, msg("At least 2 characters")),
   description: z.string().optional(),
-  price: z.coerce.number().positive("Must be above 0"),
-  stock: z.coerce.number().int("Must be a whole number").min(0, "Cannot be negative"),
-  reorderLevel: z.coerce.number().int("Must be a whole number").min(0, "Cannot be negative"),
-  categoryId: z.coerce.number().int().min(1, "Pick a category"),
+  price: z.coerce.number().positive(msg("Must be above 0")),
+  stock: z.coerce.number().int(msg("Must be a whole number")).min(0, msg("Cannot be negative")),
+  reorderLevel: z.coerce.number().int(msg("Must be a whole number")).min(0, msg("Cannot be negative")),
+  categoryId: z.coerce.number().int().min(1, msg("Pick a category")),
 });
 type FormInput = z.input<typeof schema>; // what the inputs hold (text)
 type FormValues = z.output<typeof schema>; // what we get after validation (numbers)
 
-const errorText = (err: unknown) => (err instanceof ApiError && err.details[0]?.message) || (err instanceof Error ? err.message : "Unknown error");
+const errorText = (err: unknown) => (err instanceof ApiError && err.details[0]?.message) || (err instanceof Error ? err.message : tr("Something went wrong"));
 
 export function ProductFormPage() {
   const { id } = useParams();
@@ -30,6 +33,7 @@ export function ProductFormPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const toast = useToast();
+  const { t } = useT();
 
   const categories = useQuery({ queryKey: ["categories"], queryFn: productsApi.categories });
   const existing = useQuery({ queryKey: ["product", Number(id)], queryFn: () => productsApi.get(Number(id)), enabled: isEdit });
@@ -65,8 +69,8 @@ export function ProductFormPage() {
     setPhotoError("");
     setPhoto(null);
     if (!file) return;
-    if (!IMAGE_TYPES.includes(file.type)) return setPhotoError("Use a JPG, PNG, WebP or GIF image");
-    if (file.size > MAX_IMAGE_MB * 1024 * 1024) return setPhotoError(`The image must be ${MAX_IMAGE_MB} MB or smaller`);
+    if (!IMAGE_TYPES.includes(file.type)) return setPhotoError(t("Use a JPG, PNG, WebP or GIF image"));
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) return setPhotoError(t("The image must be {count} MB or smaller", { count: MAX_IMAGE_MB }));
     setPhoto({ file, url: URL.createObjectURL(file) });
   };
 
@@ -91,11 +95,11 @@ export function ProductFormPage() {
       qc.invalidateQueries({ queryKey: ["product"] });
       if (uploadError) {
         // The product exists now; stay on its edit page so the photo can be tried again.
-        setPhotoError(`The product was saved, but the photo was not: ${uploadError}`);
+        setPhotoError(t("The product was saved, but the photo was not: {reason}", { reason: uploadError }));
         if (!isEdit) navigate(`/admin/products/${saved.id}/edit`, { replace: true });
         return;
       }
-      toast(isEdit ? `"${saved.name}" saved` : `"${saved.name}" added to the shop`);
+      toast(isEdit ? t('"{name}" saved', { name: saved.name }) : t('"{name}" added to the shop', { name: saved.name }));
       navigate("/admin/products");
     },
     onError: (err) => {
@@ -119,7 +123,7 @@ export function ProductFormPage() {
         {label}
       </label>
       <input id={name} type={type} step="any" {...register(name)} className="input" />
-      {errors[name] && <p className="field-error">{errors[name]?.message}</p>}
+      {errors[name]?.message && <p className="field-error">{t(errors[name].message)}</p>}
     </div>
   );
 
@@ -133,38 +137,38 @@ export function ProductFormPage() {
   return (
     <form onSubmit={handleSubmit((v) => save.mutate(v))} className="card mx-auto max-w-2xl space-y-5 p-6 sm:p-8">
       <div>
-        <h1 className="page-title">{isEdit ? "Edit product" : "New product"}</h1>
-        <p className="text-sm text-slate-500">Fields are checked here and again on the server.</p>
+        <h1 className="page-title">{isEdit ? t("Edit product") : t("New product")}</h1>
+        <p className="text-sm text-slate-500">{t("Fields are checked here and again on the server.")}</p>
       </div>
-      {field("name", "Name")}
-      {field("description", "Description")}
-      {field("price", "Price", "number")}
-      {field("stock", "Stock", "number")}
-      {field("reorderLevel", "Reorder level (Low stock at or below this number)", "number")}
+      {field("name", t("Name"))}
+      {field("description", t("Description"))}
+      {field("price", t("Price (US dollars)"), "number")}
+      {field("stock", t("Stock"), "number")}
+      {field("reorderLevel", t("Reorder level (Low stock at or below this number)"), "number")}
       <div>
         <label htmlFor="categoryId" className="label">
-          Category
+          {t("Category")}
         </label>
         <select id="categoryId" {...register("categoryId")} className="input">
-          <option value="0">Select...</option>
+          <option value="0">{t("Select...")}</option>
           {categories.data?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
         </select>
-        {errors.categoryId && <p className="field-error">{errors.categoryId.message}</p>}
+        {errors.categoryId?.message && <p className="field-error">{t(errors.categoryId.message)}</p>}
       </div>
 
       <div>
         <label htmlFor="image" className="label">
-          Photo
+          {t("Photo")}
         </label>
         <div className="mt-1 flex items-center gap-4">
           {photo ? (
-            <img src={photo.url} alt="New photo preview" className="h-24 w-24 shrink-0 rounded object-cover" />
+            <img src={photo.url} alt={t("New photo preview")} className="h-24 w-24 shrink-0 rounded object-cover" />
           ) : (
-            <ProductImage src={currentImage} alt="Current photo" className="h-24 w-24 shrink-0" />
+            <ProductImage src={currentImage} alt={t("Current photo")} className="h-24 w-24 shrink-0" />
           )}
           <div className="min-w-0 space-y-2 text-sm">
             <input
@@ -172,32 +176,42 @@ export function ProductFormPage() {
               type="file"
               accept={IMAGE_TYPES.join(",")}
               onChange={(e) => choosePhoto(e.target.files?.[0])}
-              className="block w-full text-sm file:mr-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700"
+              className="block w-full text-sm file:me-3 file:rounded file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-brand-700"
             />
-            <p className="text-xs text-slate-500">JPG, PNG, WebP or GIF, up to {MAX_IMAGE_MB} MB. It is uploaded when you click Save.</p>
+            <p className="text-xs text-slate-500">
+              {t("JPG, PNG, WebP or GIF, up to {count} MB. It is uploaded when you click Save.", { count: MAX_IMAGE_MB })}
+            </p>
             {isEdit && currentImage && !photo && (
               <button
                 type="button"
                 disabled={removePhoto.isPending}
-                onClick={() => confirm("Remove this photo?") && removePhoto.mutate()}
+                onClick={() => confirm(t("Remove this photo?")) && removePhoto.mutate()}
                 className="btn btn-danger px-3 py-1"
               >
-                Remove photo
+                {t("Remove photo")}
               </button>
             )}
           </div>
         </div>
         {photoError && <p className="field-error">{photoError}</p>}
-        {removePhoto.isError && <p className="field-error">Could not remove the photo. {removePhoto.error.message}</p>}
+        {removePhoto.isError && (
+          <p className="field-error">
+            {t("Could not remove the photo.")} {removePhoto.error.message}
+          </p>
+        )}
       </div>
 
-      {save.isError && !(save.error instanceof ApiError && save.error.details.length) && <p className="alert-danger">Could not save. {save.error.message}</p>}
+      {save.isError && !(save.error instanceof ApiError && save.error.details.length) && (
+        <p className="alert-danger">
+          {t("Could not save.")} {save.error.message}
+        </p>
+      )}
       <div className="flex gap-3 border-t border-slate-100 pt-5">
         <button disabled={isSubmitting || save.isPending} className="btn btn-primary px-6">
-          {save.isPending ? "Saving..." : "Save"}
+          {save.isPending ? t("Saving...") : t("Save")}
         </button>
         <button type="button" onClick={() => navigate("/admin/products")} className="btn btn-outline">
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
     </form>

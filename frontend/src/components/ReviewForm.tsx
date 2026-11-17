@@ -2,12 +2,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { reviewsApi } from "../api/reviews";
 import { useToast } from "../toast/useToast";
+import { useT } from "../i18n/useT";
 
 // For a logged-in customer on a product page: give a rating from 1 to 10 and a comment,
 // or change/delete the one they gave before. Only possible after buying the product.
 export function ReviewForm({ productId }: { productId: number }) {
   const qc = useQueryClient();
   const toast = useToast();
+  const { t } = useT();
   const mine = useQuery({ queryKey: ["reviews", productId, "me"], queryFn: () => reviewsApi.mine(productId) });
   // What the customer picked or typed; until they touch the form, show their saved review.
   const [rating, setRating] = useState<number>();
@@ -25,7 +27,7 @@ export function ReviewForm({ productId }: { productId: number }) {
   const save = useMutation({
     mutationFn: () => reviewsApi.save(productId, { rating: currentRating!, comment: currentComment }),
     onSuccess: () => {
-      toast("Thanks! Your review is saved");
+      toast(t("Thanks! Your review is saved"));
       refresh();
     },
   });
@@ -34,18 +36,18 @@ export function ReviewForm({ productId }: { productId: number }) {
     onSuccess: () => {
       setRating(undefined);
       setComment(undefined);
-      toast("Your review was deleted", "info");
+      toast(t("Your review was deleted"), "info");
       refresh();
     },
   });
 
   if (mine.isLoading) return null;
-  if (!mine.data?.canReview) return <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">You can rate this product after you buy it.</p>;
+  if (!mine.data?.canReview) return <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">{t("You can rate this product after you buy it.")}</p>;
 
   return (
     <div className="space-y-3 rounded-lg border border-brand-100 bg-brand-50/40 p-4">
-      <p className="font-semibold text-slate-900">{existing ? "Your review" : "Rate this product"}</p>
-      <div role="radiogroup" aria-label="Your rating out of 10" className="flex flex-wrap gap-1.5">
+      <p className="font-semibold text-slate-900">{existing ? t("Your review") : t("Rate this product")}</p>
+      <div role="radiogroup" aria-label={t("Your rating out of 10")} className="flex flex-wrap gap-1.5">
         {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
           const active = currentRating === n;
           return (
@@ -54,7 +56,7 @@ export function ReviewForm({ productId }: { productId: number }) {
               type="button"
               role="radio"
               aria-checked={active}
-              aria-label={`${n} out of 10`}
+              aria-label={t("{n} out of 10", { n })}
               onClick={() => setRating(n)}
               className={`h-9 w-9 rounded-lg border text-sm font-semibold transition ${
                 active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
@@ -67,7 +69,7 @@ export function ReviewForm({ productId }: { productId: number }) {
       </div>
       <div>
         <label htmlFor={`review-comment-${productId}`} className="label">
-          Comment (optional)
+          {t("Comment (optional)")}
         </label>
         <textarea
           id={`review-comment-${productId}`}
@@ -75,21 +77,25 @@ export function ReviewForm({ productId }: { productId: number }) {
           maxLength={1000}
           value={currentComment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="What did you like or not like?"
+          placeholder={t("What did you like or not like?")}
           className="input"
         />
       </div>
-      {(save.isError || remove.isError) && <p className="field-error">Could not save. {(save.error ?? remove.error)?.message}</p>}
+      {(save.isError || remove.isError) && (
+        <p className="field-error">
+          {t("Could not save.")} {(save.error ?? remove.error)?.message}
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <button disabled={!currentRating || save.isPending} onClick={() => save.mutate()} className="btn btn-primary">
-          {save.isPending ? "Saving..." : existing ? "Update review" : "Submit review"}
+          {save.isPending ? t("Saving...") : existing ? t("Update review") : t("Submit review")}
         </button>
         {existing && (
-          <button disabled={remove.isPending} onClick={() => confirm("Delete your review?") && remove.mutate()} className="btn btn-danger">
-            Delete
+          <button disabled={remove.isPending} onClick={() => confirm(t("Delete your review?")) && remove.mutate()} className="btn btn-danger">
+            {t("Delete")}
           </button>
         )}
-        {!currentRating && <span className="text-sm text-slate-500">Pick a score from 1 to 10.</span>}
+        {!currentRating && <span className="text-sm text-slate-500">{t("Pick a score from 1 to 10.")}</span>}
       </div>
     </div>
   );

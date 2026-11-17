@@ -1,3 +1,4 @@
+import { msg } from "../i18n/core";
 import { useMutation } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
@@ -8,6 +9,8 @@ import { CodeField } from "../components/CodeField";
 import { LogoMark } from "../components/Logo";
 import { useCountdown } from "../hooks/useCountdown";
 import { useToast } from "../toast/useToast";
+import { useT } from "../i18n/useT";
+import { tx } from "../i18n/core";
 
 const WAIT_SECONDS = 60; // the API sends a new code at most once a minute
 
@@ -20,6 +23,7 @@ export function VerifyEmailPage() {
   const { startSession } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const { t } = useT();
   const [code, setCode] = useState("");
   const [error, setError] = useState<{ code: string; message: string } | null>(null);
   const [wait, setWait] = useCountdown(justSent ? WAIT_SECONDS : 0); // seconds until "Send a new code" works
@@ -30,7 +34,7 @@ export function VerifyEmailPage() {
     mutationFn: () => authApi.verifyEmail(email, code),
     onSuccess: (session) => {
       startSession(session);
-      toast(`Welcome to StockFlow, ${session.user.name}! Your email is verified.`);
+      toast(t("Welcome to StockFlow, {name}! Your email is verified.", { name: session.user.name }));
       navigate("/products", { replace: true });
     },
     onError: showError,
@@ -42,16 +46,22 @@ export function VerifyEmailPage() {
       setCode("");
       setError(null);
       setWait(WAIT_SECONDS);
-      toast(`We sent a new code to ${email}`, "info");
+      toast(t("We sent a new code to {email}", { email }), "info");
     },
     onError: showError,
   });
 
   if (!email) return <Navigate to="/register" replace />;
 
+  const emailBox = (
+    <span key="email" className="font-medium break-all text-slate-900">
+      {email}
+    </span>
+  );
+
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (code.length !== 6) return setError({ code: "", message: "Enter the 6 digits from the email" });
+    if (code.length !== 6) return setError({ code: "", message: msg("Enter the 6 digits from the email") });
     setError(null);
     verify.mutate();
   };
@@ -60,12 +70,13 @@ export function VerifyEmailPage() {
     <form onSubmit={onSubmit} noValidate className="card mx-auto max-w-md space-y-5 p-8">
       <div className="space-y-2 text-center">
         <LogoMark className="mx-auto h-12 w-12" />
-        <h1 className="page-title">Check your email</h1>
+        <h1 className="page-title">{t("Check your email")}</h1>
         <p className="text-sm text-slate-600">
-          {justSent ? "We sent a 6-digit code to" : "Your email is not verified yet. Type the 6-digit code we sent to"}{" "}
-          <span className="font-medium break-all text-slate-900">{email}</span>
+          {justSent
+            ? tx("We sent a 6-digit code to {email}", { email: emailBox })
+            : tx("Your email is not verified yet. Type the 6-digit code we sent to {email}", { email: emailBox })}
         </p>
-        <p className="text-xs text-slate-500">Can't find it? Look in Spam or Junk. A code works for 15 minutes.</p>
+        <p className="text-xs text-slate-500">{t("Can't find it? Look in Spam or Junk. A code works for 15 minutes.")}</p>
       </div>
       <CodeField
         value={code}
@@ -76,7 +87,7 @@ export function VerifyEmailPage() {
               {error.message}{" "}
               {error.code === "ALREADY_VERIFIED" && (
                 <Link to="/login" className="link">
-                  Log in
+                  {t("Log in")}
                 </Link>
               )}
             </>
@@ -84,24 +95,24 @@ export function VerifyEmailPage() {
         }
       />
       <button disabled={verify.isPending} className="btn btn-primary w-full py-2.5">
-        {verify.isPending ? "Checking..." : "Verify email"}
+        {verify.isPending ? t("Checking...") : t("Verify email")}
       </button>
       <div className="space-y-1 text-center text-sm text-slate-600">
         <p>
-          Didn't get the email?{" "}
+          {t("Didn't get the email?")}{" "}
           <button
             type="button"
             onClick={() => resend.mutate()}
             disabled={wait > 0 || resend.isPending}
             className="link disabled:cursor-not-allowed disabled:text-slate-400 disabled:no-underline"
           >
-            {wait > 0 ? `Send a new code in ${wait}s` : resend.isPending ? "Sending..." : "Send a new code"}
+            {wait > 0 ? t("Send a new code in {count}s", { count: wait }) : resend.isPending ? t("Sending...") : t("Send a new code")}
           </button>
         </p>
         <p>
-          Wrong email?{" "}
+          {t("Wrong email?")}{" "}
           <Link to="/register" className="link">
-            Register again
+            {t("Register again")}
           </Link>
         </p>
       </div>

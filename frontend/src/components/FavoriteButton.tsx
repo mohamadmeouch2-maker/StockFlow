@@ -4,6 +4,7 @@ import { favoritesApi } from "../api/favorites";
 import type { Product } from "../api/types";
 import { AuthContext } from "../auth/authContext";
 import { useToast } from "../toast/useToast";
+import { useT } from "../i18n/useT";
 
 // The heart on a product: empty = not saved, red = saved in "My favourites". Only customers see it.
 export function FavoriteButton({ product, className = "" }: { product: Product; className?: string }) {
@@ -11,6 +12,7 @@ export function FavoriteButton({ product, className = "" }: { product: Product; 
   const isCustomer = user?.role === "CUSTOMER";
   const qc = useQueryClient();
   const toast = useToast();
+  const { t } = useT();
   // One shared list for every heart on the page (TanStack Query loads it once)
   const favorites = useQuery({ queryKey: ["favorites"], queryFn: favoritesApi.list, enabled: isCustomer });
   const saved = !!favorites.data?.some((p) => p.id === product.id);
@@ -18,10 +20,13 @@ export function FavoriteButton({ product, className = "" }: { product: Product; 
   const toggle = useMutation({
     mutationFn: () => (saved ? favoritesApi.remove(product.id) : favoritesApi.add(product.id)),
     onSuccess: () => {
-      toast(saved ? `${product.name} removed from your favourites` : `${product.name} saved to your favourites`, saved ? "info" : "success");
+      toast(
+        saved ? t("{name} removed from your favourites", { name: product.name }) : t("{name} saved to your favourites", { name: product.name }),
+        saved ? "info" : "success",
+      );
       qc.invalidateQueries({ queryKey: ["favorites"] });
     },
-    onError: () => toast("Could not update your favourites. Please try again.", "error"),
+    onError: () => toast(t("Could not update your favourites. Please try again."), "error"),
   });
 
   if (!isCustomer) return null;
@@ -34,8 +39,8 @@ export function FavoriteButton({ product, className = "" }: { product: Product; 
       }}
       disabled={toggle.isPending || favorites.isLoading}
       aria-pressed={saved}
-      aria-label={saved ? `Remove ${product.name} from favourites` : `Save ${product.name} to favourites`}
-      title={saved ? "Remove from favourites" : "Save to favourites"}
+      aria-label={saved ? t("Remove {name} from favourites", { name: product.name }) : t("Save {name} to favourites", { name: product.name })}
+      title={saved ? t("Remove from favourites") : t("Save to favourites")}
       className={`rounded-full p-1.5 transition hover:bg-rose-50 ${saved ? "text-rose-600" : "text-slate-400 hover:text-rose-500"} ${className}`}
     >
       <svg

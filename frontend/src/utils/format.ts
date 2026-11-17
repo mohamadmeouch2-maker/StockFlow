@@ -1,4 +1,5 @@
-// Small helpers for showing numbers and dates the same way everywhere.
+// Small helpers for showing numbers and dates the same way everywhere, in the chosen language.
+import { currentLang, currentLocale, t } from "../i18n/core";
 
 // 1234.5 -> "$1,234.50"
 export const money = (n: number) => n.toLocaleString("en-US", { style: "currency", currency: "USD" });
@@ -9,19 +10,27 @@ export const dayToDate = (day: string) => {
   return new Date(y, m - 1, d);
 };
 
-// "just now", "5 min ago", "3 h ago", "2 days ago"
+// "just now", "5 min ago", "3 h ago", "2 days ago" (French: "il y a 5 min", Arabic: "قبل 5 د")
 export const timeAgo = (iso: string, now = Date.now()) => {
   const minutes = Math.floor((now - new Date(iso).getTime()) / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 1) return t("just now");
+  const ago = (n: number, unit: Intl.RelativeTimeFormatUnit, english: string) =>
+    currentLang() === "en" ? english : new Intl.RelativeTimeFormat(currentLocale(), { style: "short" }).format(-n, unit);
+  if (minutes < 60) return ago(minutes, "minute", `${minutes} min ago`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} h ago`;
+  if (hours < 24) return ago(hours, "hour", `${hours} h ago`);
   const days = Math.floor(hours / 24);
-  return `${days} ${days === 1 ? "day" : "days"} ago`;
+  return ago(days, "day", `${days} ${days === 1 ? "day" : "days"} ago`);
 };
 
 // "Thu, Nov 12"
-export const shortDate = (d: Date | string) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+export const shortDate = (d: Date | string) => new Date(d).toLocaleDateString(currentLocale(), { weekday: "short", month: "short", day: "numeric" });
+
+// "Nov 17, 2026"
+export const dateOnly = (d: Date | string) => new Date(d).toLocaleDateString(currentLocale(), { dateStyle: "medium" });
+
+// "Nov 17, 2026, 9:30 AM"
+export const dateTime = (d: Date | string) => new Date(d).toLocaleString(currentLocale(), { dateStyle: "medium", timeStyle: "short" });
 
 // Today + n days, e.g. the last day a delivery should arrive.
 export const addDays = (days: number, from = new Date()) => {

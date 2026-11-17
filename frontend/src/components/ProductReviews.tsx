@@ -5,17 +5,20 @@ import { useAuth } from "../auth/useAuth";
 import { RatingBadge } from "./RatingBadge";
 import { ReviewForm } from "./ReviewForm";
 import { RowsSkeleton } from "./Skeleton";
+import { useT } from "../i18n/useT";
+import { dateOnly } from "../utils/format";
 
 // The "Ratings & reviews" section under a product.
 export function ProductReviews({ productId }: { productId: number }) {
   const { user } = useAuth();
+  const { t } = useT();
   const location = useLocation();
   const data = useQuery({ queryKey: ["reviews", productId], queryFn: () => reviewsApi.list(productId) });
 
   return (
     <section className="card space-y-5 p-6 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-bold text-slate-900">Ratings & reviews</h2>
+        <h2 className="text-xl font-bold text-slate-900">{t("Ratings & reviews")}</h2>
         {data.data && <RatingBadge rating={data.data} size="lg" />}
       </div>
 
@@ -23,15 +26,19 @@ export function ProductReviews({ productId }: { productId: number }) {
       {!user && (
         <p className="rounded-lg bg-slate-50 p-4 text-sm text-slate-500">
           <Link to="/login" state={{ from: location }} className="link">
-            Log in
+            {t("Log in")}
           </Link>{" "}
-          and buy this product to rate it.
+          {t("and buy this product to rate it.")}
         </p>
       )}
 
       {data.isLoading && <RowsSkeleton rows={2} />}
-      {data.isError && <p className="text-danger-600">Could not load the reviews. {data.error.message}</p>}
-      {data.data?.reviews.length === 0 && <p className="text-slate-500">No reviews yet. Be the first to rate it!</p>}
+      {data.isError && (
+        <p className="text-danger-600">
+          {t("Could not load the reviews.")} {data.error.message}
+        </p>
+      )}
+      {data.data?.reviews.length === 0 && <p className="text-slate-500">{t("No reviews yet. Be the first to rate it!")}</p>}
 
       <ul className="divide-y divide-slate-100">
         {data.data?.reviews.map((r) => (
@@ -43,7 +50,7 @@ export function ProductReviews({ productId }: { productId: number }) {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-slate-900">{r.userName}</span>
                 <span className="rounded-md bg-slate-900 px-1.5 py-0.5 text-xs font-bold text-white">{r.rating}/10</span>
-                <span className="text-xs text-slate-400">{new Date(r.updatedAt).toLocaleDateString()}</span>
+                <span className="text-xs text-slate-400">{dateOnly(r.updatedAt)}</span>
               </div>
               {r.comment && <p className="mt-1 text-slate-600">{r.comment}</p>}
             </div>

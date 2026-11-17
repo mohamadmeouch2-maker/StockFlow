@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DeliveryMethod } from "../api/types";
 import { shortDate } from "../utils/format";
+import { useT } from "../i18n/useT";
 
 type Props = {
   delivery: DeliveryMethod;
@@ -10,6 +11,7 @@ type Props = {
 
 // "⚡ Express · by Thu, Nov 12", "🚚 Standard · by Mon, Nov 16", or in red "⚠ Express · late (due Fri, Nov 6)"
 export function DeliveryBadge({ delivery, deliverBy, onTheWay = false }: Props) {
+  const { t } = useT();
   const [now] = useState(() => Date.now()); // read the clock once, when the badge appears
   const express = delivery === "EXPRESS";
   const late = onTheWay && !!deliverBy && new Date(deliverBy).setHours(23, 59, 59, 999) < now; // the whole due day has passed
@@ -17,8 +19,12 @@ export function DeliveryBadge({ delivery, deliverBy, onTheWay = false }: Props) 
   return (
     <span className={`badge gap-1 ${color}`}>
       <span aria-hidden="true">{late ? "⚠" : express ? "⚡" : "🚚"}</span>
-      {express ? "Express" : "Standard"}
-      {deliverBy && <span className="font-normal opacity-80">· {late ? `late (due ${shortDate(deliverBy)})` : `by ${shortDate(deliverBy)}`}</span>}
+      {express ? t("Express") : t("Standard")}
+      {deliverBy && (
+        <span className="font-normal opacity-80">
+          · {late ? t("late (due {date})", { date: shortDate(deliverBy) }) : t("by {date}", { date: shortDate(deliverBy) })}
+        </span>
+      )}
     </span>
   );
 }

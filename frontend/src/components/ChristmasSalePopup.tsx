@@ -4,11 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { promotionsApi } from "../api/promotions";
 import { AuthContext } from "../auth/authContext";
 import { shortDate } from "../utils/format";
+import { useT } from "../i18n/useT";
 
 const seenKey = (id: number) => `sale-popup-seen-${id}`;
 
 // When a sale is on, visitors and customers see a festive window once per visit (admins don't).
 export function ChristmasSalePopup() {
+  const { t } = useT();
   const user = useContext(AuthContext)?.user;
   const sale = useQuery({ queryKey: ["promotion"], queryFn: promotionsApi.current, staleTime: 60_000 });
   const promo = sale.data;
@@ -54,8 +56,8 @@ export function ChristmasSalePopup() {
         <Snow />
         <button
           onClick={close}
-          aria-label="Close"
-          className="absolute top-3 right-3 z-10 rounded-full px-2 py-1 text-white/80 hover:bg-white/10 hover:text-white"
+          aria-label={t("Close")}
+          className="absolute top-3 end-3 z-10 rounded-full px-2 py-1 text-white/80 hover:bg-white/10 hover:text-white"
         >
           ✕
         </button>
@@ -63,13 +65,13 @@ export function ChristmasSalePopup() {
           <div className="text-5xl" aria-hidden="true">
             🎄
           </div>
-          <p className="mt-3 text-xs font-semibold tracking-[0.25em] text-amber-200 uppercase">Merry Christmas</p>
+          <p className="mt-3 text-xs font-semibold tracking-[0.25em] text-amber-200 uppercase">{t("Merry Christmas")}</p>
           <h2 id="sale-title" className="mt-1 text-3xl font-extrabold">
             {promo.name}
           </h2>
           <p className="mt-4 text-7xl font-black text-amber-300 drop-shadow-lg">-{promo.percent}%</p>
-          <p className="mt-2 text-lg text-white/95">on {promo.productCount} selected products</p>
-          <p className="mt-1 text-sm text-white/75">Until {shortDate(promo.endsAt)}, while stocks last</p>
+          <p className="mt-2 text-lg text-white/95">{t("on {count} selected products", { count: promo.productCount ?? 0 })}</p>
+          <p className="mt-1 text-sm text-white/75">{t("Until {date}, while stocks last", { date: shortDate(promo.endsAt) })}</p>
           <div className="mt-7 flex flex-col items-center gap-3">
             <button
               ref={mainButton}
@@ -79,10 +81,10 @@ export function ChristmasSalePopup() {
               }}
               className="btn w-full max-w-xs bg-white py-3 text-base font-bold text-red-700 shadow-lg hover:bg-amber-50"
             >
-              See the deals 🎁
+              {t("See the deals 🎁")}
             </button>
             <button onClick={close} className="text-sm text-white/80 hover:text-white hover:underline">
-              Maybe later
+              {t("Maybe later")}
             </button>
           </div>
         </div>

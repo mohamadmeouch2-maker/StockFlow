@@ -1,3 +1,4 @@
+import { translateServer } from "../i18n/core";
 import type { ApiErrorBody } from "./types";
 
 // Guide 4.4. Every call to the real API goes through api(). It adds the token,
@@ -51,7 +52,9 @@ export async function api<T>(base: "core" | "reports", path: string, init: Reque
     // Logged out only if the token is still the one this request used. (After a password change this device
     // already has a new token, so an answer to a request sent just before, with the old one, must not log it out.)
     if (res.status === 401 && sentWith === token) onUnauthorized(e?.code ?? "UNAUTHORIZED");
-    throw new ApiError(res.status, e?.code ?? "UNKNOWN", e?.message ?? res.statusText, e?.details);
+    // The API writes its messages in English: show them in the language the visitor chose
+    const details = e?.details?.map((d) => ({ ...d, message: translateServer(d.message) }));
+    throw new ApiError(res.status, e?.code ?? "UNKNOWN", translateServer(e?.message ?? res.statusText), details);
   }
   return body as T;
 }

@@ -10,12 +10,14 @@ import { RatingBadge } from "../../components/RatingBadge";
 import { RowsSkeleton } from "../../components/Skeleton";
 import { StockBadge } from "../../components/StockBadge";
 import { useToast } from "../../toast/useToast";
+import { useT } from "../../i18n/useT";
 
 // FR-11 (admin): table of all products with Edit and Delete, plus a "New product" button.
 export function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
   const toast = useToast();
+  const { t } = useT();
 
   const products = useQuery({
     queryKey: ["products", "admin", page],
@@ -26,14 +28,14 @@ export function AdminProductsPage() {
   const remove = useMutation({
     mutationFn: (p: Product) => productsApi.remove(p.id),
     onSuccess: (_, p) => {
-      toast(`"${p.name}" deleted`);
+      toast(t('"{name}" deleted', { name: p.name }));
       qc.invalidateQueries({ queryKey: ["products"] });
       qc.invalidateQueries({ queryKey: ["product"] });
     },
   });
 
   const onDelete = (p: Product) => {
-    if (confirm(`Delete "${p.name}"?`)) remove.mutate(p);
+    if (confirm(t('Delete "{name}"?', { name: p.name }))) remove.mutate(p);
   };
 
   const totalPages = products.data ? Math.max(1, Math.ceil(products.data.total / products.data.pageSize)) : 1;
@@ -42,33 +44,41 @@ export function AdminProductsPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Manage products</h1>
-          <p className="text-sm text-slate-500">{products.data ? `${products.data.total} products` : ""}</p>
+          <h1 className="page-title">{t("Manage products")}</h1>
+          <p className="text-sm text-slate-500">{products.data ? t("{count} products", { count: products.data.total }) : ""}</p>
         </div>
         <div className="flex gap-2">
           <Link to="/admin/categories" className="btn btn-outline">
-            Categories
+            {t("Categories")}
           </Link>
           <Link to="/admin/products/new" className="btn btn-primary">
-            + New product
+            {t("+ New product")}
           </Link>
         </div>
       </div>
 
       {products.isLoading && <RowsSkeleton />}
-      {products.isError && <p className="text-danger-600">Could not load products. {products.error.message}</p>}
-      {remove.isError && <p className="alert-danger">Could not delete. {remove.error.message}</p>}
+      {products.isError && (
+        <p className="text-danger-600">
+          {t("Could not load products.")} {products.error.message}
+        </p>
+      )}
+      {remove.isError && (
+        <p className="alert-danger">
+          {t("Could not delete.")} {remove.error.message}
+        </p>
+      )}
 
       <div className="data-table-wrap">
         <table className="data-table">
           <thead>
             <tr>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Rating</th>
-              <th>Views</th>
+              <th>{t("Product")}</th>
+              <th>{t("Category")}</th>
+              <th>{t("Price")}</th>
+              <th>{t("Stock")}</th>
+              <th>{t("Rating")}</th>
+              <th>{t("Views")}</th>
               <th></th>
             </tr>
           </thead>
@@ -87,7 +97,7 @@ export function AdminProductsPage() {
                 </td>
                 <td>
                   <div className="flex items-center gap-2">
-                    <span className="w-8 text-right">{p.stock}</span>
+                    <span className="w-8 text-end">{p.stock}</span>
                     <StockBadge product={p} />
                   </div>
                 </td>
@@ -95,12 +105,12 @@ export function AdminProductsPage() {
                   <RatingBadge rating={p.rating} />
                 </td>
                 <td className="text-slate-500">{p.viewCount ?? 0}</td>
-                <td className="text-right whitespace-nowrap">
-                  <Link to={`/admin/products/${p.id}/edit`} className="btn btn-outline mr-2 px-3 py-1">
-                    Edit
+                <td className="text-end whitespace-nowrap">
+                  <Link to={`/admin/products/${p.id}/edit`} className="btn btn-outline me-2 px-3 py-1">
+                    {t("Edit")}
                   </Link>
                   <button onClick={() => onDelete(p)} className="btn btn-danger px-3 py-1">
-                    Delete
+                    {t("Delete")}
                   </button>
                 </td>
               </tr>

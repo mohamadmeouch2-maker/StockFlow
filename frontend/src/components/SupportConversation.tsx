@@ -4,16 +4,20 @@ import { supportApi, topicLabel } from "../api/support";
 import type { SupportStatus, SupportTicket } from "../api/types";
 import { useToast } from "../toast/useToast";
 import { OrderStatusBadge } from "./OrderStatusBadge";
+import { dateTime } from "../utils/format";
+import { useT } from "../i18n/useT";
+import { msg } from "../i18n/core";
+import { useCurrency } from "../currency/useCurrency";
 
 type Viewer = "CUSTOMER" | "STAFF";
 
 // The status in words: the customer and the store see the same conversation from different sides.
 const statusText: Record<Viewer, Record<SupportStatus, string>> = {
-  CUSTOMER: { OPEN: "Waiting for our answer", ANSWERED: "We answered", RESOLVED: "Solved" },
-  STAFF: { OPEN: "Waiting for us", ANSWERED: "Answered", RESOLVED: "Solved" },
+  CUSTOMER: { OPEN: msg("Waiting for our answer"), ANSWERED: msg("We answered"), RESOLVED: msg("Solved") },
+  STAFF: { OPEN: msg("Waiting for us"), ANSWERED: msg("Answered"), RESOLVED: msg("Solved") },
 };
 const statusClass: Record<SupportStatus, string> = { OPEN: "badge-warning", ANSWERED: "badge-brand", RESOLVED: "badge-success" };
-const when = (iso: string) => new Date(iso).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+const when = dateTime;
 
 type Props = { ticket: SupportTicket; viewer: Viewer; isNew?: boolean };
 
@@ -23,6 +27,8 @@ type Props = { ticket: SupportTicket; viewer: Viewer; isNew?: boolean };
 export function SupportConversation({ ticket, viewer, isNew }: Props) {
   const qc = useQueryClient();
   const toast = useToast();
+  const { money } = useCurrency();
+  const { t } = useT();
   const [text, setText] = useState("");
   const staff = viewer === "STAFF";
   const refresh = () => qc.invalidateQueries({ queryKey: ["support"] });
@@ -34,9 +40,9 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
       toast(
         staff
           ? resolve
-            ? "Answer sent. The conversation is solved."
-            : "Answer sent. The customer also gets it by email."
-          : "Message sent. We will answer soon.",
+            ? t("Answer sent. The conversation is solved.")
+            : t("Answer sent. The customer also gets it by email.")
+          : t("Message sent. We will answer soon."),
       );
       refresh();
     },
@@ -44,7 +50,7 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
   const setStatus = useMutation({
     mutationFn: (status: SupportStatus) => supportApi.setStatus(ticket.id, status),
     onSuccess: (_, status) => {
-      toast(status === "RESOLVED" ? "Marked as solved" : "Conversation reopened", "info");
+      toast(status === "RESOLVED" ? t("Marked as solved") : t("Conversation reopened"), "info");
       refresh();
     },
   });
@@ -54,15 +60,15 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
 
   return (
     <article
-      aria-label={`${topicLabel(ticket.topic)}${ticket.orderId ? `, order #${ticket.orderId}` : ""}`}
-      className={`card overflow-hidden ${staff && ticket.status === "OPEN" ? "border-l-4 border-l-warning-400" : ""} ${isNew ? "ring-2 ring-brand-300" : ""}`}
+      aria-label={t(topicLabel(ticket.topic)) + (ticket.orderId ? t(", order #{id}", { id: ticket.orderId }) : "")}
+      className={`card overflow-hidden ${staff && ticket.status === "OPEN" ? "border-s-4 border-s-warning-400" : ""} ${isNew ? "ring-2 ring-brand-300" : ""}`}
     >
       <header className="flex flex-wrap items-center gap-2 border-b border-slate-100 bg-slate-50 px-5 py-3 text-sm">
-        <span className="font-semibold text-slate-900">{topicLabel(ticket.topic)}</span>
-        {ticket.orderId && <span className="text-slate-500">· Order #{ticket.orderId}</span>}
-        <span className={`badge ${statusClass[ticket.status]}`}>{statusText[viewer][ticket.status]}</span>
-        {isNew && <span className="badge badge-danger">New reply</span>}
-        <span className="ml-auto text-xs text-slate-500">Started {when(ticket.createdAt)}</span>
+        <span className="font-semibold text-slate-900">{t(topicLabel(ticket.topic))}</span>
+        {ticket.orderId && <span className="text-slate-500">· {t("Order #{id}", { id: ticket.orderId })}</span>}
+        <span className={`badge ${statusClass[ticket.status]}`}>{t(statusText[viewer][ticket.status])}</span>
+        {isNew && <span className="badge badge-danger">{t("New reply")}</span>}
+        <span className="ms-auto text-xs text-slate-500">{t("Started {date}", { date: when(ticket.createdAt) })}</span>
       </header>
 
       {staff && (
@@ -72,14 +78,14 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
             {ticket.email}
           </a>
           {ticket.userId === null && (
-            <span className="badge badge-neutral" title="Wrote without logging in: your answer only reaches them by email">
-              Visitor, not logged in
+            <span className="badge badge-neutral" title={t("Wrote without logging in: your answer only reaches them by email")}>
+              {t("Visitor, not logged in")}
             </span>
           )}
           {order && (
             <span className="flex flex-wrap items-center gap-2">
               <OrderStatusBadge status={order.status} />
-              {order.items.map((it) => `${it.quantity} × ${it.product.name}`).join(", ")} · ${Number(order.total).toFixed(2)}
+              {order.items.map((it) => `${it.quantity} × ${it.product.name}`).join(", ")} · {money(order.total)}
             </span>
           )}
         </div>
@@ -88,11 +94,11 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
       <ol className="space-y-3 px-5 py-4">
         {ticket.messages.map((m) => {
           const ours = (m.author === "STAFF") === staff; // written by the person looking at the page: on the right, in blue
-          const who = m.author === "STAFF" ? (staff ? "You (StockFlow)" : "StockFlow") : staff ? ticket.name : "You";
+          const who = m.author === "STAFF" ? (staff ? t("You (StockFlow)") : "StockFlow") : staff ? ticket.name : t("You");
           return (
             <li key={m.id} className={`flex ${ours ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${ours ? "rounded-br-sm bg-brand-600 text-white" : "rounded-bl-sm bg-slate-100 text-slate-800"}`}
+                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${ours ? "rounded-ee-sm bg-brand-600 text-white" : "rounded-es-sm bg-slate-100 text-slate-800"}`}
               >
                 <p className={`mb-0.5 text-xs font-semibold ${ours ? "text-brand-100" : "text-slate-500"}`}>
                   {who} · {when(m.createdAt)}
@@ -106,7 +112,7 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
 
       <div className="space-y-2 border-t border-slate-100 px-5 py-3">
         <label htmlFor={`reply-${ticket.id}`} className="label">
-          {staff ? "Answer the customer" : "Write a reply"}
+          {staff ? t("Answer the customer") : t("Write a reply")}
         </label>
         <textarea
           id={`reply-${ticket.id}`}
@@ -114,31 +120,35 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
           maxLength={2000}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder={staff ? "For example: Sorry about that! We are sending a new one today." : "Write your message"}
+          placeholder={staff ? t("For example: Sorry about that! We are sending a new one today.") : t("Write your message")}
           className="input"
         />
-        {error && <p className="field-error">Could not send. {error.message}</p>}
+        {error && (
+          <p className="field-error">
+            {t("Could not send.")} {error.message}
+          </p>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <button disabled={busy || !text.trim()} onClick={() => reply.mutate(false)} className="btn btn-primary">
-            {staff ? "Send answer" : "Send"}
+            {staff ? t("Send answer") : t("Send")}
           </button>
           {staff && (
             <>
               <button disabled={busy || !text.trim()} onClick={() => reply.mutate(true)} className="btn btn-outline">
-                Send & mark solved
+                {t("Send & mark solved")}
               </button>
               {ticket.status === "RESOLVED" ? (
                 <button disabled={busy} onClick={() => setStatus.mutate("OPEN")} className="btn btn-outline">
-                  Reopen
+                  {t("Reopen")}
                 </button>
               ) : (
                 <button disabled={busy} onClick={() => setStatus.mutate("RESOLVED")} className="btn btn-outline">
-                  Mark solved
+                  {t("Mark solved")}
                 </button>
               )}
             </>
           )}
-          {!staff && ticket.status === "RESOLVED" && <span className="text-xs text-slate-500">Still need help? Write again and we'll reopen it.</span>}
+          {!staff && ticket.status === "RESOLVED" && <span className="text-xs text-slate-500">{t("Still need help? Write again and we'll reopen it.")}</span>}
         </div>
       </div>
     </article>
