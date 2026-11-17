@@ -9,7 +9,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Area | What works | Requirement |
 |---|---|---|
 | Accounts | Register, log in, log out, stay logged in after a refresh (JWT valid for 1 hour) | FR-01, FR-02 |
-| Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows new answers from customer service in red, otherwise the items in the cart (customers), or the customer messages waiting for an answer (admins). It closes with ✕, Escape or a click outside | extra |
+| Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows in red the new answers from customer service (customers) or the messages waiting for an answer (admins). Customers also have a cart icon in the top bar, with the number of items. It closes with ✕, Escape or a click outside | extra |
 | Languages | English, Arabic and French: a 🌐 language button in the top bar, remembered on the browser. Arabic pages read right to left (the menu opens from the right). Everything on the website is translated, also the API's messages and the notifications; dates follow the language. Product and category names stay as they were typed | extra |
 | Currencies | A currency button next to the language: prices in US dollars, Lebanese pounds (no decimals) or euros, remembered on the browser. Prices and orders stay in US dollars; the website converts what it shows with exchange rates the admin sets on the Dashboard (Exchange rates). The cart says the rate and the dollar amount of the order | extra |
 | Email check | After Register, a 6-digit code is emailed (Gmail). The account can log in only after the code is typed on the "Check your email" page. A code works for 15 minutes and 5 tries; "Send a new code" once a minute | extra |
@@ -41,7 +41,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (119 API tests), Vitest + Testing Library (96 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (119 API tests), Vitest + Testing Library (97 website tests), GitHub Actions CI
 - **Code style:** Prettier (one shared style, checked in CI) and ESLint
 
 ## Project structure
@@ -145,7 +145,7 @@ cd api-node
 npm test        # ✅ Tests: 119 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 96 passed (no backend needed)
+npm test        # ✅ Tests: 97 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.

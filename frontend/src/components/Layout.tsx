@@ -43,14 +43,12 @@ export function Layout() {
   // Customers see how many products they saved (the same list the hearts use)
   const favorites = useQuery({ queryKey: ["favorites"], queryFn: favoritesApi.list, enabled: user?.role === "CUSTOMER" });
   const favoriteCount = favorites.data?.length ?? 0;
-  // A number on the ☰ button, so it is not hidden in the menu. Red = needs attention: messages waiting for
-  // an answer (admins), new answers from customer service (customers). Otherwise blue: items in the cart.
+  // A red number on the ☰ button, so it is not hidden in the menu: messages waiting for an answer (admins),
+  // new answers from customer service (customers). The cart has its own icon in the top bar.
   const badge =
     user?.role === "ADMIN"
-      ? { n: waitingCount, alert: true, text: t("{count} messages waiting for an answer", { count: waitingCount }) }
-      : newReplies > 0
-        ? { n: newReplies, alert: true, text: t("{count} new replies from customer service", { count: newReplies }) }
-        : { n: user ? count : 0, alert: false, text: t("{count} items in the cart", { count }) };
+      ? { n: waitingCount, text: t("{count} messages waiting for an answer", { count: waitingCount }) }
+      : { n: newReplies, text: t("{count} new replies from customer service", { count: newReplies }) };
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
@@ -76,7 +74,7 @@ export function Layout() {
               <path d="M4 6h16M4 12h16M4 18h16" />
             </svg>
             {badge.n > 0 && (
-              <span aria-hidden="true" className={`count absolute -top-1 -end-1 ms-0 ${badge.alert ? "count-alert" : "count-brand"}`}>
+              <span aria-hidden="true" className="count count-alert absolute -top-1 -end-1 ms-0">
                 {badge.n}
               </span>
             )}
@@ -91,6 +89,41 @@ export function Layout() {
           <div className="ms-auto flex items-center gap-2">
             <LanguageSelect />
             <CurrencySelect />
+            {/* Customers: the cart, with the number of items in it */}
+            {user?.role === "CUSTOMER" && (
+              <NavLink
+                to="/cart"
+                aria-label={`${t("Cart")}: ${t("{count} items in the cart", { count })}`}
+                title={t("Cart")}
+                className={({ isActive }) =>
+                  `relative rounded-lg p-2 transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`
+                }
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <circle cx="9" cy="20" r="1.4" />
+                  <circle cx="18" cy="20" r="1.4" />
+                  <path d="M2.5 3.5h2.3l2.4 11a1.5 1.5 0 0 0 1.5 1.2h8.8a1.5 1.5 0 0 0 1.5-1.1L21 7H5.6" />
+                </svg>
+                {count > 0 && (
+                  <span
+                    dir="ltr"
+                    aria-hidden="true"
+                    className="absolute -top-0.5 -end-0.5 min-w-5 rounded-full bg-brand-600 px-1 text-center text-[11px] leading-5 font-bold text-white"
+                  >
+                    {count > 9 ? "9+" : count}
+                  </span>
+                )}
+              </NavLink>
+            )}
             {user && <NotificationBell role={user.role} />}
             {user ? (
               <>

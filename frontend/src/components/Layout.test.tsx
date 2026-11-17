@@ -46,7 +46,9 @@ const menu = () => screen.getByRole("dialog", { name: "Menu" });
 
 test("the page links are in the ☰ menu; a link opens its page and closes the menu", async () => {
   visit(sara, 2);
-  expect(menuButton()).toHaveAccessibleName("Menu, 2 items in the cart"); // the cart count stays visible on ☰
+  expect(menuButton()).toHaveAccessibleName("Menu");
+  // The cart is in the top bar, with its number of items
+  expect(screen.getByRole("link", { name: "Cart: 2 items in the cart" })).toHaveAttribute("href", "/cart");
   expect(menuButton()).toHaveAttribute("aria-expanded", "false");
 
   await userEvent.click(menuButton());
@@ -92,7 +94,7 @@ test("visitors who are not logged in find Log in and Register in the menu too", 
   expect(within(menu()).getByRole("link", { name: "Register" })).toBeInTheDocument();
 });
 
-test("a new answer from customer service shows on ☰ (before the cart) and next to Customer service", async () => {
+test("a new answer from customer service shows on ☰ and next to Customer service", async () => {
   vi.spyOn(supportApi, "mine").mockResolvedValue([
     { id: 7, customerUnread: true },
     { id: 8, customerUnread: false },
@@ -101,4 +103,9 @@ test("a new answer from customer service shows on ☰ (before the cart) and next
   expect(await screen.findByRole("button", { name: "Menu, 1 new reply from customer service" })).toBeInTheDocument();
   await userEvent.click(menuButton());
   expect(within(menu()).getByRole("link", { name: /^Customer service\s*1$/ })).toHaveAttribute("href", "/help");
+});
+
+test("admins and visitors have no cart in the top bar", () => {
+  visit(admin);
+  expect(screen.queryByRole("link", { name: /^Cart:/ })).not.toBeInTheDocument();
 });
