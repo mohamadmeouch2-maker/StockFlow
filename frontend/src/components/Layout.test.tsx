@@ -109,3 +109,11 @@ test("admins and visitors have no cart in the top bar", () => {
   visit(admin);
   expect(screen.queryByRole("link", { name: /^Cart:/ })).not.toBeInTheDocument();
 });
+
+test("logged-in people get the assistant button; visitors don't", () => {
+  const { unmount } = visit(sara);
+  expect(screen.getByRole("button", { name: "Ask the StockFlow assistant" })).toBeInTheDocument();
+  unmount();
+  visit(null);
+  expect(screen.queryByRole("button", { name: "Ask the StockFlow assistant" })).not.toBeInTheDocument();
+});

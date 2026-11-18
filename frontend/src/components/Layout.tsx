@@ -6,6 +6,8 @@ import { supportApi } from "../api/support";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
 import { useToast } from "../toast/useToast";
+import { ASSISTANT_STORAGE_KEY } from "../api/assistant";
+import { AssistantButton } from "./AssistantButton";
 import { ChristmasSalePopup } from "./ChristmasSalePopup";
 import { LogoMark } from "./Logo";
 import { NotificationBell } from "./NotificationBell";
@@ -52,6 +54,11 @@ export function Layout() {
 
   const onLogout = () => {
     clear(); // the next person on this browser starts with an empty cart
+    try {
+      sessionStorage.removeItem(ASSISTANT_STORAGE_KEY); // ...and an empty chat with the assistant
+    } catch {
+      // nothing kept
+    }
     logout();
     navigate("/products");
     toast(t("You are logged out. See you soon!"), "info");
@@ -239,6 +246,7 @@ export function Layout() {
       </main>
 
       <ChristmasSalePopup />
+      {user && <AssistantButton />}
 
       <footer inert={menuOpen} className="border-t border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-slate-500">

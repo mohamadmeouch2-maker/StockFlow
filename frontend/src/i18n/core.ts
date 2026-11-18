@@ -60,6 +60,11 @@ const SERVER_TEXTS: { pattern: RegExp; key: string; names: string[] }[] = [
     key: "You sent many messages in a short time. Please try again in {count} minutes, or log in.",
     names: ["count"],
   },
+  {
+    pattern: /^You asked many questions in a short time\. Please try again in (\d+) minutes\.$/,
+    key: "You asked many questions in a short time. Please try again in {count} minutes.",
+    names: ["count"],
+  },
   { pattern: /^Not enough stock for (.+) \((\d+) left\)$/, key: "Not enough stock for {name} ({count} left)", names: ["name", "count"] },
   { pattern: /^Product (\d+) does not exist$/, key: "Product {id} does not exist", names: ["id"] },
   { pattern: /^(.+) not found$/, key: "{what} not found", names: ["what"] },
@@ -171,6 +176,11 @@ export const SERVER_MESSAGES = [
   msg("At most 1,000,000"),
   msg("Standard delivery"),
   msg("Express delivery"),
+  // the assistant
+  msg("The assistant is not available right now. Please try again later."),
+  msg("Sorry, I could not answer that. Please ask in another way."),
+  msg("The last message must be the question"),
+  msg("At most 1000 characters"),
   // what "{what} not found" can be about
   msg("Order"),
   msg("Product"),

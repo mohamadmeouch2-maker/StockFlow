@@ -24,6 +24,10 @@ export const english: Dictionary = {
     one: "This category still has {count} product. Move or delete it first.",
     other: "This category still has {count} products. Move or delete them first.",
   },
+  "You asked many questions in a short time. Please try again in {count} minutes.": {
+    one: "You asked many questions in a short time. Please try again in {count} minute.",
+    other: "You asked many questions in a short time. Please try again in {count} minutes.",
+  },
   "({count} ratings)": { one: "({count} rating)", other: "({count} ratings)" },
   "Rated {average} out of 10 by {count} customers": {
     one: "Rated {average} out of 10 by {count} customer",

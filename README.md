@@ -12,6 +12,7 @@ It is built from the *StockFlow: Requirements and Build Guide*. For the plan and
 | Menu | The page links are in a ☰ menu that slides in from the left (it shows only the pages you may open). The ☰ button shows in red the new answers from customer service (customers) or the messages waiting for an answer (admins). Customers also have a cart icon in the top bar, with the number of items. It closes with ✕, Escape or a click outside | extra |
 | Languages | English, Arabic and French: a 🌐 language button in the top bar, remembered on the browser. Arabic pages read right to left (the menu opens from the right). Everything on the website is translated, also the API's messages and the notifications; dates follow the language. Product and category names stay as they were typed | extra |
 | Currencies | A currency button next to the language: prices in US dollars, Lebanese pounds (no decimals) or euros, remembered on the browser. Prices and orders stay in US dollars; the website converts what it shows with exchange rates the admin sets on the Dashboard (Exchange rates). The cart says the rate and the dollar amount of the order | extra |
+| Assistant | A 💬 chat in the corner for logged-in users, answered by a **free AI that runs on this computer** (Ollama). It looks up real data with read-only tools: products, prices and stock for everyone; their own orders for customers; low stock, sales and orders to ship for admins. It answers in the website's language. 30 questions an hour per person | extra |
 | Email check | After Register, a 6-digit code is emailed (Gmail). The account can log in only after the code is typed on the "Check your email" page. A code works for 15 minutes and 5 tries; "Send a new code" once a minute | extra |
 | Forgot password | "Forgot password?" on the login page emails a 6-digit code. Type it with a new password on the "Reset your password" page: the password changes and you are logged in. The answer is the same for every email, so nobody can find out who has an account | extra |
 | Security | Admin pages and endpoints are admin-only: 401 without login, 403 for the wrong role. After 5 wrong passwords, that login waits 15 minutes (protection against password guessing). Changing the password (or resetting it) logs out every other device at once, e.g. a thief who was logged in | FR-03 |
@@ -41,7 +42,7 @@ Not built (out of scope for the one-week plan): the separate .NET reporting API 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form + Zod, Recharts (dashboard chart)
 - **Backend (Core API):** Node.js, Express 5, TypeScript, Prisma 6, Zod, JWT, bcrypt
 - **Database:** PostgreSQL 16
-- **Tests:** Jest + Supertest (119 API tests), Vitest + Testing Library (97 website tests), GitHub Actions CI
+- **Tests:** Jest + Supertest (128 API tests), Vitest + Testing Library (101 website tests), GitHub Actions CI
 - **Code style:** Prettier (one shared style, checked in CI) and ESLint
 
 ## Project structure
@@ -119,6 +120,16 @@ npm run dev
 
 These are for local use only. You can also register a new customer on the website.
 
+### The chat assistant (optional, free)
+
+The 💬 assistant uses a free AI that runs on your own computer with [Ollama](https://ollama.com). Nothing to pay and no key. Without it the shop works; the assistant just says it is not available.
+
+1. Install Ollama: `winget install Ollama.Ollama` (or download it from ollama.com). It starts by itself and listens on port 11434.
+2. Download the model once (about 2.5 GB): `ollama pull qwen3:4b-instruct`
+3. Restart the API. Open the website, log in and click 💬.
+
+The model fits a 4 GB graphics card; on a computer without one it still works, more slowly. Another model: set `OLLAMA_MODEL` in `api-node/.env` (it must support tools).
+
 ### Emails
 
 After Register and for "Forgot password?", the API emails a 6-digit code. To send it through Gmail:
@@ -142,10 +153,10 @@ Without these two lines nothing is sent: the code is printed in the API terminal
 
 ```bash
 cd api-node
-npm test        # ✅ Tests: 119 passed (uses the stockflow_test database, never your app data)
+npm test        # ✅ Tests: 128 passed (uses the stockflow_test database, never your app data)
 
 cd ../frontend
-npm test        # ✅ Tests: 97 passed (no backend needed)
+npm test        # ✅ Tests: 101 passed (no backend needed)
 ```
 
 A GitHub Actions workflow ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs the same checks and tests on every push to `master`, once Actions is enabled in the repository settings (**Settings → Actions → General → Allow all actions**). It can also be started by hand from the **Actions** tab.
@@ -219,6 +230,7 @@ All endpoints use JSON. "Admin" and "Customer" need the header `Authorization: B
 | GET | `/api/support?status=` | Admin | Every conversation: `OPEN` (waiting for us) first, then `ANSWERED`, then `RESOLVED` |
 | PATCH | `/api/support/:id` | Admin | `{ "status": "RESOLVED" }`: mark solved or reopen without writing |
 | GET | `/api/currencies` | anyone | The exchange rates: `[{ "currency": "USD", "rate": "1" }, { "currency": "LBP", "rate": "89500" }, ...]` (how much of each currency 1 US dollar is) |
+| POST | `/api/assistant/chat` | logged in | `{ "messages": [{ "role": "user", "content": "Which pens do you have?" }], "language": "en" }` -> `{ reply, products }`. 503 when Ollama isn't running, 429 after 30 questions in an hour |
 | PUT | `/api/currencies/:currency` | Admin | `{ "rate": 89500 }` for `LBP` or `EUR` (above 0) |
 | GET | `/api/notifications` | logged in | The 20 newest of my notifications and the unread count. Admins: stock alerts and customer service messages; customers: their order news and answers |
 | POST | `/api/notifications/:id/read`, `/api/notifications/read-all` | logged in | Mark one of mine, or all of mine, as read |
