@@ -168,13 +168,39 @@
     @apply w-full text-start text-sm;
   }
   .data-table th {
-    @apply bg-slate-50 px-4 py-3 text-xs font-semibold tracking-wide text-slate-500 uppercase;
+    @apply bg-slate-50 px-4 py-3 text-start text-xs font-semibold tracking-wide text-slate-500 uppercase;
   }
   .data-table td {
     @apply border-t border-slate-100 px-4 py-3 align-middle;
   }
   .data-table tbody tr {
     @apply transition hover:bg-brand-50/40;
+  }
+
+  /* On a phone, a table with "data-table-cards" shows each row as a small card, so nothing is
+     hidden off the side of the screen. Each cell shows its column name (its data-label) above
+     the value; "cell-wide" cells take the whole width of the card. */
+  @media (width < 48rem) {
+    .data-table-cards thead {
+      @apply hidden;
+    }
+    .data-table-cards,
+    .data-table-cards tbody {
+      @apply block;
+    }
+    .data-table-cards tbody tr {
+      @apply grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 p-4 first:border-t-0;
+    }
+    .data-table-cards td {
+      @apply block border-0 p-0;
+    }
+    .data-table-cards td[data-label]::before {
+      content: attr(data-label);
+      @apply mb-1 block text-xs font-semibold tracking-wide text-slate-500 uppercase;
+    }
+    .data-table-cards td.cell-wide {
+      @apply col-span-2;
+    }
   }
 }
 

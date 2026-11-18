@@ -94,7 +94,8 @@ export function AdminOrdersPage() {
 
       {!!d?.items.length && (
         <div className="data-table-wrap">
-          <table className="data-table">
+          {/* On a phone each order is a card (see .data-table-cards) */}
+          <table className="data-table data-table-cards">
             <thead>
               <tr>
                 <th>{t("Order")}</th>
@@ -113,7 +114,7 @@ export function AdminOrdersPage() {
                     <span className="font-medium text-slate-900">#{o.id}</span>
                     <div className="text-xs text-slate-500">{dateTime(o.createdAt)}</div>
                   </td>
-                  <td className="max-w-60">
+                  <td data-label={t("Customer")} className="max-w-60">
                     <span className="font-medium text-slate-900">{o.user?.name ?? o.userId}</span>
                     {/* Where to deliver; tap the number to call the customer */}
                     {o.address ? (
@@ -129,16 +130,20 @@ export function AdminOrdersPage() {
                       <div className="text-xs text-slate-400">{t("No address (older order)")}</div>
                     )}
                   </td>
-                  <td>{items(o)}</td>
-                  <td>{money(o.total)}</td>
-                  <td>
+                  <td data-label={t("Items")} className="cell-wide">
+                    {items(o)}
+                  </td>
+                  <td data-label={t("Total")}>{money(o.total)}</td>
+                  {/* On a phone: Total and Status side by side, then the (long) delivery badge across the card, then the buttons */}
+                  <td data-label={t("Delivery")} className="cell-wide max-md:order-1">
                     {/* Express orders first: they must arrive the next day */}
                     <DeliveryBadge delivery={o.delivery} deliverBy={o.status === "PENDING" || o.status === "SHIPPED" ? o.deliverBy : null} onTheWay />
                   </td>
-                  <td>
+                  <td data-label={t("Status")}>
                     <OrderStatusBadge status={o.status} />
                   </td>
-                  <td className="space-x-2 text-end whitespace-nowrap">
+                  {/* (no buttons for delivered or cancelled orders: then the cell is hidden on a phone) */}
+                  <td className="cell-wide space-x-2 whitespace-nowrap max-md:order-2 max-md:empty:hidden md:text-end">
                     {actions[o.status].map((a) => (
                       <button
                         key={a.status}

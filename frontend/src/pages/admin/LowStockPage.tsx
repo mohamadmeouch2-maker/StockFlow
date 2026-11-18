@@ -28,7 +28,8 @@ export function LowStockPage() {
 
       {!!rows.data?.length && (
         <div className="data-table-wrap">
-          <table className="data-table">
+          {/* On a phone each product is a card (see .data-table-cards) */}
+          <table className="data-table data-table-cards">
             <thead>
               <tr>
                 <th>{t("Product")}</th>
@@ -41,18 +42,20 @@ export function LowStockPage() {
             <tbody>
               {rows.data.map((r) => (
                 <tr key={r.productId}>
-                  <td>
+                  <td className="cell-wide">
                     <div className="flex items-center gap-3">
                       <ProductImage src={r.imageUrl} alt={r.name} className="h-11 w-11 shrink-0" />
                       {r.name}
                     </div>
                   </td>
-                  <td className="text-slate-500">{r.category}</td>
-                  <td>
+                  <td data-label={t("Category")} className="text-slate-500">
+                    {r.category}
+                  </td>
+                  <td data-label={t("Stock")}>
                     {r.stock} <StockBadge product={r} />
                   </td>
-                  <td>{r.reorderLevel}</td>
-                  <td className="text-end">
+                  <td data-label={t("Reorder level")}>{r.reorderLevel}</td>
+                  <td className="cell-wide md:text-end">
                     <Link to={`/admin/products/${r.productId}/edit`} className="btn btn-outline px-3 py-1">
                       {t("Restock")}
                     </Link>

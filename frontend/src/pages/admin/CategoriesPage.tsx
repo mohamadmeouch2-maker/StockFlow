@@ -96,7 +96,8 @@ export function CategoriesPage() {
 
       {!!categories.data?.length && (
         <div className="data-table-wrap">
-          <table className="data-table">
+          {/* On a phone each category is a card (see .data-table-cards) */}
+          <table className="data-table data-table-cards">
             <thead>
               <tr>
                 <th>{t("Name")}</th>
@@ -145,7 +146,7 @@ function CategoryRow({ category, deleting, onDelete, onSaved }: { category: Cate
 
   return (
     <tr>
-      <td>
+      <td className="cell-wide">
         {editing ? (
           <form
             onSubmit={(e) => {
@@ -181,8 +182,8 @@ function CategoryRow({ category, deleting, onDelete, onSaved }: { category: Cate
           <span className="font-medium text-slate-900">{category.name}</span>
         )}
       </td>
-      <td className="text-slate-500">{t("{count} products", { count })}</td>
-      <td className="text-end whitespace-nowrap">
+      <td className="cell-wide text-slate-500">{t("{count} products", { count })}</td>
+      <td className="cell-wide whitespace-nowrap max-md:empty:hidden md:text-end">
         {!editing && (
           <>
             <button onClick={() => setEditing(true)} className="btn btn-outline me-2 px-3 py-1">

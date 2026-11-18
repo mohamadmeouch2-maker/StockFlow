@@ -70,7 +70,8 @@ export function AdminProductsPage() {
       )}
 
       <div className="data-table-wrap">
-        <table className="data-table">
+        {/* On a phone each product is a card (see .data-table-cards); data-label names the value there */}
+        <table className="data-table data-table-cards">
           <thead>
             <tr>
               <th>{t("Product")}</th>
@@ -85,27 +86,31 @@ export function AdminProductsPage() {
           <tbody>
             {products.data?.items.map((p) => (
               <tr key={p.id}>
-                <td>
+                <td className="cell-wide">
                   <div className="flex items-center gap-3">
                     <ProductImage src={p.imageUrl} alt={p.name} className="h-11 w-11 shrink-0" />
                     <span className="font-medium text-slate-900">{p.name}</span>
                   </div>
                 </td>
-                <td className="text-slate-500">{p.category?.name}</td>
-                <td>
+                <td data-label={t("Category")} className="text-slate-500">
+                  {p.category?.name}
+                </td>
+                <td data-label={t("Price")}>
                   <Price product={p} size="sm" />
                 </td>
-                <td>
+                <td data-label={t("Stock")}>
                   <div className="flex items-center gap-2">
-                    <span className="w-8 text-end">{p.stock}</span>
+                    <span className="text-end md:w-8">{p.stock}</span>
                     <StockBadge product={p} />
                   </div>
                 </td>
-                <td>
+                <td data-label={t("Rating")}>
                   <RatingBadge rating={p.rating} />
                 </td>
-                <td className="text-slate-500">{p.viewCount ?? 0}</td>
-                <td className="text-end whitespace-nowrap">
+                <td data-label={t("Views")} className="text-slate-500">
+                  {p.viewCount ?? 0}
+                </td>
+                <td className="cell-wide whitespace-nowrap md:text-end">
                   <Link to={`/admin/products/${p.id}/edit`} className="btn btn-outline me-2 px-3 py-1">
                     {t("Edit")}
                   </Link>
