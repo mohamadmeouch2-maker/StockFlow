@@ -34,6 +34,7 @@ export const english: Dictionary = {
     other: "Rated {average} out of 10 by {count} customers",
   },
   "{count} products": { one: "{count} product", other: "{count} products" },
+  "{count} views": { one: "{count} view", other: "{count} views" },
   "{count} orders": { one: "{count} order", other: "{count} orders" },
   "{count} days": { one: "{count} day", other: "{count} days" },
   "Showing {from}–{to} of {count} products": { one: "Showing {from}–{to} of {count} product", other: "Showing {from}–{to} of {count} products" },

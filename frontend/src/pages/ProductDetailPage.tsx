@@ -11,6 +11,7 @@ import { Price } from "../components/Price";
 import { ProductImage } from "../components/ProductImage";
 import { ProductReviews } from "../components/ProductReviews";
 import { RatingBadge } from "../components/RatingBadge";
+import { SimilarProducts } from "../components/SimilarProducts";
 import { ProductDetailSkeleton } from "../components/Skeleton";
 import { StockBadge } from "../components/StockBadge";
 import { useToast } from "../toast/useToast";
@@ -35,6 +36,10 @@ export function ProductDetailPage() {
   const product = useQuery({ queryKey: ["product", id], queryFn: () => productsApi.get(id) });
   const p = product.data;
   useCountView(id);
+  // A new product (e.g. chosen in "You may also like", low on the page): start at its top
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   return (
     <div className="space-y-5">
@@ -66,19 +71,19 @@ export function ProductDetailPage() {
             </div>
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <RatingBadge rating={p.rating} />
-              {p.viewCount !== undefined && <span className="text-sm text-slate-400">👁 {p.viewCount} views</span>}
+              {p.viewCount !== undefined && <span className="text-sm text-slate-400">👁 {t("{count} views", { count: p.viewCount })}</span>}
             </div>
             <div>
               <Price product={p} size="lg" />
               {p.promotion && (
                 <p className="mt-1 text-sm font-medium text-sale-600">
-                  🎄 {p.promotion.name}: {p.promotion.percent}% off until {shortDate(p.promotion.endsAt)}
+                  🎄 {t("{name}: {percent}% off until {date}", { name: p.promotion.name, percent: p.promotion.percent, date: shortDate(p.promotion.endsAt) })}
                 </p>
               )}
             </div>
             <div className="flex items-center gap-3">
               <StockBadge product={p} />
-              <span className="text-sm text-slate-500">{p.stock} left</span>
+              <span className="text-sm text-slate-500">{t("{count} left", { count: p.stock })}</span>
             </div>
             <p className="text-slate-600">{p.description || t("No description.")}</p>
 
@@ -96,6 +101,7 @@ export function ProductDetailPage() {
         </div>
       )}
 
+      {p && <SimilarProducts productId={p.id} />}
       {p && <ProductReviews productId={p.id} />}
     </div>
   );

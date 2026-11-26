@@ -89,6 +89,43 @@ productsRouter.get("/:id", async (req, res) => {
   res.json({ ...withSale(product), rating: (await ratingsFor([id]))(id) });
 });
 
+// "You may also like" on the product page: up to 4 other products. First the ones most often
+// bought together with this one (in the same orders, cancelled ones not counted), then others
+// from the same category, then the shop's most viewed. Sold-out products are left out.
+const SIMILAR = 4;
+productsRouter.get("/:id/similar", async (req, res) => {
+  const id = parseId(req.params.id, "Product");
+  const product = await prisma.product.findUnique({ where: { id }, select: { categoryId: true } });
+  if (!product) throw notFound("Product");
+
+  // Other products in stock that match, the best first (max 20 to choose from)
+  const available = async (where: Prisma.ProductWhereInput, orderBy: Prisma.ProductOrderByWithRelationInput[] = []) =>
+    (await prisma.product.findMany({ where: { AND: [where, { stock: { gt: 0 } }, { id: { not: id } }] }, select: { id: true }, orderBy, take: 20 })).map(
+      (p) => p.id,
+    );
+  const picked: number[] = [];
+  const add = (ids: number[]) => ids.forEach((pid) => picked.length < SIMILAR && !picked.includes(pid) && picked.push(pid));
+
+  // 1. Bought together: in how many orders each other product was next to this one
+  const together = await prisma.orderItem.groupBy({
+    by: ["productId"],
+    where: { productId: { not: id }, order: { status: { not: "CANCELLED" }, items: { some: { productId: id } } } },
+    _count: { orderId: true },
+    orderBy: [{ _count: { orderId: "desc" } }, { productId: "asc" }],
+    take: 20,
+  });
+  const inStock = new Set(await available({ id: { in: together.map((t) => t.productId) } }));
+  add(together.map((t) => t.productId).filter((pid) => inStock.has(pid))); // keeps the "most often" order
+  // 2. The same category, then 3. anything, the most viewed first
+  const popular: Prisma.ProductOrderByWithRelationInput[] = [{ viewCount: "desc" }, { name: "asc" }];
+  if (picked.length < SIMILAR) add(await available({ categoryId: product.categoryId }, popular));
+  if (picked.length < SIMILAR) add(await available({}, popular));
+
+  const rows = await prisma.product.findMany({ where: { id: { in: picked } }, include: { category: true, promotion: true } });
+  const rating = await ratingsFor(picked);
+  res.json(picked.map((pid) => rows.find((p) => p.id === pid)!).map((p) => ({ ...withSale(p), rating: rating(p.id) })));
+});
+
 // Counts one view of the product page. The website calls it once per visit.
 productsRouter.post("/:id/view", async (req, res) => {
   const id = parseId(req.params.id, "Product");

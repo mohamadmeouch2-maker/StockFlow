@@ -31,6 +31,8 @@ export const productsApi = {
     return api<Paged<Product>>("core", `/api/products?${q}`);
   },
   get: (id: number) => api<Product>("core", `/api/products/${id}`),
+  // "You may also like": up to 4 other products in stock (bought together, same category, most viewed)
+  similar: (id: number) => api<Product[]>("core", `/api/products/${id}/similar`),
   create: (d: ProductInput) => api<Product>("core", "/api/products", { method: "POST", body: JSON.stringify(d) }),
   update: (id: number, d: ProductInput) => api<Product>("core", `/api/products/${id}`, { method: "PUT", body: JSON.stringify(d) }),
   remove: (id: number) => api<void>("core", `/api/products/${id}`, { method: "DELETE" }),

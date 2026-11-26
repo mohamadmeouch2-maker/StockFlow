@@ -176,7 +176,7 @@ export function ProductsPage() {
               </p>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                 <RatingBadge rating={p.rating} />
-                {p.viewCount !== undefined && <span className="text-xs whitespace-nowrap text-slate-400">👁 {p.viewCount} views</span>}
+                {p.viewCount !== undefined && <span className="text-xs whitespace-nowrap text-slate-400">👁 {t("{count} views", { count: p.viewCount })}</span>}
               </div>
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
                 <StockBadge product={p} />
