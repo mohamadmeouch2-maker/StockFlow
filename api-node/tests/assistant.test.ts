@@ -78,6 +78,23 @@ test("a customer's question: the AI searches the products, the answer comes back
   expect(JSON.parse(toolMessage.content)).toEqual([{ id: pen, name: "Blue Pen", category: "Office", price: "$2.00", stock: "in stock" }]);
 });
 
+test("the products on sale: only a sale that has not ended, also when the AI searches for the word 'sale'", async () => {
+  const categoryId = (await prisma.category.findFirstOrThrow({ where: { name: "Office" } })).id;
+  const ended = await prisma.promotion.create({ data: { name: "Summer Sale", percent: 50, endsAt: new Date(Date.now() - 86_400_000) } });
+  const running = await prisma.promotion.create({ data: { name: "Christmas Sale", percent: 30, endsAt: new Date(Date.now() + 86_400_000) } });
+  const paper = await prisma.product.create({ data: { name: "Printer Paper", price: 10, stock: 20, categoryId, promotionId: running.id } });
+  const stapler = await prisma.product.create({ data: { name: "Stapler", price: 6, stock: 20, categoryId, promotionId: ended.id } });
+  const who = { id: saraId, role: "CUSTOMER" as const };
+
+  const onSale = [expect.objectContaining({ name: "Printer Paper", price: "$7.00", normal_price: "$10.00", sale: "-30%" })];
+  expect(await runTool({ function: { name: "search_products", arguments: { on_sale_only: true } } }, who)).toEqual(onSale);
+  expect(await runTool({ function: { name: "search_products", arguments: { query: "sale" } } }, who)).toEqual(onSale);
+  expect(await runTool({ function: { name: "search_products", arguments: { query: "Discounts" } } }, who)).toEqual(onSale);
+
+  await prisma.product.deleteMany({ where: { id: { in: [paper.id, stapler.id] } } });
+  await prisma.promotion.deleteMany({ where: { id: { in: [ended.id, running.id] } } });
+});
+
 test("the answer uses the website's language", async () => {
   chat.mockResolvedValueOnce(answer("مرحبا"));
   await ask(sara, "مرحبا", "ar").expect(200);
@@ -109,10 +126,17 @@ test("admins get the shop's numbers: low stock, sales and the orders to ship", a
   expect(toolNames(chat.mock.calls[0][1])).toEqual(["list_categories", "low_stock", "orders_to_ship", "sales_summary", "search_products"]);
 
   const who = { id: 1, role: "ADMIN" as const };
+  const categoryId = (await prisma.category.findFirstOrThrow({ where: { name: "Office" } })).id;
+  const printer = await prisma.product.create({ data: { name: "Label Printer", price: 30, stock: 0, categoryId } });
   expect(await runTool({ function: { name: "low_stock", arguments: {} } }, who)).toEqual({
-    count: 1,
-    products: [{ name: "Desk Chair", stock: 3, reorder_level: 6 }],
+    count: 2,
+    sold_out: 1,
+    products: [
+      { name: "Label Printer", stock: 0, reorder_level: 6, status: "sold out" }, // the most urgent first
+      { name: "Desk Chair", stock: 3, reorder_level: 6, status: "low" },
+    ],
   });
+  await prisma.product.delete({ where: { id: printer.id } });
   expect(await runTool({ function: { name: "sales_summary", arguments: { days: 7 } } }, who)).toEqual({
     days: 7,
     orders: 1,

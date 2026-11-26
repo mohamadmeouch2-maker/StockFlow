@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vitest";
@@ -31,6 +31,9 @@ test("a customer opens the chat, picks a suggested question, and gets an answer 
   renderButton();
   await openChat();
   expect(screen.getByText("Hi Sara! Ask me about products, prices or your orders.")).toBeInTheDocument();
+  // A new customer sees what they can ask: at least 5 questions to click
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getAllByRole("button").length).toBeGreaterThanOrEqual(5 + 2); // (+ ✕ and Send)
 
   await userEvent.click(screen.getByRole("button", { name: "Which products are on sale?" }));
   expect(await screen.findByText("These are on sale: Ballpoint Pens.")).toBeInTheDocument();

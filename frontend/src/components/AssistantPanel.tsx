@@ -21,10 +21,24 @@ const save = (messages: ChatMessage[]) => {
   }
 };
 
-// Questions to start with, depending on who is asking
+// Questions to start with, depending on who is asking: they show a new user what they can ask.
+// Each one is answered by the assistant's tools (see api-node/src/modules/assistant/tools.ts).
 const SUGGESTIONS = {
-  CUSTOMER: [msg("Which products are on sale?"), msg("What can I buy for less than $10?"), msg("Where is my last order?")],
-  ADMIN: [msg("Which products need restocking?"), msg("How were the sales this week?"), msg("Which orders should I ship first?")],
+  CUSTOMER: [
+    msg("Which products are on sale?"),
+    msg("What can I buy for less than $10?"),
+    msg("Do you have office chairs?"),
+    msg("What do you have for cleaning?"),
+    msg("What categories do you sell?"),
+    msg("Where is my last order?"),
+  ],
+  ADMIN: [
+    msg("Which products need restocking?"),
+    msg("Which products are sold out?"),
+    msg("How were the sales this week?"),
+    msg("What were the best sellers this month?"),
+    msg("Which orders should I ship first?"),
+  ],
 };
 
 // The StockFlow assistant: a chat answered by a free AI that runs on the shop's computer.
@@ -105,7 +119,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                 ? t("Hi {name}! Ask me about stock, sales or the orders to ship.", { name: user.name })
                 : t("Hi {name}! Ask me about products, prices or your orders.", { name: user?.name ?? "" })}
             </p>
-            <div className="flex flex-col items-start gap-2">
+            <div className="flex flex-wrap gap-2">
               {SUGGESTIONS[user?.role ?? "CUSTOMER"].map((s) => (
                 <button
                   key={s}

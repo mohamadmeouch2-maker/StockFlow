@@ -28,18 +28,24 @@ const TOOLS: Record<string, ToolDef> = {
     roles: ["CUSTOMER", "ADMIN"],
     tool: fn(
       "search_products",
-      "Find products in the shop: name, price in US dollars (sale price during a sale), stock and category. Product names are in English, so search with English words. With no query, it lists products.",
+      "Find products in the shop: name, price in US dollars (sale price during a sale), stock and category. Product names are in English, so search with English words. With no query, it lists products. For products on sale (discounts, offers, promotions), use on_sale_only: product names don't contain the word 'sale'.",
       {
         query: { type: "string", description: "English words from the product name or description, e.g. 'paper' or 'chair'" },
         category: { type: "string", description: "Only this category (see list_categories)" },
         max_price: { type: "number", description: "Only products at or below this price in US dollars" },
         in_stock_only: { type: "boolean", description: "Leave out sold-out products" },
+        on_sale_only: { type: "boolean", description: "Only the products on sale right now (with their discount)" },
       },
     ),
     async run(args) {
-      const query = text(args.query);
+      let query = text(args.query);
       const category = text(args.category);
+      // A small model may still search for the word "sale": that means "the products on sale"
+      const saleWord = /^(on )?(sales?|discounts?|offers?|promotions?|promos?)$/i.test(query);
+      if (saleWord) query = "";
+      const onSale = args.on_sale_only === true || saleWord;
       const where: Prisma.ProductWhereInput = {
+        ...(onSale && { promotion: { endsAt: { gt: new Date() } } }), // a sale counts until its end date
         ...(query && {
           OR: [
             { name: { contains: query, mode: "insensitive" } },
@@ -61,20 +67,20 @@ const TOOLS: Record<string, ToolDef> = {
             name: p.name,
             category: p.category.name,
             price: `$${price.toFixed(2)}`,
-            ...(sale && { normal_price: `$${p.price.toFixed(2)}`, sale: `-${p.promotion!.percent}%` }),
+            ...(sale && { normal_price: `$${p.price.toFixed(2)}`, sale: `-${p.promotion!.percent}%`, sale_until: day(p.promotion!.endsAt) }),
             stock: p.stock === 0 ? "sold out" : p.stock <= p.reorderLevel ? `low stock (${p.stock} left)` : "in stock",
             priceValue: Number(price),
           };
         })
         .filter((p) => !(maxPrice > 0) || p.priceValue <= maxPrice)
-        .slice(0, 8)
+        .slice(0, 12) // enough for a whole sale, small enough for the AI to read quickly
         .map(({ priceValue: _ignored, ...p }) => p);
     },
   },
 
   list_categories: {
     roles: ["CUSTOMER", "ADMIN"],
-    tool: fn("list_categories", "The product categories of the shop and how many products each has."),
+    tool: fn("list_categories", "The shop's real product categories and how many products each has: use it when asked what the shop sells."),
     async run() {
       const rows = await prisma.category.findMany({ include: { _count: { select: { products: true } } }, orderBy: { name: "asc" } });
       return rows.map((c) => ({ name: c.name, products: c._count.products }));
@@ -110,16 +116,20 @@ const TOOLS: Record<string, ToolDef> = {
 
   low_stock: {
     roles: ["ADMIN"],
-    tool: fn("low_stock", "Products at or below their reorder level (the most urgent first), to restock."),
+    tool: fn("low_stock", "Products that are sold out or running low (at or below their reorder level), the most urgent first, to restock."),
     async run() {
       const rows = await prisma.product.findMany({
         where: { stock: { lte: prisma.product.fields.reorderLevel } },
         orderBy: [{ stock: "asc" }, { name: "asc" }],
         take: 20,
       });
-      if (rows.length === 0) return { count: 0, products: [], note: "Every product has enough stock." };
-      // The count helps a small model mention every product, not just the first few
-      return { count: rows.length, products: rows.map((p) => ({ name: p.name, stock: p.stock, reorder_level: p.reorderLevel })) };
+      if (rows.length === 0) return { count: 0, sold_out: 0, products: [], note: "Every product has enough stock." };
+      // The counts help a small model mention every product, not just the first few
+      return {
+        count: rows.length,
+        sold_out: rows.filter((p) => p.stock === 0).length,
+        products: rows.map((p) => ({ name: p.name, stock: p.stock, reorder_level: p.reorderLevel, status: p.stock === 0 ? "sold out" : "low" })),
+      };
     },
   },
 
