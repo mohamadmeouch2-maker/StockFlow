@@ -30,7 +30,7 @@ ordersRouter.post("/", requireRole("CUSTOMER"), validate(createBody), async (_re
   res.status(201).json(await createOrder(res.locals.user.id, items, delivery, { phone, city, address }));
 });
 
-// The delivery choices for the cart: Standard (free, 3-5 days) or Express (extra fee, next day).
+// The delivery choices for the cart: Standard ($3, free from $60, 3-5 days) or Express ($7, next day).
 ordersRouter.get("/delivery-options", (_req, res) => {
   res.json(deliveryOptionsJson());
 });

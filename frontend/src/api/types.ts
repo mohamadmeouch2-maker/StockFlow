@@ -34,7 +34,8 @@ export type OrderStatus = "PENDING" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
 // How fast the order arrives. Express costs more (the API sets the price).
 export type DeliveryMethod = "STANDARD" | "EXPRESS";
-export type DeliveryOption = { id: DeliveryMethod; label: string; fee: string; minDays: number; maxDays: number };
+// freeFrom: the items' total from which this delivery is free ("60.00"), or null if it never is
+export type DeliveryOption = { id: DeliveryMethod; label: string; fee: string; freeFrom: string | null; minDays: number; maxDays: number };
 
 // Where to bring the order, typed in the cart.
 export type ShipTo = { phone: string; city: string; address: string };

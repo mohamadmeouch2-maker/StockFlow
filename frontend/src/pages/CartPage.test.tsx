@@ -12,8 +12,8 @@ import { CartPage } from "./CartPage";
 const stapler = { id: 5, name: "Stapler", price: "4.50", stock: 10, reorderLevel: 5, categoryId: 1, imageUrl: null };
 
 vi.spyOn(ordersApi, "deliveryOptions").mockResolvedValue([
-  { id: "STANDARD", label: "Standard delivery", fee: "0.00", minDays: 3, maxDays: 5 },
-  { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
+  { id: "STANDARD", label: "Standard delivery", fee: "3.00", freeFrom: "60.00", minDays: 3, maxDays: 5 },
+  { id: "EXPRESS", label: "Express delivery", fee: "7.00", freeFrom: null, minDays: 1, maxDays: 1 },
 ]);
 const savedAddress = vi.spyOn(ordersApi, "savedAddress");
 const create = vi.spyOn(ordersApi, "create").mockResolvedValue({ id: 41, deliverBy: new Date().toISOString() } as Order);
@@ -42,18 +42,30 @@ const fillAddress = async () => {
   await userEvent.type(screen.getByLabelText("Address"), typed.address);
 };
 
-test("standard delivery is chosen first and is free", async () => {
+test("standard delivery is chosen first and costs $3 under $60, with how much is missing for free delivery", async () => {
   renderCart();
   expect(await screen.findByRole("radio", { name: /Standard delivery/ })).toBeChecked();
   expect(screen.getByRole("radio", { name: /Standard delivery/ })).toHaveAccessibleName(/3–5 days/);
-  expect(totalRow()).toHaveTextContent("$9.00");
+  expect(totalRow()).toHaveTextContent("$12.00"); // $9.00 + $3.00
+  expect(screen.getByText("Add $51.00 more for free standard delivery.")).toBeInTheDocument();
 });
 
-test("choosing Express adds $4.50 to the total and sends EXPRESS with the order and the address", async () => {
+test("from $60 standard delivery is free; Express still costs $7", async () => {
+  sessionStorage.setItem("cart", JSON.stringify([{ product: stapler, quantity: 14 }])); // 14 x $4.50 = $63.00
+  renderCart();
+  expect(await screen.findByRole("radio", { name: /Standard delivery/ })).toHaveAccessibleName(/Free/);
+  expect(totalRow()).toHaveTextContent("$63.00");
+  expect(screen.getByText("Your order gets free standard delivery.")).toBeInTheDocument();
+
+  await userEvent.click(screen.getByRole("radio", { name: /Express delivery/ }));
+  expect(totalRow()).toHaveTextContent("$70.00"); // $63.00 + $7.00
+});
+
+test("choosing Express adds $7 to the total and sends EXPRESS with the order and the address", async () => {
   renderCart();
   await userEvent.click(await screen.findByRole("radio", { name: /Express delivery/ }));
   expect(screen.getByRole("radio", { name: /Express delivery/ })).toHaveAccessibleName(/Next day/);
-  expect(totalRow()).toHaveTextContent("$13.50"); // $9.00 + $4.50
+  expect(totalRow()).toHaveTextContent("$16.00"); // $9.00 + $7.00
 
   await fillAddress();
   await userEvent.click(screen.getByRole("button", { name: "Place order" }));

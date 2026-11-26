@@ -34,7 +34,7 @@ test("rejects orders without a token", async () => {
 
 test("creates an order, computes the total on the server and deducts stock (FR-07, FR-08)", async () => {
   const res = await order(2).expect(201);
-  expect(Number(res.body.total)).toBe(20);
+  expect(Number(res.body.total)).toBe(23); // 2 x $10 + $3 standard delivery
   expect(res.body.status).toBe("PENDING");
   expect(res.body.items[0].product.name).toBe("Widget");
   expect(await stockOf(productId)).toBe(1);
@@ -143,16 +143,16 @@ test("a product that appears in orders cannot be deleted", async () => {
   expect(res.body.error.code).toBe("IN_USE");
 });
 
-// Delivery options: Standard (free, 3-5 days) or Express (+$4.50, next day).
+// Delivery options: Standard ($3, free from $60, 3-5 days) or Express (+$7, next day).
 const DAY = 24 * 60 * 60 * 1000;
 const daysFromNow = (iso: string) => (new Date(iso).getTime() - Date.now()) / DAY;
 
-test("standard delivery is free and arrives within 5 days; express adds $4.50 and arrives the next day", async () => {
+test("standard delivery adds $3 and arrives within 5 days; express adds $7 and arrives the next day", async () => {
   const gadget = await newProduct(10); // $2.50 each
   const standard = (await order(2, customerToken, gadget).expect(201)).body; // no choice sent = standard
   expect(standard.delivery).toBe("STANDARD");
-  expect(Number(standard.deliveryFee)).toBe(0);
-  expect(Number(standard.total)).toBe(5);
+  expect(Number(standard.deliveryFee)).toBe(3);
+  expect(Number(standard.total)).toBe(8); // 2 x $2.50 + $3
   expect(daysFromNow(standard.deliverBy)).toBeCloseTo(5, 1);
 
   const express = (
@@ -163,9 +163,31 @@ test("standard delivery is free and arrives within 5 days; express adds $4.50 an
       .expect(201)
   ).body;
   expect(express.delivery).toBe("EXPRESS");
-  expect(Number(express.deliveryFee)).toBe(4.5);
-  expect(Number(express.total)).toBe(9.5); // 2 x $2.50 + $4.50
+  expect(Number(express.deliveryFee)).toBe(7);
+  expect(Number(express.total)).toBe(12); // 2 x $2.50 + $7
   expect(daysFromNow(express.deliverBy)).toBeCloseTo(1, 1);
+});
+
+test("standard delivery is free from $60 (the sale price counts); express always costs $7", async () => {
+  const gadget = await newProduct(200); // $2.50 each
+  const send = (quantity: number, delivery = "STANDARD") =>
+    request(app)
+      .post("/api/orders")
+      .set(auth(customerToken))
+      .send({ items: [{ productId: gadget, quantity }], delivery, ...shipTo })
+      .expect(201)
+      .then((res) => ({ fee: Number(res.body.deliveryFee), total: Number(res.body.total) }));
+
+  expect(await send(23)).toEqual({ fee: 3, total: 60.5 }); // $57.50: not yet
+  expect(await send(24)).toEqual({ fee: 0, total: 60 }); // exactly $60: free
+  expect(await send(24, "EXPRESS")).toEqual({ fee: 7, total: 67 });
+
+  // 30% off: 30 x $2.50 = $75 becomes $52.50, under $60, so delivery is not free
+  const sale = await prisma.promotion.create({ data: { name: "Test Sale", percent: 30, endsAt: new Date(Date.now() + DAY) } });
+  await prisma.product.update({ where: { id: gadget }, data: { promotionId: sale.id } });
+  expect(await send(30)).toEqual({ fee: 3, total: 55.5 });
+  await prisma.product.update({ where: { id: gadget }, data: { promotionId: null } });
+  await prisma.promotion.delete({ where: { id: sale.id } });
 });
 
 test("the browser can't choose its own delivery fee, and unknown deliveries are refused", async () => {
@@ -176,7 +198,7 @@ test("the browser can't choose its own delivery fee, and unknown deliveries are 
       .set(auth(customerToken))
       .send({ items: [{ productId: gadget, quantity: 1 }], ...shipTo, ...body });
   const sneaky = await send({ delivery: "EXPRESS", deliveryFee: 0 }).expect(201); // the extra field is ignored
-  expect(Number(sneaky.body.deliveryFee)).toBe(4.5);
+  expect(Number(sneaky.body.deliveryFee)).toBe(7);
   const bad = await send({ delivery: "ROCKET" }).expect(400);
   expect(bad.body.error.details[0].field).toBe("delivery");
 });
@@ -184,8 +206,8 @@ test("the browser can't choose its own delivery fee, and unknown deliveries are 
 test("the cart can ask for the delivery options", async () => {
   const res = await request(app).get("/api/orders/delivery-options").set(auth(customerToken)).expect(200);
   expect(res.body).toEqual([
-    { id: "STANDARD", label: "Standard delivery", fee: "0.00", minDays: 3, maxDays: 5 },
-    { id: "EXPRESS", label: "Express delivery", fee: "4.50", minDays: 1, maxDays: 1 },
+    { id: "STANDARD", label: "Standard delivery", fee: "3.00", freeFrom: "60.00", minDays: 3, maxDays: 5 },
+    { id: "EXPRESS", label: "Express delivery", fee: "7.00", freeFrom: null, minDays: 1, maxDays: 1 },
   ]);
 });
 

@@ -5,6 +5,7 @@ import { AppError } from "../../lib/errors";
 import { prisma } from "../../lib/prisma";
 import { requireAuth, type AuthUser } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
+import { DELIVERY_OPTIONS } from "../orders/delivery";
 import { ollama, type OllamaMessage } from "./ollama";
 import { runTool, toolsFor } from "./tools";
 
@@ -43,6 +44,17 @@ function limitQuestions(userId: number, res: Response, now = Date.now()) {
 
 const LANGUAGES = { en: "English", ar: "Arabic", fr: "French" };
 
+// "Standard delivery $3.00, free from $60.00 (after sale discounts), 3-5 days; Express delivery $7.00 always, never free, 1 day"
+// Built from the real prices, so the assistant never tells an old price.
+const deliveryText = () =>
+  Object.values(DELIVERY_OPTIONS)
+    .map((o) => {
+      const days = o.minDays === o.maxDays ? `${o.maxDays} day${o.maxDays > 1 ? "s" : ""}` : `${o.minDays}-${o.maxDays} days`;
+      const free = o.freeFrom ? `, free from $${o.freeFrom.toFixed(2)} (after sale discounts)` : " always, never free";
+      return `${o.label} $${o.fee.toFixed(2)}${free}, ${days}`;
+    })
+    .join("; ");
+
 function instructions(role: Role, name: string, language: keyof typeof LANGUAGES) {
   const who =
     role === "ADMIN"
@@ -56,6 +68,7 @@ function instructions(role: Role, name: string, language: keyof typeof LANGUAGES
     "Before answering about products, categories, prices, stock, sales or orders, always call a tool to get the real data, even if you think you know. Never invent them: if the tools don't have it, say you don't know.",
     "When a tool gives a list, mention every item in it (or say how many there are), not just the first ones.",
     "Prices are in US dollars. Product names are in English: search with English words, even when the question is in another language.",
+    `Delivery, chosen in the cart: ${deliveryText()}.`,
     "You can only read information. You cannot place, change or cancel orders: say where to do it on the website (Cart, My orders, Customer service).",
   ].join("\n");
 }

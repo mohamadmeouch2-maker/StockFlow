@@ -8,7 +8,7 @@ import { Prisma, PrismaClient, type Product } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { uploadRoot } from "../src/lib/uploads";
 import { stockAlert } from "../src/modules/notifications/notifications.service";
-import { DELIVERY_OPTIONS, deliverBy } from "../src/modules/orders/delivery";
+import { deliverBy, feeFor } from "../src/modules/orders/delivery";
 
 const prisma = new PrismaClient();
 
@@ -156,7 +156,7 @@ async function main() {
         const createdAt = new Date(Date.now() - day * 24 * 60 * 60 * 1000 - (k * 2 + 1) * 60 * 60 * 1000);
         // Every second order of a day chose Express delivery (it costs more and arrives the next day).
         const delivery = k === 1 ? "EXPRESS" : "STANDARD";
-        const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
+        const deliveryFee = feeFor(delivery, total);
         // When each step happened, for the tracking timeline
         const after = (hours: number) => new Date(createdAt.getTime() + hours * 60 * 60 * 1000);
         const steps =

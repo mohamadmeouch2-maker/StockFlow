@@ -4,7 +4,7 @@ import { salePrice } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
 import type { ShipTo } from "../../lib/shipTo";
 import { stockAlert } from "../notifications/notifications.service";
-import { DELIVERY_OPTIONS, deliverBy } from "./delivery";
+import { deliverBy, feeFor } from "./delivery";
 
 // Order lines come back with the product name, which the website shows.
 export const withItems = { items: { include: { product: { select: { name: true } } } } } as const;
@@ -41,8 +41,8 @@ export async function createOrder(userId: number, items: { productId: number; qu
       const alert = stockAlert(product, quantity);
       if (alert) await tx.notification.create({ data: { ...alert, productId } });
     }
-    // Express costs more and arrives sooner. The fee comes from the server, never from the browser.
-    const deliveryFee = DELIVERY_OPTIONS[delivery].fee;
+    // Express costs more and arrives sooner; Standard is free from $60. The fee comes from the server, never from the browser.
+    const deliveryFee = feeFor(delivery, total);
     return tx.order.create({
       data: { userId, total: total.add(deliveryFee), delivery, deliveryFee, deliverBy: deliverBy(delivery), ...shipTo, items: { create: orderLines } },
       include: withItems,

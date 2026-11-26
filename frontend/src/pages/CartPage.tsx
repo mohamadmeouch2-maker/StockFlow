@@ -25,6 +25,9 @@ const howLong = (o: DeliveryOption) =>
       ? tr("{count} days", { count: o.maxDays })
       : tr("{min}–{count} days", { min: o.minDays, count: o.maxDays });
 
+// Money compared in cents, so 0.1 + 0.2 rounding errors can't change the delivery price
+const cents = (amount: number) => Math.round(amount * 100);
+
 // FR-06 / FR-07: review the cart and place the order (guide 4.8).
 export function CartPage() {
   const { t, locale } = useT();
@@ -33,7 +36,7 @@ export function CartPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const toast = useToast();
-  // Standard (free) or Express (costs more, arrives sooner). The prices come from the API.
+  // Standard ($3, free from $60) or Express (costs more, arrives sooner). The prices come from the API.
   const [delivery, setDelivery] = useState<DeliveryMethod>("STANDARD");
   const options = useQuery({ queryKey: ["delivery-options"], queryFn: ordersApi.deliveryOptions, staleTime: Infinity });
 
@@ -76,8 +79,14 @@ export function CartPage() {
 
   // For information only: the server calculates the real total (FR-08).
   const subtotal = items.reduce((sum, i) => sum + effectivePrice(i.product) * i.quantity, 0);
-  const deliveryFee = Number(options.data?.find((o) => o.id === delivery)?.fee ?? 0);
-  const total = subtotal + deliveryFee;
+  // What a delivery costs for this cart: Standard is free from its "freeFrom" amount ($60)
+  const feeOf = (o: DeliveryOption) => (o.freeFrom !== null && cents(subtotal) >= cents(Number(o.freeFrom)) ? 0 : Number(o.fee));
+  const chosen = options.data?.find((o) => o.id === delivery);
+  const deliveryFee = chosen ? feeOf(chosen) : null; // null: the options are not loaded
+  const total = subtotal + (deliveryFee ?? 0);
+  // How much more the customer needs to buy for free delivery (0 = they have it)
+  const freeOption = options.data?.find((o) => o.freeFrom !== null);
+  const missing = freeOption ? Math.max(0, cents(Number(freeOption.freeFrom)) - cents(subtotal)) / 100 : 0;
 
   if (items.length === 0)
     return (
@@ -213,7 +222,11 @@ export function CartPage() {
                         <span aria-hidden="true">{o.id === "EXPRESS" ? "⚡ " : "🚚 "}</span>
                         {t(o.label)}
                       </span>
-                      <span>{Number(o.fee) === 0 ? t("Free") : `+${money(o.fee)}`}</span>
+                      <span>
+                        {/* Free from $60: the usual price crossed out */}
+                        {feeOf(o) < Number(o.fee) && <del className="me-1 font-normal text-slate-400">{money(o.fee)}</del>}
+                        {feeOf(o) === 0 ? t("Free") : `+${money(feeOf(o))}`}
+                      </span>
                     </span>
                     <span className="block text-sm text-slate-500">
                       {howLong(o)} · {t("arrives by {date}", { date: shortDate(addDays(o.maxDays)) })}
@@ -222,7 +235,22 @@ export function CartPage() {
                 </label>
               );
             })}
-            {options.isError && <p className="text-sm text-slate-500">{t("Standard delivery (free) will be used.")}</p>}
+            {options.isError && <p className="text-sm text-slate-500">{t("Standard delivery will be used.")}</p>}
+            {/* Free standard delivery from $60: how far the cart is from it */}
+            {freeOption &&
+              (missing > 0 ? (
+                <div className="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  {t("Add {amount} more for free standard delivery.", { amount: money(missing) })}
+                  <div aria-hidden="true" className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full rounded-full bg-brand-600" style={{ width: `${(subtotal / Number(freeOption.freeFrom)) * 100}%` }} />
+                  </div>
+                </div>
+              ) : (
+                <p className="rounded-lg bg-success-50 px-3 py-2 text-sm font-medium text-success-700">
+                  <span aria-hidden="true">🎉 </span>
+                  {t("Your order gets free standard delivery.")}
+                </p>
+              ))}
           </fieldset>
 
           <div className="space-y-1.5 border-t border-slate-100 pt-4 text-sm text-slate-600">
@@ -232,7 +260,7 @@ export function CartPage() {
             </div>
             <div className="flex justify-between">
               <span>{t("Delivery")}</span>
-              <span>{deliveryFee === 0 ? t("Free") : money(deliveryFee)}</span>
+              <span>{deliveryFee === null ? "—" : deliveryFee === 0 ? t("Free") : money(deliveryFee)}</span>
             </div>
           </div>
           <div className="flex justify-between border-t border-slate-100 pt-4 text-lg font-bold text-slate-900">

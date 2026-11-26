@@ -72,6 +72,9 @@ test("a customer's question: the AI searches the products, the answer comes back
   expect(toolNames(tools)).toEqual(["list_categories", "my_orders", "search_products"]); // no shop numbers for customers
   expect(first[0]).toMatchObject({ role: "system" });
   expect(first[0].content).toContain("Always answer in English");
+  expect(first[0].content).toContain(
+    "Standard delivery $3.00, free from $60.00 (after sale discounts), 3-5 days; Express delivery $7.00 always, never free, 1 day",
+  );
   // The second round sees what the tool found
   const toolMessage = chat.mock.calls[1][0].at(-1) as Extract<OllamaMessage, { role: "tool" }>;
   expect(toolMessage).toMatchObject({ role: "tool", tool_name: "search_products" });
@@ -111,7 +114,7 @@ test("a customer only ever sees their own orders, whatever the AI asks", async (
   chat.mockResolvedValueOnce(toolCall("my_orders")).mockResolvedValueOnce(answer("Your order is pending."));
   await ask(sara, "Where is my order?").expect(200);
   const orders = JSON.parse((chat.mock.calls[1][0].at(-1) as { content: string }).content);
-  expect(orders).toEqual([expect.objectContaining({ status: "pending", items: "2 × Blue Pen", total: "$4.00", delivery: "standard" })]);
+  expect(orders).toEqual([expect.objectContaining({ status: "pending", items: "2 × Blue Pen", total: "$7.00", delivery: "standard" })]);
 });
 
 test("a customer can't use the admins' tools, even if the AI asks for them", async () => {
@@ -140,7 +143,7 @@ test("admins get the shop's numbers: low stock, sales and the orders to ship", a
   expect(await runTool({ function: { name: "sales_summary", arguments: { days: 7 } } }, who)).toEqual({
     days: 7,
     orders: 1,
-    revenue: "$4",
+    revenue: "$7", // 2 x $2 + $3 delivery
     best_sellers: [{ name: "Blue Pen", sold: 2 }],
   });
   expect(await runTool({ function: { name: "orders_to_ship", arguments: {} } }, who)).toEqual([

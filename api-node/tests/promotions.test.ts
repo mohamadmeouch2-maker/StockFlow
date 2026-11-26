@@ -71,7 +71,7 @@ test("an order pays the sale price (calculated on the server)", async () => {
     .send({ items: [{ productId: id["Slow"], quantity: 2 }], ...shipTo })
     .expect(201);
   expect(Number(res.body.items[0].unitPrice)).toBe(7);
-  expect(Number(res.body.total)).toBe(14);
+  expect(Number(res.body.total)).toBe(17); // + $3 standard delivery
 });
 
 test("only one sale at a time, and the input is checked", async () => {
