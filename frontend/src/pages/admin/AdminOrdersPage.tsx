@@ -10,6 +10,7 @@ import { useToast } from "../../toast/useToast";
 import { useT } from "../../i18n/useT";
 import { msg } from "../../i18n/core";
 import { dateTime } from "../../utils/format";
+import { downloadFile, excelDateTime, toCsv, today } from "../../utils/csv";
 import { useCurrency } from "../../currency/useCurrency";
 
 // FR-12 (guide 4.11): all orders with a status filter. Each row shows only the valid next actions.
@@ -54,6 +55,33 @@ export function AdminOrdersPage() {
   });
 
   const items = (o: Order) => o.items.map((i) => `${i.quantity} × ${i.product.name}`).join(", ");
+  const statusName = (s: OrderStatus) => t(s.charAt(0) + s.slice(1).toLowerCase()); // "Pending"
+
+  // "Download for Excel": every order with the chosen status (not only this page), one row each.
+  // Amounts in US dollars, the currency the orders are saved in.
+  const download = useMutation({
+    mutationFn: () => ordersApi.exportAll(status),
+    onSuccess: (list) => {
+      const rows = list.map((o) => [
+        o.id,
+        excelDateTime(o.createdAt),
+        o.user?.name,
+        o.user?.email,
+        o.phone,
+        o.city,
+        o.address,
+        o.items.map((i) => `${i.quantity} × ${i.product.name}`).join("; "),
+        o.delivery === "EXPRESS" ? t("Express") : t("Standard"),
+        Number(o.deliveryFee),
+        Number(o.total),
+        statusName(o.status),
+      ]);
+      const titles = [t("Order"), t("Date"), t("Customer"), t("Email"), t("Phone number"), t("City"), t("Address"), t("Items")];
+      const header = [...titles, t("Delivery"), t("Delivery fee (USD)"), t("Total (USD)"), t("Status")];
+      downloadFile(`stockflow-orders${status ? `-${status.toLowerCase()}` : ""}-${today()}.csv`, toCsv([header, ...rows]));
+    },
+    onError: (err) => toast(`${t("Could not download the file.")} ${err.message}`, "error"),
+  });
 
   return (
     <div className="space-y-4">
@@ -62,21 +90,27 @@ export function AdminOrdersPage() {
           <h1 className="page-title">{t("Manage orders")}</h1>
           <p className="text-sm text-slate-500">{showing}</p>
         </div>
-        <select
-          aria-label={t("Filter by status")}
-          value={status ?? ""}
-          onChange={(e) => {
-            setStatus((e.target.value || undefined) as OrderStatus | undefined);
-            setPage(1); // a new filter starts on its first page
-          }}
-          className="input w-auto"
-        >
-          <option value="">{t("All statuses")}</option>
-          <option value="PENDING">{t("Pending")}</option>
-          <option value="SHIPPED">{t("Shipped")}</option>
-          <option value="DELIVERED">{t("Delivered")}</option>
-          <option value="CANCELLED">{t("Cancelled")}</option>
-        </select>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            aria-label={t("Filter by status")}
+            value={status ?? ""}
+            onChange={(e) => {
+              setStatus((e.target.value || undefined) as OrderStatus | undefined);
+              setPage(1); // a new filter starts on its first page
+            }}
+            className="input w-auto"
+          >
+            <option value="">{t("All statuses")}</option>
+            <option value="PENDING">{t("Pending")}</option>
+            <option value="SHIPPED">{t("Shipped")}</option>
+            <option value="DELIVERED">{t("Delivered")}</option>
+            <option value="CANCELLED">{t("Cancelled")}</option>
+          </select>
+          <button type="button" onClick={() => download.mutate()} disabled={download.isPending} className="btn btn-outline">
+            <span aria-hidden="true">⬇</span>
+            {download.isPending ? t("Preparing the file...") : t("Download for Excel")}
+          </button>
+        </div>
       </div>
 
       {orders.isLoading && <RowsSkeleton />}

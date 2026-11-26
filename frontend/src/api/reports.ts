@@ -23,8 +23,16 @@ export type Summary = {
   bestSellers: { productId: number; name: string; imageUrl: string | null; sold: number }[]; // top 5 (FR-15)
 };
 
+// Sales per product for a period (every product, the best first), for the Excel download.
+// Cancelled orders and delivery fees are not counted. revenue = "12.50" in US dollars.
+export type SalesByProduct = {
+  days: number;
+  products: { productId: number; name: string; category: string; sold: number; revenue: string; stock: number }[];
+};
+
 // Admin reports. FR-16 is served by the Core API (the .NET reporting API is out of scope).
 export const reportsApi = {
   lowStock: () => api<LowStockRow[]>("core", "/api/reports/low-stock"),
   summary: (days = 30) => api<Summary>("core", `/api/reports/summary?days=${days}`),
+  salesByProduct: (days = 30) => api<SalesByProduct>("core", `/api/reports/sales-by-product?days=${days}`),
 };

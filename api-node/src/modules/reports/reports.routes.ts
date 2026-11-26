@@ -102,3 +102,35 @@ reportsRouter.get("/summary", validate(summaryQuery, "query"), async (_req, res)
     })),
   });
 });
+
+// Sales per product for the chosen period, for the dashboard's "Download sales for Excel" button:
+// every product (also those that sold nothing), the pieces sold and what they brought in.
+// Cancelled orders don't count, and the delivery fees are not in it (they are not a product).
+reportsRouter.get("/sales-by-product", validate(summaryQuery, "query"), async (_req, res) => {
+  const { days } = res.locals.query as z.infer<typeof summaryQuery>;
+  const [products, lines] = await Promise.all([
+    prisma.product.findMany({ include: { category: true } }),
+    prisma.orderItem.findMany({
+      where: { order: { createdAt: { gte: midnight(days - 1) }, status: { not: "CANCELLED" } } },
+      select: { productId: true, quantity: true, unitPrice: true },
+    }),
+  ]);
+  const sold = new Map<number, { pieces: number; revenue: Prisma.Decimal }>();
+  for (const line of lines) {
+    const p = sold.get(line.productId) ?? { pieces: 0, revenue: new Prisma.Decimal(0) };
+    p.pieces += line.quantity;
+    p.revenue = p.revenue.add(line.unitPrice.mul(line.quantity)); // the price paid, so sale prices count as they were
+    sold.set(line.productId, p);
+  }
+  const rows = products.map((p) => ({
+    productId: p.id,
+    name: p.name,
+    category: p.category.name,
+    sold: sold.get(p.id)?.pieces ?? 0,
+    revenue: sold.get(p.id)?.revenue ?? new Prisma.Decimal(0),
+    stock: p.stock,
+  }));
+  // The best first; products that sold nothing at the end, by name
+  rows.sort((a, b) => b.revenue.comparedTo(a.revenue) || a.name.localeCompare(b.name));
+  res.json({ days, products: rows.map((r) => ({ ...r, revenue: r.revenue.toFixed(2) })) });
+});

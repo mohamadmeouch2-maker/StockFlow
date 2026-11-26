@@ -83,6 +83,21 @@ ordersRouter.get("/", requireRole("ADMIN"), validate(listQuery, "query"), async 
   res.json({ items, page, pageSize, total });
 });
 
+// Admin: every order (or those with one status) at once, for the "Download for Excel" button.
+// Newest first, with the customer and the items. At most 10,000, so one download can't take forever.
+const exportQuery = z.object({ status: listQuery.shape.status });
+ordersRouter.get("/export", requireRole("ADMIN"), validate(exportQuery, "query"), async (_req, res) => {
+  const { status } = res.locals.query as z.infer<typeof exportQuery>;
+  res.json(
+    await prisma.order.findMany({
+      where: status ? { status } : {},
+      include: { ...withItems, user: { select: { name: true, email: true } } },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: 10_000,
+    }),
+  );
+});
+
 // FR-12: admin moves an order along: Pending -> Shipped -> Delivered, or Pending -> Cancelled.
 ordersRouter.patch("/:id/status", requireRole("ADMIN"), validate(statusBody), async (req, res) => {
   res.json(await changeStatus(parseId(req.params.id, "Order"), res.locals.body.status, res.locals.user));

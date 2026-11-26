@@ -80,6 +80,23 @@ test("the dashboard summary counts products, problems, daily sales and best sell
   ]);
 });
 
+test("sales per product for the Excel download: every product, cancelled orders left out", async () => {
+  // (the orders of the test above: Plenty 2 today + 1 twenty days ago, At level 1, Empty only cancelled or too old)
+  const month = await request(app).get("/api/reports/sales-by-product").set(auth(adminToken)).expect(200);
+  expect(month.body.days).toBe(30);
+  expect(month.body.products).toEqual([
+    expect.objectContaining({ name: "Plenty", category: "Test", sold: 3, revenue: "3.00", stock: 50 }),
+    expect.objectContaining({ name: "At level", sold: 1, revenue: "1.00", stock: 5 }),
+    expect.objectContaining({ name: "Empty", sold: 0, revenue: "0.00", stock: 0 }), // also the products that sold nothing
+  ]);
+  const week = await request(app).get("/api/reports/sales-by-product?days=7").set(auth(adminToken)).expect(200);
+  expect(week.body.products.map((p: { name: string; sold: number }) => [p.name, p.sold])).toEqual([
+    ["Plenty", 2],
+    ["At level", 1],
+    ["Empty", 0],
+  ]);
+});
+
 test("the dashboard period must be 7 to 90 days", async () => {
   for (const days of ["5", "91", "abc"]) {
     const res = await request(app).get(`/api/reports/summary?days=${days}`).set(auth(adminToken)).expect(400);
@@ -88,7 +105,7 @@ test("the dashboard period must be 7 to 90 days", async () => {
 });
 
 test("reports are admin-only", async () => {
-  for (const url of ["/api/reports/low-stock", "/api/reports/summary"]) {
+  for (const url of ["/api/reports/low-stock", "/api/reports/summary", "/api/reports/sales-by-product"]) {
     await request(app).get(url).expect(401);
     await request(app).get(url).set(auth(customerToken)).expect(403);
   }

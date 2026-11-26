@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { reportsApi, type Summary } from "../../api/reports";
@@ -12,6 +12,8 @@ import { DashboardSkeleton } from "../../components/Skeleton";
 import { dayToDate } from "../../utils/format";
 import { useT } from "../../i18n/useT";
 import { useCurrency } from "../../currency/useCurrency";
+import { useToast } from "../../toast/useToast";
+import { downloadFile, toCsv, today } from "../../utils/csv";
 
 const PERIODS = [7, 14, 30]; // days the admin can choose; 30 is the default (FR-14)
 
@@ -64,6 +66,21 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
   const change = before > 0 ? Math.round(((sales - before) / before) * 100) : null;
   const allOrders = Object.values(s.ordersByStatus).reduce((a, b) => a + b, 0);
   const bestSold = s.bestSellers[0]?.sold ?? 0;
+  const toast = useToast();
+
+  // "Download sales for Excel": every product's sales in the chosen period, the best first, and a total.
+  // In US dollars, without the delivery fees (they are not a product) and without cancelled orders.
+  const download = useMutation({
+    mutationFn: () => reportsApi.salesByProduct(days),
+    onSuccess: ({ products }) => {
+      const header = [t("Product"), t("Category"), t("Pieces sold"), t("Sales (USD)"), t("Stock")];
+      const rows = products.map((p) => [p.name, p.category, p.sold, Number(p.revenue), p.stock]);
+      const pieces = products.reduce((n, p) => n + p.sold, 0);
+      const cents = products.reduce((n, p) => n + Math.round(Number(p.revenue) * 100), 0); // added up in cents: no rounding errors
+      downloadFile(`stockflow-sales-${days}-days-${today()}.csv`, toCsv([header, ...rows, [t("Total"), "", pieces, cents / 100, ""]]));
+    },
+    onError: (err) => toast(`${t("Could not download the file.")} ${err.message}`, "error"),
+  });
 
   return (
     <>
@@ -124,22 +141,28 @@ function Dashboard({ s, days, onDays, updating }: DashboardProps) {
       </div>
 
       {/* The period: everything below shows only these days */}
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("Period")}>
-        <span className="me-1 text-sm font-medium text-slate-600">{t("Show:")}</span>
-        {PERIODS.map((d) => (
-          <button
-            key={d}
-            aria-pressed={days === d}
-            onClick={() => onDays(d)}
-            className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-              days === d
-                ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-                : "border-slate-300 bg-surface text-slate-600 hover:border-brand-300 hover:text-brand-700"
-            }`}
-          >
-            {t("Last {count} days", { count: d })}
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("Period")}>
+          <span className="me-1 text-sm font-medium text-slate-600">{t("Show:")}</span>
+          {PERIODS.map((d) => (
+            <button
+              key={d}
+              aria-pressed={days === d}
+              onClick={() => onDays(d)}
+              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
+                days === d
+                  ? "border-brand-600 bg-brand-600 text-white shadow-sm"
+                  : "border-slate-300 bg-surface text-slate-600 hover:border-brand-300 hover:text-brand-700"
+              }`}
+            >
+              {t("Last {count} days", { count: d })}
+            </button>
+          ))}
+        </div>
+        <button type="button" onClick={() => download.mutate()} disabled={download.isPending} className="btn btn-outline">
+          <span aria-hidden="true">⬇</span>
+          {download.isPending ? t("Preparing the file...") : t("Download sales for Excel")}
+        </button>
       </div>
 
       {/* Fades a little while a new period loads, instead of jumping */}

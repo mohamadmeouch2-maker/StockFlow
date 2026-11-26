@@ -1,10 +1,14 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 import { ordersApi } from "../../api/orders";
 import type { Order } from "../../api/types";
+import { downloadFile, excelDateTime } from "../../utils/csv";
 import { AdminOrdersPage } from "./AdminOrdersPage";
+
+// The file is not really saved: the test reads what would be in it
+vi.mock("../../utils/csv", async (importOriginal) => ({ ...(await importOriginal<typeof import("../../utils/csv")>()), downloadFile: vi.fn() }));
 
 // 45 orders in all: 20 per page, so 3 pages
 const order = (id: number): Order => ({
@@ -44,4 +48,28 @@ test("orders come 20 per page, with Previous and Next buttons", async () => {
   // A status filter starts again on page 1
   await userEvent.selectOptions(screen.getByLabelText("Filter by status"), "DELIVERED");
   expect(all).toHaveBeenLastCalledWith("DELIVERED", 1);
+});
+
+test("Download for Excel saves every order with the chosen status, one row each", async () => {
+  const pending = { ...order(7), status: "PENDING" as const, delivery: "EXPRESS" as const, deliveryFee: "7.00", total: "17.00" };
+  const exportAll = vi
+    .spyOn(ordersApi, "exportAll")
+    .mockResolvedValue([{ ...pending, phone: "+961 70 000 101", city: "Beirut", address: "Hamra, Building 3" }]);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <AdminOrdersPage />
+    </QueryClientProvider>,
+  );
+  await userEvent.selectOptions(await screen.findByLabelText("Filter by status"), "PENDING");
+  await userEvent.click(screen.getByRole("button", { name: /Download for Excel/ }));
+  expect(exportAll).toHaveBeenCalledWith("PENDING"); // all of them, not only this page
+  await waitFor(() => expect(downloadFile).toHaveBeenCalled());
+
+  const [name, text] = vi.mocked(downloadFile).mock.calls[0];
+  expect(name).toMatch(/^stockflow-orders-pending-\d{4}-\d{2}-\d{2}\.csv$/);
+  expect(text.slice(1).split("\r\n")).toEqual([
+    "Order,Date,Customer,Email,Phone number,City,Address,Items,Delivery,Delivery fee (USD),Total (USD),Status",
+    `7,${excelDateTime(pending.createdAt)},Customer 7,c7@test.dev,'+961 70 000 101,Beirut,"Hamra, Building 3",1 × Stapler,Express,7,17,Pending`,
+    "",
+  ]);
 });

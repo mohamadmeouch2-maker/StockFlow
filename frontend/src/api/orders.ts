@@ -11,6 +11,8 @@ export const ordersApi = {
   cancel: (id: number) => api<Order>("core", `/api/orders/${id}/cancel`, { method: "POST" }),
   // Admin only
   all: (status: OrderStatus | undefined, page: number) => api<Paged<Order>>("core", `/api/orders?page=${page}${status ? `&status=${status}` : ""}`),
+  // Every order at once (or those with one status), for the Excel download
+  exportAll: (status?: OrderStatus) => api<Order[]>("core", `/api/orders/export${status ? `?status=${status}` : ""}`),
   setStatus: (id: number, status: Exclude<OrderStatus, "PENDING">) =>
     api<Order>("core", `/api/orders/${id}/status`, { method: "PATCH", body: JSON.stringify({ status }) }),
 };

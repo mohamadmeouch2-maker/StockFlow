@@ -138,6 +138,21 @@ test("the admin order list comes one page at a time, newest first", async () => 
   await request(app).get("/api/orders?pageSize=500").set(auth(adminToken)).expect(400); // at most 100 per page
 });
 
+test("the Excel download gets every order at once (or one status), with the customer and the items", async () => {
+  const { total } = (await request(app).get("/api/orders?pageSize=1").set(auth(adminToken)).expect(200)).body;
+  const all = (await request(app).get("/api/orders/export").set(auth(adminToken)).expect(200)).body;
+  expect(all).toHaveLength(total); // not one page: all of them
+  expect(all[0]).toMatchObject({ user: { email: expect.any(String) }, items: [expect.objectContaining({ product: { name: expect.any(String) } })] });
+  const dates = all.map((o: { createdAt: string }) => o.createdAt);
+  expect([...dates].sort().reverse()).toEqual(dates); // newest first
+
+  const cancelled = (await request(app).get("/api/orders/export?status=CANCELLED").set(auth(adminToken)).expect(200)).body;
+  expect(cancelled.length).toBeGreaterThan(0);
+  expect(cancelled.every((o: { status: string }) => o.status === "CANCELLED")).toBe(true);
+  await request(app).get("/api/orders/export?status=WRONG").set(auth(adminToken)).expect(400);
+  await request(app).get("/api/orders/export").set(auth(customerToken)).expect(403); // only admins
+});
+
 test("a product that appears in orders cannot be deleted", async () => {
   const res = await request(app).delete(`/api/products/${productId}`).set(auth(adminToken)).expect(409);
   expect(res.body.error.code).toBe("IN_USE");
