@@ -457,6 +457,7 @@ export const french: Dictionary = {
   "Standard delivery": "Livraison standard",
   "Standard delivery will be used.": "La livraison standard sera utilisée.",
   "Dark mode": "Mode sombre",
+  "Install the app": "Installer l'application",
   "Download for Excel": "Télécharger pour Excel",
   "Download sales for Excel": "Télécharger les ventes pour Excel",
   "Preparing the file...": "Préparation du fichier...",

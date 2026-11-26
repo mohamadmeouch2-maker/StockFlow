@@ -22,9 +22,13 @@ const systemDark = () => window.matchMedia?.("(prefers-color-scheme: dark)").mat
 
 export const currentTheme = (): Theme => (document.documentElement.dataset.theme === "dark" ? "dark" : "light");
 
+// The app's title bar (when installed) has the colour of the top bar: white, or the dark card colour
+const TITLE_BAR = { light: "#ffffff", dark: "#11192a" };
+
 function apply(theme: Theme) {
   if (theme === "dark") document.documentElement.dataset.theme = "dark";
   else delete document.documentElement.dataset.theme;
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", TITLE_BAR[theme]);
   listeners.forEach((listener) => listener());
 }
 

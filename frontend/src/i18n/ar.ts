@@ -468,6 +468,7 @@ export const arabic: Dictionary = {
   "Standard delivery": "توصيل عادي",
   "Standard delivery will be used.": "سيُستخدم التوصيل العادي.",
   "Dark mode": "الوضع الداكن",
+  "Install the app": "تثبيت التطبيق",
   "Download for Excel": "تنزيل لـ Excel",
   "Download sales for Excel": "تنزيل المبيعات لـ Excel",
   "Preparing the file...": "جارٍ تحضير الملف...",

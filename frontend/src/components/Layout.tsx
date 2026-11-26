@@ -17,6 +17,7 @@ import { useT } from "../i18n/useT";
 import { CurrencySelect } from "./CurrencySelect";
 import { LanguageSelect } from "./LanguageSelect";
 import { ThemeToggle } from "./ThemeToggle";
+import { InstallAppButton } from "./InstallAppButton";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
@@ -242,6 +243,8 @@ export function Layout() {
             </NavLink>
           </>
         )}
+        {/* Chrome / Edge: install StockFlow as an app (hidden when it can't be, or already is) */}
+        <InstallAppButton onDone={closeMenu} />
         {/* Only on a phone: the top bar has no room for these there */}
         <div className="space-y-1 md:hidden">
           <div className="flex flex-wrap items-center gap-2 pt-2">

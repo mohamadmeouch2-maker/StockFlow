@@ -5,12 +5,21 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StockFlow</title>
+    <meta name="description" content="Office supplies, always in stock: shop, follow your orders, and manage the store." />
+    <!-- Install as an app (public/manifest.webmanifest): the name, the icons, its own window -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- The colour of the app's title bar: white, or dark grey in dark mode (src/theme/theme.ts) -->
+    <meta name="theme-color" content="#ffffff" />
     <script>
       // Dark mode before anything shows, so a dark page never flashes white: the user's choice,
       // or else the computer's / phone's setting (see src/theme/theme.ts)
       try {
         var theme = localStorage.getItem("theme");
-        if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.dataset.theme = "dark";
+        if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.dataset.theme = "dark";
+          document.querySelector('meta[name="theme-color"]').content = "#11192a";
+        }
       } catch (e) {}
     </script>
   </head>
