@@ -25,6 +25,8 @@ const menuLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 // The frame around every page: a bar on top (☰ menu, logo, account), the current page, and a footer.
 // The page links are in the ☰ menu that slides in from the left. They depend on who is logged in (guide 4.6).
+// On a phone or a small tablet (under 768 px) the bar stays one row: ☰, the logo and the icons (cart, bell, account) or Log in.
+// The language, the currency, Log out and Register are then in the ☰ menu.
 export function Layout() {
   const { user, logout } = useAuth();
   const { count, clear } = useCart();
@@ -53,6 +55,7 @@ export function Layout() {
       : { n: newReplies, text: t("{count} new replies from customer service", { count: newReplies }) };
 
   const onLogout = () => {
+    closeMenu(); // Log out can be in the ☰ menu (on a phone)
     clear(); // the next person on this browser starts with an empty cart
     try {
       sessionStorage.removeItem(ASSISTANT_STORAGE_KEY); // ...and an empty chat with the assistant
@@ -86,16 +89,20 @@ export function Layout() {
               </span>
             )}
           </button>
-          <Link to="/" className="me-4 flex items-center gap-2 text-lg font-bold text-slate-900">
+          <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900 md:me-4">
             <LogoMark className="h-8 w-8" />
             <span>
               Stock<span className="text-brand-600">Flow</span>
             </span>
           </Link>
 
-          <div className="ms-auto flex items-center gap-2">
-            <LanguageSelect />
-            <CurrencySelect />
+          {/* If it is too wide for the screen, it wraps (the buttons never break in the middle) */}
+          <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
+            {/* On a phone: in the ☰ menu */}
+            <div className="hidden items-center gap-2 md:flex">
+              <LanguageSelect />
+              <CurrencySelect />
+            </div>
             {/* Customers: the cart, with the number of items in it */}
             {user?.role === "CUSTOMER" && (
               <NavLink
@@ -146,21 +153,21 @@ export function Layout() {
                   <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-700">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
-                  <span className="hidden sm:inline">{user.name}</span>
-                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 sm:inline">
+                  <span className="hidden lg:inline">{user.name}</span>
+                  <span className="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500 lg:inline">
                     {user.role === "ADMIN" ? t("admin") : t("customer")}
                   </span>
                 </NavLink>
-                <button onClick={onLogout} className="btn btn-outline py-1.5">
+                <button onClick={onLogout} className="btn btn-outline hidden py-1.5 whitespace-nowrap md:inline-flex">
                   {t("Log out")}
                 </button>
               </>
             ) : (
               <>
-                <NavLink to="/login" className={linkClass}>
+                <NavLink to="/login" className={(state) => `${linkClass(state)} whitespace-nowrap`}>
                   {t("Log in")}
                 </NavLink>
-                <Link to="/register" className="btn btn-primary py-1.5">
+                <Link to="/register" className="btn btn-primary hidden py-1.5 whitespace-nowrap md:inline-flex">
                   {t("Register")}
                 </Link>
               </>
@@ -233,6 +240,22 @@ export function Layout() {
             </NavLink>
           </>
         )}
+        {/* Only on a phone: the top bar has no room for these there */}
+        <div className="space-y-1 md:hidden">
+          <div className="flex flex-wrap items-center gap-2 pt-2">
+            <LanguageSelect />
+            <CurrencySelect />
+          </div>
+          {user && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex w-full items-center rounded-lg px-3 py-2.5 text-sm font-medium text-danger-600 transition hover:bg-danger-50"
+            >
+              {t("Log out")}
+            </button>
+          )}
+        </div>
       </SideMenu>
 
       <main inert={menuOpen} className="mx-auto w-full max-w-6xl flex-1 px-6 py-8">

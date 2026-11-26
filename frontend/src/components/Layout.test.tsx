@@ -23,10 +23,10 @@ beforeEach(() => {
   vi.spyOn(supportApi, "mine").mockResolvedValue([]);
 });
 
-const visit = (user: User | null, cartCount = 0) =>
+const visit = (user: User | null, cartCount = 0, logout = vi.fn()) =>
   render(
     <QueryClientProvider client={new QueryClient()}>
-      <AuthContext.Provider value={{ user, loading: false, login: vi.fn(), startSession: vi.fn(), logout: vi.fn(), updateUser: vi.fn() } as AuthState}>
+      <AuthContext.Provider value={{ user, loading: false, login: vi.fn(), startSession: vi.fn(), logout, updateUser: vi.fn() } as AuthState}>
         <CartContext.Provider value={{ items: [], count: cartCount, add: vi.fn(), setQuantity: vi.fn(), remove: vi.fn(), clear: vi.fn() } as CartState}>
           <MemoryRouter initialEntries={["/products"]}>
             <Routes>
@@ -87,11 +87,25 @@ test("admins get the admin pages in the menu, and ☰ shows the messages waiting
   expect(within(menu()).queryByRole("link", { name: /Cart/ })).not.toBeInTheDocument();
 });
 
+// On a phone the top bar is one row: the language, the currency and Log out are in the ☰ menu instead
+// (the CSS shows them only there on a phone, and only in the top bar on a computer)
+test("the ☰ menu has the language, the currency and Log out, for phones", async () => {
+  const logout = vi.fn();
+  visit(sara, 0, logout);
+  await userEvent.click(menuButton());
+  expect(within(menu()).getByLabelText("Language")).toBeInTheDocument();
+  expect(within(menu()).getByLabelText("Currency")).toBeInTheDocument();
+  await userEvent.click(within(menu()).getByRole("button", { name: "Log out" }));
+  expect(logout).toHaveBeenCalled();
+  expect(menuButton()).toHaveAttribute("aria-expanded", "false"); // the menu closed
+});
+
 test("visitors who are not logged in find Log in and Register in the menu too", async () => {
   visit(null);
   await userEvent.click(menuButton());
   expect(within(menu()).getByRole("link", { name: "Log in" })).toBeInTheDocument();
   expect(within(menu()).getByRole("link", { name: "Register" })).toBeInTheDocument();
+  expect(within(menu()).queryByRole("button", { name: "Log out" })).not.toBeInTheDocument();
 });
 
 test("a new answer from customer service shows on ☰ and next to Customer service", async () => {
