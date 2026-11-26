@@ -41,7 +41,7 @@ export function FavoriteButton({ product, className = "" }: { product: Product; 
       aria-pressed={saved}
       aria-label={saved ? t("Remove {name} from favourites", { name: product.name }) : t("Save {name} to favourites", { name: product.name })}
       title={saved ? t("Remove from favourites") : t("Save to favourites")}
-      className={`rounded-full p-1.5 transition hover:bg-rose-50 ${saved ? "text-rose-600" : "text-slate-400 hover:text-rose-500"} ${className}`}
+      className={`rounded-full p-1.5 transition hover:bg-rose-50 dark:hover:bg-rose-950/40 ${saved ? "text-rose-600" : "text-slate-400 hover:text-rose-500"} ${className}`}
     >
       <svg
         viewBox="0 0 24 24"

@@ -98,7 +98,7 @@ export function SupportConversation({ ticket, viewer, isNew }: Props) {
           return (
             <li key={m.id} className={`flex ${ours ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${ours ? "rounded-ee-sm bg-brand-600 text-white" : "rounded-es-sm bg-slate-100 text-slate-800"}`}
+                className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${ours ? "stay-light rounded-ee-sm bg-brand-600 text-white" : "rounded-es-sm bg-slate-100 text-slate-800"}`}
               >
                 <p className={`mb-0.5 text-xs font-semibold ${ours ? "text-brand-100" : "text-slate-500"}`}>
                   {who} · {when(m.createdAt)}

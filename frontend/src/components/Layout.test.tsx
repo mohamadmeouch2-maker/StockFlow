@@ -89,12 +89,13 @@ test("admins get the admin pages in the menu, and ☰ shows the messages waiting
 
 // On a phone the top bar is one row: the language, the currency and Log out are in the ☰ menu instead
 // (the CSS shows them only there on a phone, and only in the top bar on a computer)
-test("the ☰ menu has the language, the currency and Log out, for phones", async () => {
+test("the ☰ menu has the language, the currency, dark mode and Log out, for phones", async () => {
   const logout = vi.fn();
   visit(sara, 0, logout);
   await userEvent.click(menuButton());
   expect(within(menu()).getByLabelText("Language")).toBeInTheDocument();
   expect(within(menu()).getByLabelText("Currency")).toBeInTheDocument();
+  expect(within(menu()).getByRole("button", { name: "Dark mode" })).toBeInTheDocument();
   await userEvent.click(within(menu()).getByRole("button", { name: "Log out" }));
   expect(logout).toHaveBeenCalled();
   expect(menuButton()).toHaveAttribute("aria-expanded", "false"); // the menu closed

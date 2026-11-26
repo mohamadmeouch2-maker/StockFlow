@@ -59,7 +59,7 @@ export function ReviewForm({ productId }: { productId: number }) {
               aria-label={t("{n} out of 10", { n })}
               onClick={() => setRating(n)}
               className={`h-9 w-9 rounded-lg border text-sm font-semibold transition ${
-                active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-700 hover:border-brand-400"
+                active ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-surface text-slate-700 hover:border-brand-400"
               }`}
             >
               {n}

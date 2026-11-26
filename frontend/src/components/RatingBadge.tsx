@@ -13,7 +13,7 @@ export function RatingBadge({ rating, size = "sm" }: { rating?: Rating; size?: "
       className="inline-flex items-center gap-1.5 whitespace-nowrap"
       title={t("Rated {average} out of 10 by {count} customers", { average: rating.average, count: rating.count })}
     >
-      <span className={`rounded-md bg-slate-900 font-bold text-white ${big ? "px-2.5 py-1 text-lg" : "px-1.5 py-0.5 text-xs"}`}>
+      <span className={`rounded-md bg-slate-900 font-bold text-slate-50 ${big ? "px-2.5 py-1 text-lg" : "px-1.5 py-0.5 text-xs"}`}>
         <span className="text-warning-400">★</span> {rating.average.toFixed(1)}
         <span className="font-normal opacity-80">/10</span>
       </span>

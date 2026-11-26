@@ -5,6 +5,14 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>StockFlow</title>
+    <script>
+      // Dark mode before anything shows, so a dark page never flashes white: the user's choice,
+      // or else the computer's / phone's setting (see src/theme/theme.ts)
+      try {
+        var theme = localStorage.getItem("theme");
+        if (theme === "dark" || (theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)) document.documentElement.dataset.theme = "dark";
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -44,7 +44,7 @@ export function ChristmasSalePopup() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       onMouseDown={(e) => e.target === e.currentTarget && close()} // click outside = close
     >
       <div

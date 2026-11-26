@@ -467,6 +467,7 @@ export const arabic: Dictionary = {
   Standard: "عادي",
   "Standard delivery": "توصيل عادي",
   "Standard delivery will be used.": "سيُستخدم التوصيل العادي.",
+  "Dark mode": "الوضع الداكن",
   "Add {amount} more for free standard delivery.": "أضف {amount} أخرى لتحصل على توصيل عادي مجاني.",
   "Your order gets free standard delivery.": "طلبك يحصل على توصيل عادي مجاني.",
   "Start the sale": "بدء التخفيضات",

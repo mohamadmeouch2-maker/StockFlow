@@ -44,7 +44,7 @@ export function SaleCard() {
   const promo = sale.data;
   return (
     <section className="card overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-red-50 to-emerald-50 px-5 py-3">
+      <div className="flex items-center gap-2 border-b border-slate-100 bg-gradient-to-r from-red-50 to-emerald-50 px-5 py-3 dark:from-red-950/40 dark:to-emerald-950/40">
         <span aria-hidden="true">🎄</span>
         <h2 className="font-semibold text-slate-900">{t("Sale")}</h2>
       </div>

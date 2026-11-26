@@ -122,7 +122,7 @@ export function NotificationBell({ role }: { role: Role }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute end-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-surface shadow-lg">
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <span className="font-semibold text-slate-900">{t("Notifications")}</span>
             {unread > 0 && (

@@ -456,6 +456,7 @@ export const french: Dictionary = {
   Standard: "Standard",
   "Standard delivery": "Livraison standard",
   "Standard delivery will be used.": "La livraison standard sera utilisée.",
+  "Dark mode": "Mode sombre",
   "Add {amount} more for free standard delivery.": "Ajoutez encore {amount} pour la livraison standard gratuite.",
   "Your order gets free standard delivery.": "Votre commande a droit à la livraison standard gratuite.",
   "Start the sale": "Lancer les soldes",

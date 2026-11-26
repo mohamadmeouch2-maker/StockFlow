@@ -16,6 +16,7 @@ import { RowsSkeleton } from "./Skeleton";
 import { useT } from "../i18n/useT";
 import { CurrencySelect } from "./CurrencySelect";
 import { LanguageSelect } from "./LanguageSelect";
+import { ThemeToggle } from "./ThemeToggle";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-lg px-3 py-1.5 text-sm font-medium transition ${isActive ? "bg-brand-50 text-brand-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"}`;
@@ -26,7 +27,7 @@ const menuLinkClass = ({ isActive }: { isActive: boolean }) =>
 // The frame around every page: a bar on top (☰ menu, logo, account), the current page, and a footer.
 // The page links are in the ☰ menu that slides in from the left. They depend on who is logged in (guide 4.6).
 // On a phone or a small tablet (under 768 px) the bar stays one row: ☰, the logo and the icons (cart, bell, account) or Log in.
-// The language, the currency, Log out and Register are then in the ☰ menu.
+// The language, the currency, dark mode, Log out and Register are then in the ☰ menu.
 export function Layout() {
   const { user, logout } = useAuth();
   const { count, clear } = useCart();
@@ -70,7 +71,7 @@ export function Layout() {
   return (
     <div className="flex min-h-screen flex-col">
       {/* Stays at the top while scrolling. `inert` while the menu is open: Tab stays inside the menu. */}
-      <nav aria-label={t("Top")} inert={menuOpen} className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+      <nav aria-label={t("Top")} inert={menuOpen} className="sticky top-0 z-40 border-b border-slate-200 bg-surface/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 gap-y-2 px-6 py-3">
           <button
             type="button"
@@ -102,6 +103,7 @@ export function Layout() {
             <div className="hidden items-center gap-2 md:flex">
               <LanguageSelect />
               <CurrencySelect />
+              <ThemeToggle />
             </div>
             {/* Customers: the cart, with the number of items in it */}
             {user?.role === "CUSTOMER" && (
@@ -245,6 +247,7 @@ export function Layout() {
           <div className="flex flex-wrap items-center gap-2 pt-2">
             <LanguageSelect />
             <CurrencySelect />
+            <ThemeToggle />
           </div>
           {user && (
             <button
@@ -271,7 +274,7 @@ export function Layout() {
       <ChristmasSalePopup />
       {user && <AssistantButton />}
 
-      <footer inert={menuOpen} className="border-t border-slate-200 bg-white">
+      <footer inert={menuOpen} className="border-t border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <LogoMark className="h-6 w-6" />

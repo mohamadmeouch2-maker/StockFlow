@@ -91,9 +91,9 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
     <section
       role="dialog"
       aria-label={t("StockFlow assistant")}
-      className="fixed start-4 bottom-20 z-40 flex h-[32rem] max-h-[calc(100vh-7rem)] w-[23rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+      className="fixed start-4 bottom-20 z-40 flex h-[32rem] max-h-[calc(100vh-7rem)] w-[23rem] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-2xl"
     >
-      <header className="flex items-start gap-3 border-b border-slate-100 bg-brand-600 px-4 py-3 text-white">
+      <header className="stay-light flex items-start gap-3 border-b border-slate-100 bg-brand-600 px-4 py-3 text-white">
         <span aria-hidden="true" className="text-2xl">
           🤖
         </span>
@@ -152,7 +152,7 @@ export function AssistantPanel({ onClose }: { onClose: () => void }) {
                     <Link
                       key={p.id}
                       to={`/products/${p.id}`}
-                      className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-brand-700 shadow-sm hover:underline"
+                      className="rounded-full bg-surface px-2.5 py-1 text-xs font-medium text-brand-700 shadow-sm hover:underline"
                     >
                       {p.name} →
                     </Link>

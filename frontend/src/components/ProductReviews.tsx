@@ -49,7 +49,7 @@ export function ProductReviews({ productId }: { productId: number }) {
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold text-slate-900">{r.userName}</span>
-                <span className="rounded-md bg-slate-900 px-1.5 py-0.5 text-xs font-bold text-white">{r.rating}/10</span>
+                <span className="rounded-md bg-slate-900 px-1.5 py-0.5 text-xs font-bold text-slate-50">{r.rating}/10</span>
                 <span className="text-xs text-slate-400">{dateOnly(r.updatedAt)}</span>
               </div>
               {r.comment && <p className="mt-1 text-slate-600">{r.comment}</p>}

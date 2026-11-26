@@ -100,7 +100,7 @@ export function ProductsPage() {
                 className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
                   active
                     ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-                    : "border-slate-300 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700"
+                    : "border-slate-300 bg-surface text-slate-600 hover:border-brand-300 hover:text-brand-700"
                 }`}
               >
                 {c.name}

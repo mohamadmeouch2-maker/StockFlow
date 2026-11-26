@@ -36,7 +36,7 @@ export function SupportPage() {
               aria-pressed={status === f.value}
               onClick={() => setStatus(f.value)}
               className={`rounded-full border px-4 py-1.5 text-sm font-medium transition ${
-                status === f.value ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-white text-slate-600 hover:border-brand-300"
+                status === f.value ? "border-brand-600 bg-brand-600 text-white" : "border-slate-300 bg-surface text-slate-600 hover:border-brand-300"
               }`}
             >
               {t(f.label)}

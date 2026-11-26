@@ -47,13 +47,13 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: (id: number) => 
   return (
     <div
       role={toast.kind === "error" ? "alert" : "status"}
-      className="toast-in pointer-events-auto flex items-start gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-white shadow-lg"
+      className="toast-in pointer-events-auto flex items-start gap-3 rounded-xl bg-slate-900 px-4 py-3 text-sm text-slate-50 shadow-lg"
     >
       <span aria-hidden="true" className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${color}`}>
         {icon}
       </span>
       <p className="flex-1">{toast.message}</p>
-      <button onClick={() => onClose(toast.id)} aria-label={t("Close message")} className="text-slate-400 hover:text-white">
+      <button onClick={() => onClose(toast.id)} aria-label={t("Close message")} className="text-slate-400 hover:text-slate-50">
         ✕
       </button>
     </div>

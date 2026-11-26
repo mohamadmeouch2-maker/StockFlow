@@ -16,7 +16,7 @@ export function HomeHero() {
 
   return (
     <div className="mb-8 space-y-6">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-600 to-indigo-700 px-6 py-10 text-white shadow-lg sm:px-10">
+      <section className="stay-light relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-600 via-brand-600 to-indigo-700 px-6 py-10 text-white shadow-lg sm:px-10">
         {/* Big faded logo in the corner, just for decoration */}
         <LogoMark className="pointer-events-none absolute -end-10 -bottom-12 h-64 w-64 rotate-12 opacity-15" />
         <div className="relative max-w-xl space-y-4">

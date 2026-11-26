@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* dark:… classes apply in dark mode (the 🌙 button, see src/theme/theme.ts), not only when the system is dark */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* The colours, by meaning. Pages use these names (bg-brand-600, text-danger-700, ...),
    so each colour means the same thing everywhere, and one line here changes it everywhere.
    brand = blue: buttons, links, active, Shipped, Express, counts
@@ -7,8 +10,10 @@
    warning = amber: Low stock, Pending, Open problem
    danger = red: errors, Delete, Late, things that need action
    sale = red: only sale prices and sale tags
-   (grey/slate = neutral: Sold out, Cancelled, Standard, secondary text) */
+   (grey/slate = neutral: Sold out, Cancelled, Standard, secondary text)
+   surface = the background of cards, forms, menus and the top bar (white; dark grey in dark mode) */
 @theme {
+  --color-surface: #fff;
   --color-brand-50: oklch(97% 0.014 254.604);
   --color-brand-100: oklch(93.2% 0.032 255.585);
   --color-brand-200: oklch(88.2% 0.059 254.128);
@@ -81,7 +86,7 @@
 @layer components {
   /* White boxes: product cards, forms, cart, orders */
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply rounded-xl border border-slate-200 bg-surface shadow-sm;
   }
   .card-hover {
     @apply transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-md;
@@ -98,10 +103,10 @@
     @apply bg-brand-600 text-white shadow-sm hover:bg-brand-700;
   }
   .btn-outline {
-    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+    @apply border border-slate-300 bg-surface text-slate-700 hover:bg-slate-100;
   }
   .btn-danger {
-    @apply border border-danger-200 bg-white text-danger-600 hover:bg-danger-50;
+    @apply border border-danger-200 bg-surface text-danger-600 hover:bg-danger-50;
   }
 
   /* Form fields */
@@ -109,7 +114,7 @@
     @apply mb-1 block text-sm font-medium text-slate-700;
   }
   .input {
-    @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 shadow-sm transition
+    @apply w-full rounded-lg border border-slate-300 bg-surface px-3 py-2 shadow-sm transition
       placeholder:text-slate-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none;
   }
   .field-error {
@@ -162,7 +167,7 @@
 
   /* Admin tables */
   .data-table-wrap {
-    @apply overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm;
+    @apply overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm;
   }
   .data-table {
     @apply w-full text-start text-sm;
@@ -202,6 +207,91 @@
       @apply col-span-2;
     }
   }
+}
+
+/* Dark mode. The same class names, with dark colours: light greys become dark greys and
+   dark text becomes light, so almost every page works without changes. Tinted backgrounds
+   (badges, notes: the 50-300 shades) become dark tints, and coloured text (700-950) light. */
+:root[data-theme="dark"] {
+  color-scheme: dark; /* dark scrollbars, menus of the select boxes, ... */
+  --color-surface: oklch(21.5% 0.036 265);
+  --color-slate-50: oklch(16% 0.03 266); /* the page */
+  --color-slate-100: oklch(26.5% 0.036 263);
+  --color-slate-200: oklch(31% 0.036 262); /* borders */
+  --color-slate-300: oklch(39% 0.038 260);
+  --color-slate-400: oklch(56% 0.035 257);
+  --color-slate-500: oklch(71% 0.03 257); /* secondary text */
+  --color-slate-600: oklch(79% 0.025 256);
+  --color-slate-700: oklch(86% 0.018 255);
+  --color-slate-800: oklch(91.5% 0.012 255); /* text */
+  --color-slate-900: oklch(96.5% 0.007 248); /* titles */
+  --color-slate-950: oklch(98.5% 0.003 248);
+  --color-brand-50: oklch(28% 0.075 266);
+  --color-brand-100: oklch(32% 0.09 265);
+  --color-brand-200: oklch(40% 0.12 263);
+  --color-brand-300: oklch(50% 0.16 262);
+  --color-brand-700: oklch(80.9% 0.105 251.813);
+  --color-brand-800: oklch(88.2% 0.059 254.128);
+  --color-brand-900: oklch(93.2% 0.032 255.585);
+  --color-brand-950: oklch(97% 0.014 254.604);
+  --color-success-50: oklch(27% 0.05 166);
+  --color-success-100: oklch(31% 0.06 166);
+  --color-success-200: oklch(39% 0.08 165);
+  --color-success-300: oklch(48% 0.1 164);
+  --color-success-700: oklch(84.5% 0.143 164.978);
+  --color-success-800: oklch(90.5% 0.093 164.15);
+  --color-success-900: oklch(95% 0.052 163.051);
+  --color-success-950: oklch(97.9% 0.021 166.113);
+  --color-warning-50: oklch(28% 0.055 60);
+  --color-warning-100: oklch(32% 0.07 62);
+  --color-warning-200: oklch(40% 0.09 65);
+  --color-warning-300: oklch(50% 0.11 70);
+  --color-warning-700: oklch(87.9% 0.169 91.605);
+  --color-warning-800: oklch(92.4% 0.12 95.746);
+  --color-warning-900: oklch(96.2% 0.059 95.617);
+  --color-warning-950: oklch(98.7% 0.022 95.277);
+  --color-danger-50: oklch(27% 0.07 22);
+  --color-danger-100: oklch(31% 0.09 22);
+  --color-danger-200: oklch(40% 0.12 22);
+  --color-danger-300: oklch(50% 0.15 22);
+  --color-danger-700: oklch(80.8% 0.114 19.571);
+  --color-danger-800: oklch(88.5% 0.062 18.334);
+  --color-danger-900: oklch(93.6% 0.032 17.717);
+  --color-danger-950: oklch(97.1% 0.013 17.38);
+  --color-sale-50: var(--color-danger-50);
+  --color-sale-100: var(--color-danger-100);
+  --color-sale-200: var(--color-danger-200);
+  --color-sale-300: var(--color-danger-300);
+  --color-sale-700: var(--color-danger-700);
+  --color-sale-800: var(--color-danger-800);
+  --color-sale-900: var(--color-danger-900);
+  --color-sale-950: var(--color-danger-950);
+}
+/* Coloured text in the 600 shade (links, errors, sale prices) would be too dark on a dark
+   background: a lighter shade instead. Buttons keep the 600 shade behind their white text. */
+:root[data-theme="dark"] .text-brand-600,
+:root[data-theme="dark"] .link:not(:hover) {
+  color: var(--color-brand-400);
+}
+:root[data-theme="dark"] .text-danger-600,
+:root[data-theme="dark"] .field-error,
+:root[data-theme="dark"] .btn-danger {
+  color: var(--color-danger-400);
+}
+:root[data-theme="dark"] .text-sale-600 {
+  color: var(--color-sale-400);
+}
+/* Blue buttons under the mouse: a little lighter (brand-700 is a light colour in dark mode) */
+:root[data-theme="dark"] .btn-primary:hover:not(:disabled),
+:root[data-theme="dark"] .hover\:bg-brand-700:hover {
+  background-color: var(--color-brand-500);
+}
+/* Blue areas with light text (the home banner, the chat header, your own messages) look the
+   same in both modes: they keep the light shades they use. */
+:root[data-theme="dark"] .stay-light {
+  --color-brand-50: oklch(97% 0.014 254.604);
+  --color-brand-100: oklch(93.2% 0.032 255.585);
+  --color-brand-700: oklch(48.8% 0.243 264.376);
 }
 
 /* Welcome screen: the logo and name "pop" in */

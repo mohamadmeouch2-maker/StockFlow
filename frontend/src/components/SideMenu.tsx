@@ -36,7 +36,7 @@ export function SideMenu({ open, onClose, children }: Props) {
       <div
         onClick={onClose}
         aria-hidden="true"
-        className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-200 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0"}`}
+        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0"}`}
       />
       <div
         ref={panel}
@@ -46,7 +46,7 @@ export function SideMenu({ open, onClose, children }: Props) {
         aria-label={t("Menu")}
         // A click on any link inside closes the menu (also a link to the page that is already open)
         onClick={(e) => (e.target as HTMLElement).closest("a") && onClose()}
-        className={`absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col bg-white shadow-xl transition-transform duration-200 motion-reduce:transition-none ${open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"}`}
+        className={`absolute inset-y-0 start-0 flex w-72 max-w-[85vw] flex-col bg-surface shadow-xl transition-transform duration-200 motion-reduce:transition-none ${open ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"}`}
       >
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
           <Link to="/" className="flex items-center gap-2 text-lg font-bold text-slate-900">
