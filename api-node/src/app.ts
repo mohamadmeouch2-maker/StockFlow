@@ -14,6 +14,7 @@ import { productsRouter } from "./modules/products/products.routes";
 import { promotionsRouter } from "./modules/promotions/promotions.routes";
 import { reportsRouter } from "./modules/reports/reports.routes";
 import { supportRouter } from "./modules/support/support.routes";
+import { stockAlertsRouter } from "./modules/stockAlerts/stockAlerts.routes";
 import { reviewsRouter } from "./modules/reviews/reviews.routes";
 
 // The app is separate from the server so tests can use it without opening a port (guide 2.10).
@@ -40,6 +41,7 @@ app.use("/api/orders", ordersRouter);
 app.use("/api/reports", reportsRouter);
 app.use("/api/notifications", notificationsRouter); // stock alerts for admins
 app.use("/api/favorites", favoritesRouter); // customers' saved products
+app.use("/api/stock-alerts", stockAlertsRouter); // "Tell me when it's back" for sold-out products
 app.use("/api/promotions", promotionsRouter); // sales, e.g. the Christmas Sale
 app.use("/api/support", supportRouter); // Customer service: customers and visitors write, admins answer
 app.use("/api/currencies", currenciesRouter); // exchange rates for showing prices in LBP or EUR

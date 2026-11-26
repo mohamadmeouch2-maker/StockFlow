@@ -6,6 +6,7 @@ import { reviewsApi } from "../api/reviews";
 import type { Product } from "../api/types";
 import { useAuth } from "../auth/useAuth";
 import { useCart } from "../cart/useCart";
+import { BackInStockButton } from "../components/BackInStockButton";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { Price } from "../components/Price";
 import { ProductImage } from "../components/ProductImage";
@@ -83,7 +84,7 @@ export function ProductDetailPage() {
             </div>
             <div className="flex items-center gap-3">
               <StockBadge product={p} />
-              <span className="text-sm text-slate-500">{t("{count} left", { count: p.stock })}</span>
+              {p.stock > 0 && <span className="text-sm text-slate-500">{t("{count} left", { count: p.stock })}</span>}
             </div>
             <p className="text-slate-600">{p.description || t("No description.")}</p>
 
@@ -119,7 +120,7 @@ function BuyBox({ product }: { product: Product }) {
   if (!user)
     return (
       <Link to="/login" state={{ from: location }} className="btn btn-primary self-start">
-        {t("Log in to buy")}
+        {product.stock === 0 ? t("Log in to hear when it's back") : t("Log in to buy")}
       </Link>
     );
   if (user.role === "ADMIN")
@@ -129,6 +130,7 @@ function BuyBox({ product }: { product: Product }) {
       </Link>
     );
 
+  if (product.stock === 0) return <BackInStockButton productId={product.id} />; // sold out: "Tell me when it's back"
   const canAdd = product.stock > inCart; // FR-06: never more than the stock
   return (
     <div className="flex flex-wrap items-center gap-3">

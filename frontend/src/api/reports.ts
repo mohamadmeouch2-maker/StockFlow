@@ -8,6 +8,7 @@ export type LowStockRow = {
   category: string;
   stock: number;
   reorderLevel: number;
+  waiting: number; // customers who asked "Tell me when it's back"
 };
 
 // The admin dashboard's numbers. Cancelled orders don't count as sales.

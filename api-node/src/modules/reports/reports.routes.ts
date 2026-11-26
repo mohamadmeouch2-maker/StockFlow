@@ -16,8 +16,19 @@ reportsRouter.get("/low-stock", async (_req, res) => {
     include: { category: true },
     orderBy: [{ stock: "asc" }, { name: "asc" }], // most urgent first
   });
+  // How many customers wait for each one ("Tell me when it's back"): helps choose what to restock first
+  const waiting = await prisma.stockAlert.groupBy({ by: ["productId"], where: { productId: { in: products.map((p) => p.id) } }, _count: { _all: true } });
+  const waitingFor = (id: number) => waiting.find((w) => w.productId === id)?._count._all ?? 0;
   res.json(
-    products.map((p) => ({ productId: p.id, name: p.name, imageUrl: p.imageUrl, category: p.category.name, stock: p.stock, reorderLevel: p.reorderLevel })),
+    products.map((p) => ({
+      productId: p.id,
+      name: p.name,
+      imageUrl: p.imageUrl,
+      category: p.category.name,
+      stock: p.stock,
+      reorderLevel: p.reorderLevel,
+      waiting: waitingFor(p.id),
+    })),
   );
 });
 

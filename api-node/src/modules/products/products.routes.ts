@@ -8,6 +8,7 @@ import { deleteUpload, productImageUpload } from "../../lib/uploads";
 import { requireAuth, requireRole } from "../../middleware/auth";
 import { validate } from "../../middleware/validate";
 import { ratingsFor } from "../reviews/reviews.routes";
+import { tellWaitingCustomers } from "../stockAlerts/stockAlerts.service";
 
 // FR-04: ?page=1&pageSize=12&search=&categoryId=  plus  &sort=price_asc&inStock=true
 const SORTS = ["name", "price_asc", "price_desc", "rating", "newest"] as const;
@@ -144,6 +145,7 @@ productsRouter.put("/:id", ...admin, validate(productBody), async (req, res) => 
   if (!(await prisma.product.findUnique({ where: { id } }))) throw notFound("Product");
   await checkCategory(res.locals.body.categoryId);
   const product = await prisma.product.update({ where: { id }, data: res.locals.body, include: { category: true } });
+  await tellWaitingCustomers([id]); // restocked: the customers waiting for it hear about it
   res.json(product);
 });
 

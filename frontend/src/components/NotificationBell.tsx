@@ -26,12 +26,15 @@ function show(n: Notification): { icon: string; to: string; action: string } {
       return { icon: "✅", to: "/orders", action: msg("See the order") };
     case "ORDER_CANCELLED":
       return { icon: "❌", to: "/orders", action: msg("See the order") };
+    case "BACK_IN_STOCK":
+      return { icon: "🔔", to: `/products/${n.productId}`, action: msg("See the product") };
   }
 }
 
 // The bell in the top bar, with the number of unread notifications; the list opens on click.
 //   Admins: stock alerts (Restock) and customer service messages (Answer), shared by all admins.
-//   Customers: their order news (shipped, delivered, cancelled by the store) and customer service answers.
+//   Customers: their order news (shipped, delivered, cancelled by the store), customer service answers,
+//   and the sold-out products they waited for that are back in stock.
 // It asks the API for new ones every 20 seconds, and new ones also pop up as messages.
 export function NotificationBell({ role }: { role: Role }) {
   const qc = useQueryClient();
@@ -57,6 +60,8 @@ export function NotificationBell({ role }: { role: Role }) {
       // Update the pages they are about at once: Customer service (and the number in the menu), My orders
       if (fresh.some((n) => n.type === "SUPPORT_MESSAGE" || n.type === "SUPPORT_ANSWER")) qc.invalidateQueries({ queryKey: ["support"] });
       if (fresh.some((n) => n.type.startsWith("ORDER_"))) qc.invalidateQueries({ queryKey: ["orders"] });
+      // Back in stock: the product shows its new stock, and the customer no longer waits for it
+      if (fresh.some((n) => n.type === "BACK_IN_STOCK")) for (const key of ["product", "products", "stock-alerts"]) qc.invalidateQueries({ queryKey: [key] });
     }
     newestSeen.current = Math.max(newestSeen.current ?? 0, data.items[0]?.id ?? 0);
   }, [alerts.data, toast, qc, t]);

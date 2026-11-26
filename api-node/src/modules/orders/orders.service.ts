@@ -4,6 +4,7 @@ import { salePrice } from "../../lib/pricing";
 import { prisma } from "../../lib/prisma";
 import type { ShipTo } from "../../lib/shipTo";
 import { stockAlert } from "../notifications/notifications.service";
+import { tellWaitingCustomers } from "../stockAlerts/stockAlerts.service";
 import { deliverBy, feeFor } from "./delivery";
 
 // Order lines come back with the product name, which the website shows.
@@ -73,7 +74,7 @@ export async function changeStatus(orderId: number, next: OrderStatus, actor: { 
   if (actor.role === "CUSTOMER" && (order.userId !== actor.id || next !== "CANCELLED")) throw new AppError(403, "FORBIDDEN", "Not allowed");
   if (!allowed[order.status].includes(next)) throw new AppError(409, "INVALID_STATUS", `Cannot go from ${order.status} to ${next}`);
 
-  return prisma.$transaction(async (tx) => {
+  const changed = await prisma.$transaction(async (tx) => {
     // Change the status only if nobody changed it in the meantime. This stops a double
     // click on "Cancel" from giving the stock back twice.
     // Also note WHEN it happened, for the customer's tracking timeline.
@@ -86,4 +87,7 @@ export async function changeStatus(orderId: number, next: OrderStatus, actor: { 
     if (news) await tx.notification.create({ data: { ...news, userId: order.userId, orderId } });
     return tx.order.findUniqueOrThrow({ where: { id: orderId }, include: withItems });
   });
+  // A cancel gives pieces back: a sold-out product may be in stock again ("Tell me when it's back")
+  if (next === "CANCELLED") await tellWaitingCustomers(order.items.map((i) => i.productId));
+  return changed;
 }

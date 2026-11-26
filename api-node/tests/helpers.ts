@@ -7,6 +7,7 @@ import { prisma } from "../src/lib/prisma";
 export async function resetDb() {
   await prisma.notification.deleteMany();
   await prisma.favorite.deleteMany();
+  await prisma.stockAlert.deleteMany();
   await prisma.review.deleteMany();
   await prisma.supportTicket.deleteMany(); // their messages go too (cascade)
   await prisma.orderItem.deleteMany();

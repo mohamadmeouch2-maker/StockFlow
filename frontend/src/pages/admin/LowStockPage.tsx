@@ -36,6 +36,7 @@ export function LowStockPage() {
                 <th>{t("Category")}</th>
                 <th>{t("Stock")}</th>
                 <th>{t("Reorder level")}</th>
+                <th>{t("Customers waiting")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -55,6 +56,10 @@ export function LowStockPage() {
                     {r.stock} <StockBadge product={r} />
                   </td>
                   <td data-label={t("Reorder level")}>{r.reorderLevel}</td>
+                  {/* "Tell me when it's back": restock these first, customers are waiting */}
+                  <td data-label={t("Customers waiting")}>
+                    {r.waiting > 0 ? <span className="badge badge-brand">🔔 {r.waiting}</span> : <span className="text-slate-400">—</span>}
+                  </td>
                   <td className="cell-wide md:text-end">
                     <Link to={`/admin/products/${r.productId}/edit`} className="btn btn-outline px-3 py-1">
                       {t("Restock")}

@@ -60,6 +60,7 @@ enum NotificationType {
   ORDER_DELIVERED // their order was delivered
   ORDER_CANCELLED // the store cancelled their order
   SUPPORT_ANSWER // customer service answered them
+  BACK_IN_STOCK // a sold-out product they waited for is in stock again
 }
 
 model User {
@@ -83,6 +84,7 @@ model User {
   supportTickets  SupportTicket[]
   reviews         Review[]
   favorites       Favorite[]
+  stockAlerts     StockAlert[] // sold-out products they want to hear about
   notifications   Notification[] // the customer's bell
 
   @@map("users")
@@ -129,6 +131,7 @@ model Product {
   reviews       Review[]
   notifications Notification[]
   favorites     Favorite[]
+  stockAlerts   StockAlert[] // customers waiting for it to be back in stock
   promotionId   Int?           @map("promotion_id") // the sale this product is in (e.g. Christmas Sale)
   promotion     Promotion?     @relation(fields: [promotionId], references: [id], onDelete: SetNull)
   categoryId    Int            @map("category_id")
@@ -262,6 +265,20 @@ model Favorite {
   @@id([userId, productId])
   @@index([productId])
   @@map("favorites")
+}
+
+// "Tell me when it's back": a customer waits for a sold-out product. When it is in stock again,
+// they get a notification and an email, and the row is removed. One row per customer and product.
+model StockAlert {
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId Int      @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, productId])
+  @@index([productId])
+  @@map("stock_alerts")
 }
 
 // A sale, e.g. "Christmas Sale": a percentage off some products until a date.

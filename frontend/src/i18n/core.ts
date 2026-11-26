@@ -87,6 +87,7 @@ const SERVER_TEXTS: { pattern: RegExp; key: string; names: string[] }[] = [
     names: ["name", "count", "level"],
   },
   { pattern: /^(.+) is sold out$/, key: "{name} is sold out", names: ["name"] },
+  { pattern: /^(.+) is back in stock$/, key: "{name} is back in stock", names: ["name"] },
   { pattern: /^New message from (.+): (.+)$/, key: "New message from {name}: {topic}", names: ["name", "topic"] },
   { pattern: /^(.+) wrote again: (.+)$/, key: "{name} wrote again: {topic}", names: ["name", "topic"] },
   { pattern: /^Your order #(\d+) is on its way$/, key: "Your order #{id} is on its way", names: ["id"] },

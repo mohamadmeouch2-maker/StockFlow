@@ -97,8 +97,8 @@ export type SupportTicket = {
 // A notification in the bell: for the admins (stock alerts, customer messages) or for one customer (order news, answers).
 export type Notification = {
   id: number;
-  // For the admins: LOW_STOCK, OUT_OF_STOCK, SUPPORT_MESSAGE. For one customer: ORDER_*, SUPPORT_ANSWER.
-  type: "LOW_STOCK" | "OUT_OF_STOCK" | "SUPPORT_MESSAGE" | "ORDER_SHIPPED" | "ORDER_DELIVERED" | "ORDER_CANCELLED" | "SUPPORT_ANSWER";
+  // For the admins: LOW_STOCK, OUT_OF_STOCK, SUPPORT_MESSAGE. For one customer: ORDER_*, SUPPORT_ANSWER, BACK_IN_STOCK.
+  type: "LOW_STOCK" | "OUT_OF_STOCK" | "SUPPORT_MESSAGE" | "ORDER_SHIPPED" | "ORDER_DELIVERED" | "ORDER_CANCELLED" | "SUPPORT_ANSWER" | "BACK_IN_STOCK";
   message: string; // e.g. "Stapler is low on stock: 4 left (reorder level 5)" or "Your order #12 is on its way"
   userId: number | null; // null = for the admins
   productId: number | null; // stock alerts
